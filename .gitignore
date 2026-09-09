@@ -15,3 +15,7 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 *.egg-info/
+
+# tableau de bord genere par `bra dashboard` (le gabarit du meme nom,
+# sous src/, doit rester versionne : ancrer le motif a la racine)
+/dashboard.html
