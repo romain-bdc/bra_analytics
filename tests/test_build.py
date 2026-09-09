@@ -312,3 +312,59 @@ def test_base_duckdb_orpheline_supprimee(tmp_path) -> None:
     (source / "a.xml").unlink()
     build(source, out, db)
     assert not db.exists()
+
+
+def test_replace_supprime_les_parquet_hors_partition(tmp_path) -> None:
+    """Un Parquet depose hors partition serait relu par un glob `**/*.parquet`.
+
+    La purge par defaut ne retire que les repertoires `saison=*` et le laisse
+    donc en place ; `--replace` vide la table entiere.
+    """
+    source = tmp_path / "raw"
+    source.mkdir()
+    (source / "a.xml").write_bytes(fixture("v6_2026_aspe_ossau.xml").read_bytes())
+    out = tmp_path / "warehouse"
+    build(source, out, None)
+
+    intrus = out / "bulletins" / "vieux.parquet"
+    intrus.write_bytes((out / "bulletins" / "saison=2025-2026" / "data.parquet").read_bytes())
+
+    build(source, out, None)
+    assert intrus.exists(), "le defaut ne purge que les partitions"
+    assert pl.read_parquet(out / "bulletins" / "**" / "*.parquet").height == 2
+
+    build(source, out, None, replace=True)
+    assert not intrus.exists()
+    assert pl.read_parquet(out / "bulletins" / "**" / "*.parquet").height == 1
+
+
+def test_replace_preserve_les_repertoires_etrangers(tmp_path) -> None:
+    """`replace` ne vide que les tables connues, jamais le reste de la sortie."""
+    out = tmp_path / "warehouse"
+    build(FIXTURES, out, None)
+    export = out / "export_maison"
+    export.mkdir()
+    (export / "x.csv").write_text("a,b")
+
+    build(FIXTURES, out, None, replace=True)
+    assert (export / "x.csv").exists()
+
+
+def test_repertoires_etrangers_signales(tmp_path) -> None:
+    """Un repertoire inconnu contenant des Parquet est signale, pas supprime."""
+    source = tmp_path / "raw"
+    source.mkdir()
+    (source / "a.xml").write_bytes(fixture("v6_2026_aspe_ossau.xml").read_bytes())
+    out = tmp_path / "warehouse"
+    build(source, out, None)
+
+    fantome = out / "table_disparue" / "saison=2020-2021"
+    fantome.mkdir(parents=True)
+    (fantome / "data.parquet").write_bytes(
+        (out / "bulletins" / "saison=2025-2026" / "data.parquet").read_bytes()
+    )
+
+    report, _ = build(source, out, None, replace=True)
+    assert report.stray_dirs == ["table_disparue"]
+    assert "table_disparue" in report.summary()
+    assert (fantome / "data.parquet").exists()

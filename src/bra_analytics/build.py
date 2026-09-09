@@ -34,6 +34,7 @@ class BuildReport:
     duplicates_dropped: int = 0
     seasons: list[str] = field(default_factory=list)
     failures: list[tuple[str, str]] = field(default_factory=list)
+    stray_dirs: list[str] = field(default_factory=list)
 
     def summary(self) -> str:
         lines = [
@@ -44,6 +45,11 @@ class BuildReport:
             f"bulletins conserves   : {self.bulletins_kept}",
             f"saisons               : {', '.join(self.seasons) or '-'}",
         ]
+        if self.stray_dirs:
+            lines.append(
+                "repertoires etrangers contenant des Parquet (non supprimes) : "
+                + ", ".join(self.stray_dirs)
+            )
         if self.failures:
             lines.append("echecs (10 premiers) :")
             lines += [f"  - {name} : {msg}" for name, msg in self.failures[:10]]
@@ -141,7 +147,12 @@ def to_frames(parsed: Sequence[ParsedBulletin], report: BuildReport | None = Non
     return frames
 
 
-def write_warehouse(frames: dict[str, pl.DataFrame], out_dir: str | Path) -> dict[str, int]:
+def write_warehouse(
+    frames: dict[str, pl.DataFrame],
+    out_dir: str | Path,
+    *,
+    replace: bool = False,
+) -> dict[str, int]:
     """Ecrit chaque table en Parquet partitionne par saison.
 
     Le partitionnement est materialise en repertoires `saison=...` : DuckDB et
@@ -155,14 +166,25 @@ def write_warehouse(frames: dict[str, pl.DataFrame], out_dir: str | Path) -> dic
 
     Seuls les repertoires `saison=*` des tables connues sont supprimes : rien
     d'autre n'est touche dans `out_dir`.
+
+    `replace=True` va plus loin et vide entierement le repertoire de chaque
+    table connue. Cela couvre un residu que la purge par partition laisse
+    passer : un fichier Parquet depose hors partition, qu'un glob
+    `**/*.parquet` relirait sans qu'il appartienne a aucune saison. Les
+    repertoires ne correspondant a aucune table connue ne sont jamais
+    supprimes, meme avec `replace` : ils sont seulement signales.
     """
     out = Path(out_dir)
     written: dict[str, int] = {}
     for name, df in frames.items():
         table_dir = out / name
-        for obsolete in sorted(table_dir.glob("saison=*")):
-            if obsolete.is_dir():
-                shutil.rmtree(obsolete)
+        if replace:
+            if table_dir.exists():
+                shutil.rmtree(table_dir)
+        else:
+            for obsolete in sorted(table_dir.glob("saison=*")):
+                if obsolete.is_dir():
+                    shutil.rmtree(obsolete)
         table_dir.mkdir(parents=True, exist_ok=True)
         if not df.height:
             written[name] = 0
@@ -292,16 +314,35 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
     return db_path
 
 
+def stray_parquet_dirs(out_dir: str | Path) -> list[str]:
+    """Repertoires de `out_dir` contenant des Parquet sans etre une table connue.
+
+    Un glob trop large les relirait. Ils ne sont jamais supprimes
+    automatiquement : le repertoire de sortie peut contenir des exports que
+    l'utilisateur y a places lui-meme.
+    """
+    out = Path(out_dir)
+    if not out.exists():
+        return []
+    return sorted(
+        d.name for d in out.iterdir()
+        if d.is_dir() and d.name not in schema.TABLES and any(d.rglob("*.parquet"))
+    )
+
+
 def build(
     raw_dir: str | Path = "data/raw",
     out_dir: str | Path = "warehouse",
     db_path: str | Path | None = "warehouse/bra.duckdb",
+    *,
+    replace: bool = False,
 ) -> tuple[BuildReport, dict[str, int]]:
     report = BuildReport()
     paths = iter_xml_files(raw_dir)
     parsed = parse_all(paths, report)
     frames = to_frames(parsed, report)
-    written = write_warehouse(frames, out_dir)
+    report.stray_dirs = stray_parquet_dirs(out_dir)
+    written = write_warehouse(frames, out_dir, replace=replace)
     if db_path is not None:
         if written.get("bulletins"):
             create_duckdb(out_dir, db_path)
