@@ -68,7 +68,9 @@ def cmd_fetch(args: argparse.Namespace) -> int:
 def cmd_build(args: argparse.Namespace) -> int:
     from .build import build
 
-    report, written = build(args.cache, args.out, None if args.no_db else args.db)
+    report, written = build(
+        args.cache, args.out, None if args.no_db else args.db, replace=args.replace
+    )
     print(report.summary())
     print("\nlignes ecrites :")
     for name, count in written.items():
@@ -145,6 +147,12 @@ def build_parser() -> argparse.ArgumentParser:
     b.add_argument("--out", default="warehouse", help="repertoire de sortie")
     b.add_argument("--db", default="warehouse/bra.duckdb", help="base DuckDB")
     b.add_argument("--no-db", action="store_true", help="ne pas creer la base DuckDB")
+    b.add_argument(
+        "--replace",
+        action="store_true",
+        help="recreer entierement les repertoires de tables, au lieu de ne purger "
+             "que les partitions",
+    )
     b.set_defaults(func=cmd_build)
 
     i = sub.add_parser("info", help="resume de l'entrepot")
