@@ -235,3 +235,80 @@ def test_vues_analytiques(tmp_path) -> None:
         assert all(1 <= row[2] <= 5 for row in profil)
     finally:
         con.close()
+
+
+# --------------------------------------------------------------------------
+# Idempotence de la construction
+# --------------------------------------------------------------------------
+
+def _empreinte(warehouse) -> list[tuple[str, bytes]]:
+    import hashlib
+
+    return sorted(
+        (str(p.relative_to(warehouse)), hashlib.md5(p.read_bytes()).digest())
+        for p in warehouse.rglob("*.parquet")
+    )
+
+
+def test_build_reproductible(tmp_path) -> None:
+    """Deux constructions sur la meme source donnent des fichiers identiques."""
+    out = tmp_path / "warehouse"
+    build(FIXTURES, out, None)
+    premiere = _empreinte(out)
+    build(FIXTURES, out, None)
+    assert _empreinte(out) == premiere
+
+
+def test_partitions_obsoletes_purgees(tmp_path) -> None:
+    """Une saison absente de la nouvelle source ne doit pas survivre au rebuild.
+
+    Sans purge, la partition d'un build precedent restait sur disque et etait
+    relue par le glob `**/*.parquet` : l'entrepot divergeait silencieusement du
+    rapport de build.
+    """
+    source = tmp_path / "raw"
+    source.mkdir()
+    out = tmp_path / "warehouse"
+
+    (source / "a.xml").write_bytes(fixture("v6_2026_aspe_ossau.xml").read_bytes())
+    build(source, out, None)
+    assert [p.name for p in (out / "bulletins").glob("saison=*")] == ["saison=2025-2026"]
+
+    # Nouvelle source, saison differente.
+    (source / "a.xml").unlink()
+    (source / "b.xml").write_bytes(fixture("v3_2023_aspe_ossau.xml").read_bytes())
+    report, _ = build(source, out, None)
+
+    assert [p.name for p in (out / "bulletins").glob("saison=*")] == ["saison=2022-2023"]
+    assert pl.read_parquet(out / "bulletins" / "**" / "*.parquet").height == report.bulletins_kept
+
+
+def test_purge_limitee_aux_partitions(tmp_path) -> None:
+    """La purge ne touche qu'aux repertoires `saison=*` des tables connues."""
+    out = tmp_path / "warehouse"
+    build(FIXTURES, out, None)
+    temoin = out / "bulletins" / "NOTES.md"
+    temoin.write_text("ne pas supprimer")
+    autre = out / "export_maison"
+    autre.mkdir()
+    (autre / "x.csv").write_text("a,b")
+
+    build(FIXTURES, out, None)
+    assert temoin.exists()
+    assert (autre / "x.csv").exists()
+
+
+def test_base_duckdb_orpheline_supprimee(tmp_path) -> None:
+    """Sans donnees, la base d'un build precedent pointerait dans le vide."""
+    source = tmp_path / "raw"
+    source.mkdir()
+    out = tmp_path / "warehouse"
+    db = tmp_path / "bra.duckdb"
+
+    (source / "a.xml").write_bytes(fixture("v6_2026_aspe_ossau.xml").read_bytes())
+    build(source, out, db)
+    assert db.exists()
+
+    (source / "a.xml").unlink()
+    build(source, out, db)
+    assert not db.exists()

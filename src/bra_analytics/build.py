@@ -12,6 +12,7 @@ revision. On retient donc, par `(massif_id, date_bulletin)`, la version de
 
 from __future__ import annotations
 
+import shutil
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -145,11 +146,23 @@ def write_warehouse(frames: dict[str, pl.DataFrame], out_dir: str | Path) -> dic
 
     Le partitionnement est materialise en repertoires `saison=...` : DuckDB et
     polars lisent l'arborescence en poussant le filtre de partition.
+
+    Les partitions du build precedent sont purgees avant ecriture. Sans cela,
+    une partition devenue obsolete -- perimetre reduit par `--massifs`, cache
+    source ampute, saison retiree -- survivrait a la reconstruction et serait
+    relue par le glob `**/*.parquet`, faisant diverger l'entrepot du rapport de
+    build sans qu'aucune erreur ne le signale.
+
+    Seuls les repertoires `saison=*` des tables connues sont supprimes : rien
+    d'autre n'est touche dans `out_dir`.
     """
     out = Path(out_dir)
     written: dict[str, int] = {}
     for name, df in frames.items():
         table_dir = out / name
+        for obsolete in sorted(table_dir.glob("saison=*")):
+            if obsolete.is_dir():
+                shutil.rmtree(obsolete)
         table_dir.mkdir(parents=True, exist_ok=True)
         if not df.height:
             written[name] = 0
@@ -289,6 +302,11 @@ def build(
     parsed = parse_all(paths, report)
     frames = to_frames(parsed, report)
     written = write_warehouse(frames, out_dir)
-    if db_path is not None and written.get("bulletins"):
-        create_duckdb(out_dir, db_path)
+    if db_path is not None:
+        if written.get("bulletins"):
+            create_duckdb(out_dir, db_path)
+        elif Path(db_path).exists():
+            # Une base laissee par un build precedent pointerait sur des
+            # partitions qui viennent d'etre purgees.
+            Path(db_path).unlink()
     return report, written
