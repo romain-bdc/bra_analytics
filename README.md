@@ -7,9 +7,14 @@ Source : `https://files.data.gouv.fr/meteofrance/data/BULLETIN/BRA/AAAA/MM/JJ/xm
 Couverture : mars 2016 → juin 2026, 36 massifs (Alpes, Pyrénées, Corse).
 
 Le format XML a **changé six fois** sur la période. La pipeline ramène ces variantes à un
-schéma unique. Les écarts constatés — y compris avec le descriptif technique officiel du
-26/10/2023 — sont recensés dans **[docs/exploration.md](docs/exploration.md)**, à lire avant
-toute interprétation des données.
+schéma unique.
+
+**Documentation**
+
+- **[docs/glossaire.md](docs/glossaire.md)** — signification de chaque champ, avec sa
+  correspondance XML, ses unités et ses pièges. Le point d'entrée pour exploiter le dataset.
+- **[docs/exploration.md](docs/exploration.md)** — écarts constatés entre les données réelles et
+  le descriptif technique officiel du 26/10/2023. À lire avant toute interprétation.
 
 ## Installation
 
@@ -19,29 +24,89 @@ uv sync --extra dev
 
 ## Utilisation
 
+Les quatre commandes s'enchaînent dans cet ordre : **récupérer**, **construire**, **vérifier**,
+**consulter**.
+
+### 1. `bra fetch` — récupérer le XML source
+
 ```bash
 uv run bra fetch --seasons 2023 2024 2025 --massifs pyrenees
 ```
+
+Parcourt l'archive jour par jour et télécharge les bulletins dans `data/raw/`, en reproduisant
+l'arborescence de la source. Rien n'est parsé à ce stade.
+
+Accepte `--massifs pyrenees|alpes|corse|all` ou une liste d'identifiants (`--massifs 65,67`), et
+`--start/--end` à la place de `--seasons`. `--workers` règle le nombre de téléchargements
+simultanés (6 par défaut).
+
+Le cache rend l'opération **idempotente et reprenable** : relancer la commande ne retélécharge
+que ce qui manque, ce qui permet d'interrompre puis de reprendre une ingestion longue.
+
+### 2. `bra build` — construire l'entrepôt
 
 ```bash
 uv run bra build
 ```
 
-```bash
-uv run bra info
-```
+C'est l'étape de transformation. Elle lit tout le XML présent dans `data/raw/` et :
+
+1. **parse** chaque fichier, en ramenant les six formats historiques à un schéma unique ;
+2. **normalise** les valeurs — directions de vent harmonisées, `LOC1`/`LOC2` décomposés en
+   champs typés, sentinelle `RISQUE1="-1"` convertie en valeur nulle, dates ramenées à l'heure
+   locale ;
+3. **déduplique** sur `(massif_id, date_bulletin)` en retenant la diffusion la plus tardive —
+   un même bulletin est souvent republié dans la journée ;
+4. **enrichit** avec le référentiel des massifs et la saison nivologique ;
+5. **écrit** six tables en Parquet partitionné par saison, puis crée la base DuckDB et ses vues.
+
+L'opération est **idempotente** : `warehouse/` est reconstruit intégralement à chaque appel, sans
+état résiduel. Sur les 11 saisons pyrénéennes (27 000 fichiers, 3,7 Go), elle prend environ 40 s
+et produit 6,2 Mo de Parquet — les images embarquées, qui pèsent 93 % du XML ancien, sont écartées.
+
+Options : `--out` pour changer le répertoire de sortie, `--db` pour le chemin de la base,
+`--no-db` pour ne produire que les Parquet.
+
+Un fichier illisible n'interrompt pas la construction : il est compté et listé en fin de rapport.
+
+### 3. `bra check` — vérifier la cohérence
 
 ```bash
 uv run bra check
 ```
 
-`check` distingue les **erreurs** (données incohérentes : indice hors échelle, clé dupliquée,
-échéance antérieure à la rédaction) des **signaux** (faits réels de l'archive : amendements,
-séries à trous) qu'il vaut mieux constater avant de les découvrir en cours d'analyse.
+Distingue les **erreurs** (données incohérentes : indice hors échelle, clé dupliquée, échéance
+antérieure à la rédaction, libellé de massif contredisant son identifiant) des **signaux** (faits
+réels de l'archive : amendements, séries à trous) qu'il vaut mieux constater avant de les
+découvrir en cours d'analyse. Affiche aussi les couples massif/saison à trous.
 
-`fetch` accepte `--massifs pyrenees|alpes|corse|all` ou une liste d'identifiants (`--massifs 65,67`),
-et `--start/--end` à la place de `--seasons`. Le cache local rend l'ingestion idempotente :
-relancer la commande ne retélécharge que ce qui manque.
+### 4. `bra info` — consulter le résumé
+
+```bash
+uv run bra info
+```
+
+Vue d'ensemble de ce que contient l'entrepôt : une ligne par saison, avec le nombre de bulletins,
+le nombre de massifs couverts, les bornes temporelles et le risque moyen. C'est le moyen le plus
+rapide de vérifier qu'une ingestion a bien produit ce qu'on attendait.
+
+```
+Bulletins par saison :
+  saison            n  massifs  debut       fin          risque moy.
+  2015-2016       415       12  2016-02-04  2016-04-24          2.52
+  2016-2017      2445       11  2016-11-03  2017-06-13          2.31
+  ...
+  2019-2020      1563       11  2019-10-30  2020-03-25          2.16
+  ...
+  2025-2026      2205       10  2025-11-05  2026-06-07          2.19
+```
+
+Cette sortie se lit aussi comme un diagnostic. Trois anomalies y sautent aux yeux, et toutes
+sont réelles : 12 massifs en 2015-2016 (un bulletin technique usurpe un identifiant), une saison
+2019-2020 qui s'arrête au 25 mars (confinement), et 10 massifs en 2025-2026 (le massif Andorre
+n'est plus diffusé).
+
+Une commande auxiliaire, `bra massifs`, affiche le référentiel des 36 massifs.
 
 ## Sortie
 
