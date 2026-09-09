@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="69" MASSIF="COUSERANS" PRODUCTEUR="CDM311-PREVI" DATEBULLETIN="2016-03-31T16:00:00" DATEECHEANCE="2016-04-01T18:00:00" DATEDIFFUSION="2016-03-31T13:43:06.7983641Z" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="&lt;2400" ALTITUDE="2400" RISQUE2="3" EVOLURISQUE2="" LOC2="&gt;2400" RISQUEMAXI="3" COMMENTAIRE="Au-dessus de 2400 m : Risque marqué. En-dessous : Risque limité." />
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>plaques provisoirement fragiles en haute montagne.</ACCIDENTEL>
+    <NATUREL>petites purges en surface à la faveur des petites éclaircies.</NATUREL>
+    <AVIS />
+    <VIGILANCE />
+    <ImageCartoucheRisque Format="png" Width="340" Height="132">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageCartoucheRisque>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Les conditions météo changent radicalement pour la nuit de jeudi à vendredi, avec un très net refroidissement et le retour des chutes de neige. On attend jusqu'à 20 cm en haute montagne au cours de l'épisode se terminant vendredi midi, 10 cm environ au dessus de 1000/1200 m d'altitude.
+Les rares éclaircies en journée de vendredi pourront occasionner quelques petites purges de neige fraîche dans les versants raides ensoleillés, ainsi qu'à basse et moyenne altitude.
+Les avalanches de fonte de vielle neige humide observées ces derniers jours devraient en revanche se raréfier.
+Des accumulations vont se former près des crêtes sommitales à la faveur de cet épisode neigeux, et former ainsi quelques plaques à vent provisoirement fragiles, plutôt dans un large secteur sud est.
+Dans une pente raide de haute montagne, un randonneur pourrait ainsi déclencher une coulée à son passage.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>La montagne retrouve pour quelques heures un caractère hivernal au petit matin, avec une couche de neige fraîche dès 1000 m d'altitude, dont l'épaisseur croît avec l'altitude.
+Cette neige récente repose sur un manteau de vielle neige très tassée et humidifiée en profondeur.
+L'enneigement général à toutefois souffert de la douceur de ces derniers jours, en particulier en dessous de 2000 m d'altitude et dans les versants ensoleillés.
+.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2016-03-31T00:00:00" LimiteSud="1900" LimiteNord="1500">
+    <NIVEAU ALTI="1500" N="5" S="0" />
+    <NIVEAU ALTI="1800" N="60" S="0" />
+    <NIVEAU ALTI="2100" N="150" S="60" />
+    <ImageEnneigement Format="png" Width="340" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageEnneigement>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2016-03-27T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-03-28T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-03-29T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-03-30T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-03-31T00:00:00" SS241="10" SS242="-1" />
+    <NEIGE24H DATE="2016-04-01T00:00:00" SS241="0" SS242="-1" />
+    <ImageNeigeFraiche Format="png" Width="400" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageNeigeFraiche>
+  </NEIGEFRAICHE>
+  <METEO ALTITUDEVENT1="2000" ALTITUDEVENT2="3000">
+    <COMMENTAIRE />
+    <ECHEANCE DATE="2016-04-01T00:00:00" TEMPSSENSIBLE="12" MERNUAGES="-1" PLUIENEIGE="1100" ISO0="1400" DD1="NW" FF1="30" DD2="NW" FF2="40" />
+    <ECHEANCE DATE="2016-04-01T06:00:00" TEMPSSENSIBLE="10" MERNUAGES="-1" PLUIENEIGE="900" ISO0="1200" DD1="NW" FF1="20" DD2="N" FF2="20" />
+    <ECHEANCE DATE="2016-04-01T12:00:00" TEMPSSENSIBLE="10" MERNUAGES="-1" PLUIENEIGE="1100" ISO0="1400" DD1="NW" FF1="10" DD2="_" FF2="0" />
+  </METEO>
+  <TENDANCES>
+    <TENDANCE DATE="2016-04-02T00:00:00" VALEUR="-1" />
+    <TENDANCE DATE="2016-04-03T00:00:00" VALEUR="0" />
+  </TENDANCES>
+</BULLETINS_NEIGE_AVALANCHE>

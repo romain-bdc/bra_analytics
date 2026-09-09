@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2016-03-09T16:00:00" DATEECHEANCE="2016-03-10T18:00:00" DATEDIFFUSION="2016-03-09T14:47:38.8909407Z" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="4" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="4" COMMENTAIRE="Risque fort." />
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>plaque friable dans de nombreuses pentes raides</ACCIDENTEL>
+    <NATUREL>quelques grosses pouvant atteindre les routes</NATUREL>
+    <AVIS>FORT RISQUE D'AVALANCHE</AVIS>
+    <VIGILANCE>JAUNE</VIGILANCE>
+    <ImageCartoucheRisque Format="png" Width="340" Height="132">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageCartoucheRisque>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Depuis quelques jours les chutes de neige se succèdent, le cumul de fraîche commence à  être important surtout sur l'ouest où il atteint les 60 à 80 cm. Cette neige récente s'est en partie tassée notamment à la faveur des périodes d'éclaircies. Depuis ce mercredi matin il neige de nouveau et d'ici jeudi matin on espère 40 à 60 cm de plus à 1800 m  par blocage sur les massifs du piémont et plutôt 30 cm en fond de chaîne. Avec la surcharge du aux nouvelles chutes il faut s'attendre dès cette nuit et demain jeudi à quelques grosses avalanches de poudre, certaines pouvant atteindre les routes de montagne. Ce risque va s'estomper temporairement avec la fin des chutes prévu en cours de matinée de jeudi avant de reprendre avec les chutes dans l'après-midi.       
+De nombreuses plaques friables sont déjà en place et de nouvelles vont se former pendant les chutes accompagnées de vent d'ouest à nord-ouest assez fort. Demain jeudi il faudra  surtout se méfier dans les pentes raides où la neige de surface aura pris de la cohésion avec le vent ( frittage ), la neige roulée qui tombe sous les averses constituant alors la couche fragile.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>L'enneigement est maintenant normal sous 2000 m, il est légèrement excédentaire au dessus. Ce jeudi matin  le sol devrait de nouveau être blanc au dessus de 700 à 900 m d'est en ouest. L'enneigement skiable se situant entre 1200 et 1300 m. Demain jeudi on trouvera beaucoup de neige roulée en surface parfois cartonnée par le vent dans les secteurs exposés voir de la vielle neige dure sur les croupes et crêtes les plus ventées.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2016-03-09T00:00:00" LimiteSud="1100" LimiteNord="1000">
+    <NIVEAU ALTI="1500" N="90" S="75" />
+    <NIVEAU ALTI="1800" N="140" S="105" />
+    <NIVEAU ALTI="2400" N="270" S="200" />
+    <ImageEnneigement Format="png" Width="340" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageEnneigement>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2016-03-05T00:00:00" SS241="30" SS242="-1" />
+    <NEIGE24H DATE="2016-03-06T00:00:00" SS241="10" SS242="-1" />
+    <NEIGE24H DATE="2016-03-07T00:00:00" SS241="8" SS242="-1" />
+    <NEIGE24H DATE="2016-03-08T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-03-09T00:00:00" SS241="50" SS242="-1" />
+    <NEIGE24H DATE="2016-03-10T00:00:00" SS241="10" SS242="-1" />
+    <ImageNeigeFraiche Format="png" Width="400" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageNeigeFraiche>
+  </NEIGEFRAICHE>
+  <METEO ALTITUDEVENT1="1500" ALTITUDEVENT2="3000">
+    <COMMENTAIRE />
+    <ECHEANCE DATE="2016-03-10T00:00:00" TEMPSSENSIBLE="12" MERNUAGES="-1" PLUIENEIGE="700" ISO0="1000" DD1="N" FF1="10" DD2="NW" FF2="50" />
+    <ECHEANCE DATE="2016-03-10T06:00:00" TEMPSSENSIBLE="6" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="1000" DD1="_" FF1="0" DD2="NW" FF2="50" />
+    <ECHEANCE DATE="2016-03-10T12:00:00" TEMPSSENSIBLE="10" MERNUAGES="-1" PLUIENEIGE="1100" ISO0="1300" DD1="_" FF1="0" DD2="NE" FF2="30" />
+  </METEO>
+  <TENDANCES>
+    <TENDANCE DATE="2016-03-11T00:00:00" VALEUR="-1" />
+    <TENDANCE DATE="2016-03-12T00:00:00" VALEUR="1" />
+  </TENDANCES>
+</BULLETINS_NEIGE_AVALANCHE>

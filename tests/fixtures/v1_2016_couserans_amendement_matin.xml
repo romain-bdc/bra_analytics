@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="69" MASSIF="COUSERANS" PRODUCTEUR="CDM311-PREVI" DATEBULLETIN="2016-03-31T06:00:00" DATEECHEANCE="2016-03-31T18:00:00" DATEDIFFUSION="2016-03-31T06:52:54.7189414Z" AMENDEMENT="true">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="3" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="3" COMMENTAIRE="Risque limité évoluant en Risque marqué." />
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>Quelques fines plaques en altitude.</ACCIDENTEL>
+    <NATUREL>coulée de vielle neige humide.</NATUREL>
+    <AVIS />
+    <VIGILANCE />
+    <ImageCartoucheRisque Format="png" Width="340" Height="132">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageCartoucheRisque>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Les différentes périodes de redoux ont pu favoriser une forte humidification du manteau le plus souvent jusqu'au sol. Si de nombreuses purges ont pu se produire, il demeure en place des quantités de neige mobilisables encore marquées. Le regel nocturne en raison du vent de sud et de la couverture nuageuse importante est inexistant au lever du jour. Il existe encore en matinée un risque ponctuel d'avalanches de fonte dans les pentes raides encore bien enneigées. 
+La rapide refroidissement attendu en journée devrait ensuite plutôt stabiliser voire diminuer ce risque de coulée de vielle neige humide.
+En revanche, les chutes de neige attendues en haute montagne peuvent former de petites plaques en surfaces reposant parfois sur de la neige pourrie. Outre les petites purges attendues au fur et à mesure de ces chutes, un randonneur pourrait localement provoquer une avalanche à son passage.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE />
+  </QUALITE>
+  <ENNEIGEMENT DATE="2016-03-31T00:00:00" LimiteSud="-1" LimiteNord="-1">
+    <NIVEAU ALTI="-1" N="-1" S="-1" />
+    <NIVEAU ALTI="-1" N="-1" S="-1" />
+    <NIVEAU ALTI="-1" N="-1" S="-1" />
+    <ImageEnneigement Format="png" Width="340" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageEnneigement>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2016-03-26T00:00:00" SS241="-1" SS242="-1" />
+    <NEIGE24H DATE="2016-03-27T00:00:00" SS241="-1" SS242="-1" />
+    <NEIGE24H DATE="2016-03-28T00:00:00" SS241="-1" SS242="-1" />
+    <NEIGE24H DATE="2016-03-29T00:00:00" SS241="-1" SS242="-1" />
+    <NEIGE24H DATE="2016-03-30T00:00:00" SS241="-1" SS242="-1" />
+    <NEIGE24H DATE="2016-03-31T00:00:00" SS241="-1" SS242="-1" />
+    <ImageNeigeFraiche Format="png" Width="400" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageNeigeFraiche>
+  </NEIGEFRAICHE>
+  <METEO ALTITUDEVENT1="2000" ALTITUDEVENT2="3000">
+    <COMMENTAIRE />
+    <ECHEANCE DATE="2016-03-31T00:00:00" TEMPSSENSIBLE="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="-1" DD1="" FF1="-1" DD2="" FF2="-1" />
+    <ECHEANCE DATE="2016-03-31T06:00:00" TEMPSSENSIBLE="5" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3100" DD1="S" FF1="50" DD2="S" FF2="110" />
+    <ECHEANCE DATE="2016-03-31T12:00:00" TEMPSSENSIBLE="9" MERNUAGES="-1" PLUIENEIGE="1500" ISO0="2000" DD1="NW" FF1="20" DD2="S" FF2="50" />
+  </METEO>
+  <TENDANCES>
+    <TENDANCE DATE="2016-04-01T00:00:00" VALEUR="-2" />
+    <TENDANCE DATE="2016-04-02T00:00:00" VALEUR="-2" />
+  </TENDANCES>
+</BULLETINS_NEIGE_AVALANCHE>

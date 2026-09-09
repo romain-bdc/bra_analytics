@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="bra.xslt" type="text/xsl"?>
+<Bulletins nombre="2">
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2023-02-22T16:00:00" DATEECHEANCE="2023-02-23T18:00:00" DATEVALIDITE="2023-02-23T18:00:00" DATEDIFFUSION="2023-02-22T16:25:42" AMENDEMENT="false">
+  <DateValidite>2023-02-23T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="3" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="3" COMMENTAIRE="Risque marqu&#233;."/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="CUMULS IMPORTANTS"/>
+    <ACCIDENTEL>Formation de plaques en secteurs nord.</ACCIDENTEL>
+    <NATUREL>Quelques grandes avalanches de neige fra&#238;che.</NATUREL>
+    <RESUME>D&#233;parts spontan&#233;s : Quelques grandes avalanches de neige fra&#238;che.
+D&#233;clenchements skieurs : Formation de plaques en secteurs nord.</RESUME>
+    <AVIS/>
+    <VIGILANCE/>
+    <ImageCartoucheRisque Format="png" Width="345" Height="134">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageCartoucheRisque>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>CUMULS DE NEIGE FRA&#206;CHE DEVENANT IMPORTANTS SUR LES SECTEURS FRONTALIERS
+Situations avalancheuses typiques : neige fra&#238;che, neige vent&#233;e.
+
+Chutes de neige s'intensifiant dans la nuit de mercredi &#224; jeudi, se poursuivant jusqu'&#224; vendredi matin.
+
+D&#233;parts spontan&#233;s : des avalanches de neige fra&#238;che avec d&#233;part ponctuels se produisent pendant ces chutes de neige. Les cumuls devenant importants vers la fronti&#232;re en journ&#233;e de jeudi, quelques grandes avalanches peuvent se produire.
+
+D&#233;clenchements provoqu&#233;s : dans un large secteur nord, des plaques quelquefois facilement d&#233;clenchables sont form&#233;es par le vent qui se renforce progressivement. Elles se situent principalement &#224; proximit&#233; des cr&#234;tes, cols et ruptures de pente. Le vent restant mod&#233;r&#233;, elles peuvent avoir un aspect poudreux rendant leur identification plus difficile.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>Enneigement encore d&#233;ficitaire, d&#233;butant mercredi soir vers 1200m en nord, 1700 &#224; 1800m en sud. Avec les chutes de neige attendues, la limite d'enneigement descend vers 1200 voire 1000 m dans toutes les expositions.
+Cette nouvelle neige, l&#233;g&#232;re gr&#226;ce &#224; la baisse des temp&#233;ratures, et dont l'&#233;paisseur augmente progressivement jeudi, repose sur un sol nu en expositions sud en-dessous de 1800m, sur une neige dense et regel&#233;e ailleurs.
+Malgr&#233; ces bons cumuls attendus, l'enneigement restera d&#233;ficitaire par rapport &#224; la moyenne.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2023-02-22T00:00:00" LimiteSud="1800" LimiteNord="1200">
+    <NIVEAU ALTI="1500" N="15" S="0"/>
+    <NIVEAU ALTI="2000" N="55" S="15"/>
+    <NIVEAU ALTI="2500" N="125" S="60"/>
+    <ImageEnneigement Format="png" Width="355" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageEnneigement>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2023-02-18T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2023-02-19T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2023-02-20T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2023-02-21T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2023-02-22T00:00:00" SS241="10" SS242="-1"/>
+    <NEIGE24H DATE="2023-02-23T00:00:00" SS241="40" SS242="-1"/>
+    <ImageNeigeFraiche Format="png" Width="355" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageNeigeFraiche>
+  </NEIGEFRAICHE>
+  <METEO ALTITUDEVENT1="1500" ALTITUDEVENT2="3000">
+    <COMMENTAIRE/>
+    <ECHEANCE DATE="2023-02-23T00:00:00" TEMPSSENSIBLE="12" MERNUAGES="-1" PLUIENEIGE="1300" ISO0="1500" ISO-10="3500" DD1="_" FF1="0" DD2="SW" FF2="30"/>
+    <ECHEANCE DATE="2023-02-23T06:00:00" TEMPSSENSIBLE="12" MERNUAGES="-1" PLUIENEIGE="1200" ISO0="1400" ISO-10="3500" DD1="_" FF1="0" DD2="S" FF2="60"/>
+    <ECHEANCE DATE="2023-02-23T12:00:00" TEMPSSENSIBLE="12" MERNUAGES="-1" PLUIENEIGE="1200" ISO0="1400" ISO-10="3500" DD1="_" FF1="0" DD2="S" FF2="50"/>
+  </METEO>
+  <TENDANCES>
+    <TENDANCE DATE="2023-02-24T00:00:00" VALEUR="0"/>
+    <TENDANCE DATE="2023-02-25T00:00:00" VALEUR="0"/>
+  </TENDANCES>
+  <BSH>
+    <METEO ALTITUDEVENT1="1500" ALTITUDEVENT2="3000">
+      <ECHEANCE DATE="2023-02-16T00:00:00" TEMPSSENSIBLE="4" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="2200" ISO-10="4100" DD1="S" FF1="10" DD2="E" FF2="10"/>
+      <ECHEANCE DATE="2023-02-16T06:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="2500" ISO-10="4100" DD1="SE" FF1="10" DD2="NE" FF2="20"/>
+      <ECHEANCE DATE="2023-02-16T12:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="2600" ISO-10="4200" DD1="_" FF1="0" DD2="E" FF2="20"/>
+      <ECHEANCE DATE="2023-02-17T00:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="2700" ISO-10="4400" DD1="_" FF1="0" DD2="E" FF2="20"/>
+      <ECHEANCE DATE="2023-02-17T06:00:00" TEMPSSENSIBLE="4" TEMPSSENSIBLEJ="4" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3000" ISO-10="4600" DD1="S" FF1="10" DD2="NE" FF2="10"/>
+      <ECHEANCE DATE="2023-02-17T12:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3300" ISO-10="4700" DD1="_" FF1="0" DD2="NE" FF2="20"/>
+      <ECHEANCE DATE="2023-02-18T00:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3200" ISO-10="4800" DD1="S" FF1="10" DD2="E" FF2="20"/>
+      <ECHEANCE DATE="2023-02-18T06:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3300" ISO-10="4800" DD1="S" FF1="10" DD2="E" FF2="10"/>
+      <ECHEANCE DATE="2023-02-18T12:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3300" ISO-10="4800" DD1="_" FF1="0" DD2="SE" FF2="10"/>
+      <ECHEANCE DATE="2023-02-19T00:00:00" TEMPSSENSIBLE="2" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3200" ISO-10="4700" DD1="S" FF1="10" DD2="SE" FF2="10"/>
+      <ECHEANCE DATE="2023-02-19T06:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3200" ISO-10="4600" DD1="SE" FF1="10" DD2="E" FF2="10"/>
+      <ECHEANCE DATE="2023-02-19T12:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3200" ISO-10="4600" DD1="_" FF1="0" DD2="E" FF2="10"/>
+      <ECHEANCE DATE="2023-02-20T00:00:00" TEMPSSENSIBLE="2" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3000" ISO-10="4600" DD1="S" FF1="10" DD2="SE" FF2="10"/>
+      <ECHEANCE DATE="2023-02-20T06:00:00" TEMPSSENSIBLE="4" TEMPSSENSIBLEJ="4" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3100" ISO-10="4500" DD1="S" FF1="10" DD2="S" FF2="10"/>
+      <ECHEANCE DATE="2023-02-20T12:00:00" TEMPSSENSIBLE="1" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3200" ISO-10="4400" DD1="_" FF1="0" DD2="S" FF2="10"/>
+      <ECHEANCE DATE="2023-02-21T00:00:00" TEMPSSENSIBLE="2" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3100" ISO-10="4400" DD1="_" FF1="0" DD2="S" FF2="40"/>
+      <ECHEANCE DATE="2023-02-21T06:00:00" TEMPSSENSIBLE="2" TEMPSSENSIBLEJ="5" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="2800" ISO-10="4300" DD1="S" FF1="10" DD2="S" FF2="35"/>
+      <ECHEANCE DATE="2023-02-21T12:00:00" TEMPSSENSIBLE="5" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="2400" ISO-10="4000" DD1="_" FF1="0" DD2="S" FF2="20"/>
+      <ECHEANCE DATE="2023-02-22T00:00:00" TEMPSSENSIBLE="7" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="2000" ISO0="2200" ISO-10="3800" DD1="_" FF1="0" DD2="S" FF2="20"/>
+      <ECHEANCE DATE="2023-02-22T06:00:00" TEMPSSENSIBLE="10" TEMPSSENSIBLEJ="10" MERNUAGES="-1" PLUIENEIGE="1700" ISO0="2000" ISO-10="3700" DD1="_" FF1="0" DD2="W" FF2="20"/>
+      <ECHEANCE DATE="2023-02-22T12:00:00" TEMPSSENSIBLE="10" TEMPSSENSIBLEJ="-1" MERNUAGES="-1" PLUIENEIGE="1600" ISO0="1900" ISO-10="3600" DD1="_" FF1="0" DD2="SW" FF2="10"/>
+      <ImageIso Format="png" Width="660" Height="170">
+        <Content>[base64 retire pour la fixture]</Content>
+      </ImageIso>
+      <ImageVent Format="png" Width="660" Height="170">
+        <Content>[base64 retire pour la fixture]</Content>
+      </ImageVent>
+    </METEO>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2023-02-16T00:00:00" LimiteSud="1600" LimiteNord="1100">
+        <NIVEAU ALTI="1500" N="30" S="0"/>
+        <NIVEAU ALTI="2000" N="85" S="40"/>
+        <NIVEAU ALTI="2500" N="160" S="95"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-02-17T00:00:00" LimiteSud="1600" LimiteNord="1100">
+        <NIVEAU ALTI="1500" N="30" S="0"/>
+        <NIVEAU ALTI="2000" N="70" S="40"/>
+        <NIVEAU ALTI="2500" N="160" S="95"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-02-18T00:00:00" LimiteSud="1600" LimiteNord="1200">
+        <NIVEAU ALTI="1500" N="25" S="0"/>
+        <NIVEAU ALTI="2000" N="70" S="35"/>
+        <NIVEAU ALTI="2500" N="160" S="90"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-02-19T00:00:00" LimiteSud="1700" LimiteNord="1200">
+        <NIVEAU ALTI="1500" N="20" S="0"/>
+        <NIVEAU ALTI="2000" N="65" S="30"/>
+        <NIVEAU ALTI="2500" N="140" S="75"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-02-20T00:00:00" LimiteSud="1700" LimiteNord="1200">
+        <NIVEAU ALTI="1500" N="20" S="0"/>
+        <NIVEAU ALTI="2000" N="65" S="25"/>
+        <NIVEAU ALTI="2500" N="140" S="70"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-02-21T00:00:00" LimiteSud="1800" LimiteNord="1200">
+        <NIVEAU ALTI="1500" N="20" S="0"/>
+        <NIVEAU ALTI="2000" N="60" S="20"/>
+        <NIVEAU ALTI="2500" N="130" S="65"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-02-22T00:00:00" LimiteSud="1800" LimiteNord="1200">
+        <NIVEAU ALTI="1500" N="15" S="0"/>
+        <NIVEAU ALTI="2000" N="55" S="15"/>
+        <NIVEAU ALTI="2500" N="125" S="60"/>
+      </ENNEIGEMENT>
+      <ImageEnneigementNord Format="png" Width="660" Height="170">
+        <Content>[base64 retire pour la fixture]</Content>
+      </ImageEnneigementNord>
+      <ImageEnneigementSud Format="png" Width="660" Height="170">
+        <Content>[base64 retire pour la fixture]</Content>
+      </ImageEnneigementSud>
+      <ImageEnneigementLimite Format="png" Width="660" Height="170">
+        <Content>[base64 retire pour la fixture]</Content>
+      </ImageEnneigementLimite>
+      <ImageEnneigementAlt1 Format="png" Width="660" Height="170">
+        <Content>[base64 retire pour la fixture]</Content>
+      </ImageEnneigementAlt1>
+      <ImageEnneigementAlt2 Format="png" Width="660" Height="170">
+        <Content>[base64 retire pour la fixture]</Content>
+      </ImageEnneigementAlt2>
+      <ImageEnneigementAlt3 Format="png" Width="660" Height="170">
+        <Content>[base64 retire pour la fixture]</Content>
+      </ImageEnneigementAlt3>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+      <NEIGE24H DATE="2023-02-16T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2023-02-17T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2023-02-18T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2023-02-19T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2023-02-20T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2023-02-21T00:00:00" SS241="0" SS242="-1"/>
+      <ImageNeigeFraiche Format="png" Width="660" Height="170">
+        <Content>[base64 retire pour la fixture]</Content>
+      </ImageNeigeFraiche>
+    </NEIGEFRAICHE>
+    <RISQUES>
+      <RISQUE DATE="2023-02-16T00:00:00" RISQUEMAXI="2"/>
+      <RISQUE DATE="2023-02-17T00:00:00" RISQUEMAXI="2"/>
+      <RISQUE DATE="2023-02-18T00:00:00" RISQUEMAXI="2"/>
+      <RISQUE DATE="2023-02-19T00:00:00" RISQUEMAXI="2"/>
+      <RISQUE DATE="2023-02-20T00:00:00" RISQUEMAXI="2"/>
+      <RISQUE DATE="2023-02-21T00:00:00" RISQUEMAXI="2"/>
+      <RISQUE DATE="2023-02-22T00:00:00" RISQUEMAXI="2"/>
+    </RISQUES>
+    <AVALANCHES>
+      <AVALANCHE DATE="2023-02-16T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2023-02-17T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2023-02-18T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+      <AVALANCHE DATE="2023-02-19T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+      <AVALANCHE DATE="2023-02-20T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2023-02-21T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+      <AVALANCHE DATE="2023-02-22T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+    </AVALANCHES>
+  </BSH>
+</BULLETINS_NEIGE_AVALANCHE>
+
+
+</Bulletins>

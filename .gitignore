@@ -1,0 +1,17 @@
+# XML brut : jamais commite. Seules les fixtures de test sont versionnees.
+data/
+*.xml
+!tests/fixtures/*.xml
+
+# Sorties et journaux d'execution
+warehouse/
+logs/
+*.parquet
+*.duckdb
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/

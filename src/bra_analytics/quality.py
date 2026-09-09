@@ -1,0 +1,165 @@
+"""Controles de coherence sur l'entrepot construit.
+
+L'objectif n'est pas de rejeter des donnees mais de rendre visibles les
+anomalies : l'archive en contient de reelles (journees partielles, massif
+retire en cours de serie, indices absents) qu'il vaut mieux constater que
+decouvrir au milieu d'une analyse.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import polars as pl
+
+from .fetch import SLUG_TO_ID, slugify
+from .massifs import BY_ID
+
+# Echelle europeenne du risque d'avalanche : 1 (faible) a 5 (tres fort).
+RISQUE_MIN, RISQUE_MAX = 1, 5
+
+
+@dataclass
+class Anomalie:
+    controle: str
+    gravite: str  # "erreur" (donnee incoherente) ou "signal" (fait a connaitre)
+    lignes: int
+    detail: str
+
+    def __str__(self) -> str:
+        marque = "!!" if self.gravite == "erreur" else "--"
+        return f"{marque} {self.controle:<28} {self.lignes:>6} ligne(s)  {self.detail}"
+
+
+def check_bulletins(df: pl.DataFrame) -> list[Anomalie]:
+    anomalies: list[Anomalie] = []
+
+    def add(nom: str, gravite: str, mask: pl.Expr, detail: str) -> None:
+        n = df.filter(mask).height
+        if n:
+            anomalies.append(Anomalie(nom, gravite, n, detail))
+
+    if not df.height:
+        return [Anomalie("entrepot_vide", "erreur", 0, "aucun bulletin")]
+
+    # --- incoherences franches ---
+    for col in ("risque1", "risque2", "risque_maxi", "risque_maxi_j2"):
+        add(
+            f"{col}_hors_echelle", "erreur",
+            pl.col(col).is_not_null() & ~pl.col(col).is_between(RISQUE_MIN, RISQUE_MAX),
+            f"valeurs hors [{RISQUE_MIN}, {RISQUE_MAX}]",
+        )
+
+    add(
+        "risque_maxi_incoherent", "erreur",
+        pl.col("risque_maxi").is_not_null()
+        & pl.col("risque1").is_not_null()
+        & (pl.col("risque_maxi") < pl.col("risque1")),
+        "risque_maxi < risque1",
+    )
+    add(
+        "echeance_anterieure", "erreur",
+        pl.col("date_echeance").is_not_null() & (pl.col("date_echeance") < pl.col("date_bulletin")),
+        "echeance avant la redaction",
+    )
+    add(
+        "massif_inconnu", "erreur",
+        ~pl.col("massif_id").is_in(list(BY_ID)),
+        "identifiant absent du referentiel",
+    )
+    add(
+        "risque1_absent", "erreur",
+        pl.col("risque_estime") & pl.col("risque1").is_null(),
+        "estimation annoncee mais RISQUE1 vide",
+    )
+    add(
+        "risque_non_estime", "signal",
+        ~pl.col("risque_estime"),
+        "bulletins sans estimation chiffree (hors saison, sous-neige)",
+    )
+
+    # Un identifiant connu peut porter un libelle qui n'est pas le sien : vu en
+    # 2016 avec ID=3 (Mont-Blanc) et MASSIF="MOYENNE MONTAGNE", un bulletin
+    # technique annoncant l'absence de BRA en moyenne montagne. On compare le
+    # libelle du fichier a celui du referentiel, en tolerant les variantes de
+    # graphie deja recensees (`Andorre (massif)`, `ORLU__ST_BARTHELEMY`...).
+    incoherents = []
+    for massif_id, nom_source in df.select("massif_id", "massif_nom_source").unique().iter_rows():
+        if not nom_source:
+            continue
+        reference = BY_ID.get(massif_id)
+        if reference is None:
+            continue  # deja signale par `massif_inconnu`
+        slug = slugify(nom_source)
+        if slug == slugify(reference.nom) or SLUG_TO_ID.get(slug) == massif_id:
+            continue
+        incoherents.append((massif_id, nom_source, reference.nom))
+
+    if incoherents:
+        anomalies.append(Anomalie(
+            "libelle_massif_incoherent", "erreur", len(incoherents),
+            "ID et libelle se contredisent : "
+            + ", ".join(f"ID={i} porte {src!r} au lieu de {ref!r}" for i, src, ref in incoherents[:3]),
+        ))
+
+    doublons = df.group_by(["massif_id", "date_bulletin"]).len().filter(pl.col("len") > 1).height
+    if doublons:
+        anomalies.append(Anomalie("cle_dupliquee", "erreur", doublons, "(massif_id, date_bulletin) non unique"))
+
+    # --- faits a connaitre, pas des defauts ---
+    add(
+        "jour_validite_absent", "signal",
+        pl.col("jour_validite").is_null(),
+        "ni DATEVALIDITE ni DATEECHEANCE exploitables",
+    )
+    add(
+        "loc_sans_second_risque", "signal",
+        pl.col("loc_type").is_not_null() & pl.col("risque2").is_null(),
+        "distinction annoncee mais RISQUE2 vide",
+    )
+    add("amendement", "signal", pl.col("amendement"), "bulletins amendes")
+    add(
+        "texte_stabilite_absent", "signal",
+        pl.col("stabilite_texte").is_null(),
+        "bloc stabilite vide",
+    )
+    return anomalies
+
+
+def coverage_gaps(df: pl.DataFrame) -> pl.DataFrame:
+    """Jours calendaires sans bulletin, par massif et saison.
+
+    Un ecart n'est pas forcement une lacune d'ingestion : la diffusion s'arrete
+    hors saison, et certaines journees d'archive sont reellement partielles.
+    """
+    if not df.height:
+        return pl.DataFrame(schema={"saison": pl.Utf8, "massif_id": pl.Int32, "jours_manquants": pl.Int64})
+    return (
+        df.filter(pl.col("jour_validite").is_not_null())
+        .group_by(["saison", "massif_id"])
+        .agg(
+            jours_couverts=pl.col("jour_validite").n_unique(),
+            premier=pl.col("jour_validite").min(),
+            dernier=pl.col("jour_validite").max(),
+        )
+        .with_columns(
+            jours_calendaires=(pl.col("dernier") - pl.col("premier")).dt.total_days() + 1
+        )
+        .with_columns(jours_manquants=pl.col("jours_calendaires") - pl.col("jours_couverts"))
+        .sort(["saison", "massif_id"])
+    )
+
+
+def report(df: pl.DataFrame) -> str:
+    anomalies = check_bulletins(df)
+    erreurs = [a for a in anomalies if a.gravite == "erreur"]
+    signaux = [a for a in anomalies if a.gravite == "signal"]
+
+    lignes = [f"{df.height} bulletins controles", ""]
+    lignes.append("Erreurs :" if erreurs else "Erreurs : aucune")
+    lignes += [f"  {a}" for a in erreurs]
+    if signaux:
+        lignes.append("")
+        lignes.append("Signaux :")
+        lignes += [f"  {a}" for a in signaux]
+    return "\n".join(lignes)

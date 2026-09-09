@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="INA" ID="64" MASSIF="PAYS-BASQUE" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2016-11-03T16:00:00" DATEECHEANCE="2016-11-04T18:00:00" DATEVALIDITE="2016-11-07T18:00:00" DATEDIFFUSION="2016-11-03T15:02:17.1234567Z" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="-1" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="/" COMMENTAIRE="Information neige et avalanche rédigée à partir d'informations réduites" />
+    <PENTE NE="false" E="false" SE="false" S="false" SW="false" W="false" NW="false" N="false" COMMENTAIRE="non renseigné" />
+    <ACCIDENTEL />
+    <NATUREL />
+    <RESUME>Pas d'enneigement</RESUME>
+    <AVIS />
+    <VIGILANCE />
+    <ImageCartoucheRisque Format="png" Width="345" Height="134">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageCartoucheRisque>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Voici la première information neige et avalanche pour la saison 2016-2017, cette information sera remise à jour les lundi et jeudi, jusqu'au lundi 12 décembre, puis deviendra quotidienne sous la forme d'un bulletin de risque d'avalanche.
+Pas d'enneigement sur l'ensemble du massif.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE />
+  </QUALITE>
+  <ENNEIGEMENT DATE="2016-11-03T00:00:00" LimiteSud="-1" LimiteNord="-1">
+    <NIVEAU ALTI="1200" N="0" S="0" />
+    <NIVEAU ALTI="1500" N="0" S="0" />
+    <NIVEAU ALTI="1800" N="0" S="0" />
+    <ImageEnneigement Format="png" Width="355" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageEnneigement>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2016-10-30T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-10-31T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-11-01T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-11-02T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-11-03T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-11-04T00:00:00" SS241="0" SS242="-1" />
+    <ImageNeigeFraiche Format="png" Width="355" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageNeigeFraiche>
+  </NEIGEFRAICHE>
+  <METEO ALTITUDEVENT1="1000" ALTITUDEVENT2="2000">
+    <COMMENTAIRE />
+    <ECHEANCE DATE="2016-11-04T00:00:00" TEMPSSENSIBLE="4" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="3000" ISO-10="4700" DD1="S" FF1="20" DD2="SW" FF2="40" />
+    <ECHEANCE DATE="2016-11-04T06:00:00" TEMPSSENSIBLE="2" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="2900" ISO-10="4600" DD1="S" FF1="20" DD2="SW" FF2="40" />
+    <ECHEANCE DATE="2016-11-04T12:00:00" TEMPSSENSIBLE="9" MERNUAGES="-1" PLUIENEIGE="2550" ISO0="2850" ISO-10="4700" DD1="S" FF1="20" DD2="SW" FF2="80" />
+  </METEO>
+  <TENDANCES>
+    <TENDANCE DATE="2016-11-05T00:00:00" VALEUR="-2" />
+    <TENDANCE DATE="2016-11-06T00:00:00" VALEUR="-2" />
+  </TENDANCES>
+</BULLETINS_NEIGE_AVALANCHE>
