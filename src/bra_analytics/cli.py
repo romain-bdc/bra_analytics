@@ -1,9 +1,10 @@
-"""Interface en ligne de commande : `bra fetch`, `bra build`, `bra info`."""
+"""Interface en ligne de commande : `bra fetch`, `bra build`, `bra info`, `bra ui`."""
 
 from __future__ import annotations
 
 import argparse
 import sys
+import threading
 from datetime import date, datetime
 from pathlib import Path
 
@@ -101,6 +102,59 @@ def cmd_info(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_ui(args: argparse.Namespace) -> int:
+    """Interface web locale de DuckDB : editeur SQL, explorateur de tables, graphiques."""
+    import duckdb
+
+    db = Path(args.db)
+    if not db.exists():
+        raise SystemExit(f"base absente : {db} (lancer `bra build`)")
+
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        try:
+            con.execute("INSTALL ui")
+            con.execute("LOAD ui")
+        except duckdb.Error as exc:  # premiere utilisation sans reseau
+            raise SystemExit(
+                f"extension `ui` indisponible ({exc}).\n"
+                "Elle se telecharge au premier lancement : verifier la connexion reseau."
+            ) from exc
+
+        con.execute("SET ui_local_port = ?", [args.port])
+        con.execute("CALL start_ui_server()")
+        url = f"http://localhost:{args.port}/"
+
+        if not args.no_browser:
+            import webbrowser
+
+            webbrowser.open(url)
+
+        print(f"DuckDB UI : {url}", flush=True)
+        print(f"base      : {db} (lecture seule)")
+        print("\nvues de travail : risque_journalier, couverture, profil_saison")
+        print("Ctrl-C pour arreter.", flush=True)
+        try:
+            threading.Event().wait()
+        except KeyboardInterrupt:
+            print("\narret.")
+    finally:
+        con.close()
+    return 0
+
+
+def cmd_dashboard(args: argparse.Namespace) -> int:
+    from .dashboard import render
+
+    out = render(args.db, args.out, args.zone, standalone=not args.fragment)
+    print(f"tableau de bord : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    if args.fragment:
+        print("fragment sans doctype : a inserer dans un hote qui fournit le squelette HTML.")
+    else:
+        print("page autonome : ouvrir directement dans un navigateur, aucun serveur requis.")
+    return 0
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     import polars as pl
 
@@ -154,6 +208,20 @@ def build_parser() -> argparse.ArgumentParser:
     c = sub.add_parser("check", help="controler la coherence de l'entrepot")
     c.add_argument("--out", default="warehouse", help="repertoire de l'entrepot")
     c.set_defaults(func=cmd_check)
+
+    u = sub.add_parser("ui", help="ouvrir l'interface web DuckDB")
+    u.add_argument("--db", default="warehouse/bra.duckdb")
+    u.add_argument("--port", type=int, default=4213, help="port d'ecoute (defaut: 4213)")
+    u.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
+    u.set_defaults(func=cmd_ui)
+
+    d = sub.add_parser("dashboard", help="generer le tableau de bord HTML statique")
+    d.add_argument("--db", default="warehouse/bra.duckdb")
+    d.add_argument("--out", default="dashboard.html", help="fichier de sortie")
+    d.add_argument("--zone", default="Pyrenees", help="zone a representer (defaut: Pyrenees)")
+    d.add_argument("--fragment", action="store_true",
+                   help="omettre doctype et <html> (page destinee a etre hebergee)")
+    d.set_defaults(func=cmd_dashboard)
 
     m = sub.add_parser("massifs", help="lister le referentiel des massifs")
     m.set_defaults(func=cmd_massifs)
