@@ -326,11 +326,39 @@ def test_jour_validite_est_l_echeance_pas_la_redaction() -> None:
     assert row["jour_validite"] == date(2026, 2, 12)
 
 
-def test_jour_validite_retombe_sur_echeance_en_2016() -> None:
-    """`DATEVALIDITE` n'existe pas en 2016 ; `DATEECHEANCE` prend le relais."""
+def test_jour_validite_tient_meme_sans_datevalidite() -> None:
+    """`DATEVALIDITE` n'existe pas en 2016 : `DATEECHEANCE` suffit a dater le jour couvert."""
     row = head("v1_2016_aspe_ossau.xml")
     assert row["date_validite"] is None
     assert row["jour_validite"] == date(2016, 3, 10)
+
+
+def test_jour_validite_suit_l_echeance_et_non_la_validite() -> None:
+    """Hors saison, `DATEVALIDITE` porte la date du *prochain* bulletin.
+
+    Le bulletin du 03/11/2016 couvre le 04 (`DATEECHEANCE`) mais se declare
+    valable jusqu'au 07 (`DATEVALIDITE`), faute de bulletin d'ici la. Prendre
+    `DATEVALIDITE` pour jour couvert empile plusieurs journees sur la meme cle
+    `(massif_id, jour_validite)` : c'est ce qui faisait disparaitre 2 471
+    bulletins de `risque_journalier` (docs/reconciliation.md).
+    """
+    row = head("v2_2016_pays_basque_risque_non_estime.xml")
+    assert row["jour_bulletin"] == date(2016, 11, 3)
+    assert row["date_echeance"] == datetime(2016, 11, 4, 18, 0)
+    assert row["date_validite"] == datetime(2016, 11, 7, 18, 0)
+    # L'echeance gagne : le bulletin decrit le 4, pas le 7.
+    assert row["jour_validite"] == date(2016, 11, 4)
+
+
+def test_echeance_et_validite_concordent_en_pleine_saison() -> None:
+    """Le piege est invisible en saison : les deux attributs y sont egaux.
+
+    C'est ce qui a rendu l'erreur durable -- 18 869 bulletins estimes sur
+    18 869 portent la meme date des deux cotes.
+    """
+    row = head("v3_2023_aspe_ossau.xml")
+    assert row["date_echeance"] == row["date_validite"]
+    assert row["jour_validite"] == date(2023, 2, 16)
 
 
 def test_amendement_matinal_est_un_bulletin_distinct() -> None:

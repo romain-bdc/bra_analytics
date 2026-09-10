@@ -12,6 +12,7 @@ revision. On retient donc, par `(massif_id, date_bulletin)`, la version de
 
 from __future__ import annotations
 
+import logging
 import shutil
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
@@ -24,6 +25,8 @@ from . import schema
 from .massifs import BY_ID
 from .parser import ParseError, ParsedBulletin, parse_file
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class BuildReport:
@@ -32,6 +35,7 @@ class BuildReport:
     bulletins_parsed: int = 0
     bulletins_kept: int = 0
     duplicates_dropped: int = 0
+    daily_collapse_dropped: int = 0
     seasons: list[str] = field(default_factory=list)
     failures: list[tuple[str, str]] = field(default_factory=list)
     stray_dirs: list[str] = field(default_factory=list)
@@ -43,6 +47,9 @@ class BuildReport:
             f"bulletins parses      : {self.bulletins_parsed}",
             f"doublons ecartes      : {self.duplicates_dropped}",
             f"bulletins conserves   : {self.bulletins_kept}",
+            f"  dont ecartes par la collapse quotidienne : {self.daily_collapse_dropped}"
+            f" (journalises en WARNING ; {self.bulletins_kept - self.daily_collapse_dropped}"
+            f" lignes dans risque_journalier)",
             f"saisons               : {', '.join(self.seasons) or '-'}",
         ]
         if self.stray_dirs:
@@ -147,6 +154,75 @@ def to_frames(parsed: Sequence[ParsedBulletin], report: BuildReport | None = Non
     return frames
 
 
+# Colonnes retenues pour identifier une ligne ecartee dans le journal.
+DISCARD_COLS = [
+    "saison", "massif_id", "jour_validite", "jour_bulletin", "date_bulletin",
+    "date_diffusion", "amendement", "risque_maxi", "risque_estime", "fichier_source",
+]
+
+
+def daily_collapse_discards(df: pl.DataFrame) -> pl.DataFrame:
+    """Les bulletins que la vue `risque_journalier` laisse de cote.
+
+    La vue ramene le corpus a une ligne par `(massif_id, jour_validite)` : elle
+    ecarte les bulletins sans jour couvert, puis, quand un jour est couvert
+    plusieurs fois, tous ceux qui ne sont pas la redaction la plus tardive.
+    L'arbitrage est legitime -- un jour couvert deux fois l'est par une
+    reedition ou par un amendement -- mais une vue SQL est une projection : elle
+    ne peut rien journaliser. La perte est donc invisible, et c'est ainsi que
+    2 471 bulletins mal dates ont pu disparaitre sans qu'aucun compteur bouge.
+
+    On rejoue donc ici, au build, exactement le meme arbitrage que la vue, pour
+    que chaque ligne perdue laisse une trace. Toute evolution de la clause
+    `ORDER BY` de `risque_journalier` doit etre repercutee ici, sinon le journal
+    decrit un arbitrage qui n'est plus celui de la vue.
+    """
+    vide = pl.DataFrame(
+        schema={**{c: schema.BULLETINS[c] for c in DISCARD_COLS}, "motif": pl.Utf8}
+    )
+    if not df.height:
+        return vide
+
+    sans_jour = df.filter(pl.col("jour_validite").is_null()).with_columns(
+        motif=pl.lit("jour_validite absent : ni DATEECHEANCE ni DATEVALIDITE exploitable")
+    )
+    # `int_range().over()` suit l'ordre des lignes dans le groupe : le tri
+    # prealable reproduit le `ORDER BY date_bulletin DESC, date_diffusion DESC`
+    # de la vue, donc le rang 0 est la ligne que la vue retient.
+    collisions = (
+        df.filter(pl.col("jour_validite").is_not_null())
+        .sort(["date_bulletin", "date_diffusion"], descending=True, nulls_last=True)
+        .with_columns(rang=pl.int_range(pl.len()).over(["massif_id", "jour_validite"]))
+        .filter(pl.col("rang") > 0)
+        .with_columns(motif=pl.lit("jour deja couvert par une redaction plus tardive"))
+    )
+    return (
+        pl.concat([sans_jour.select(*DISCARD_COLS, "motif"),
+                   collisions.select(*DISCARD_COLS, "motif")])
+        .sort(["saison", "massif_id", "jour_validite", "date_bulletin"])
+    )
+
+
+def log_daily_collapse_discards(df: pl.DataFrame) -> int:
+    """Journalise en WARNING chaque ligne ecartee par la collapse quotidienne.
+
+    Une ligne de journal par bulletin perdu, pas un resume : le but est qu'un
+    ecart entre `count(*) FROM bulletins` et `count(*) FROM risque_journalier`
+    soit toujours imputable ligne a ligne.
+    """
+    discards = daily_collapse_discards(df)
+    for row in discards.iter_rows(named=True):
+        logger.warning(
+            "collapse quotidienne : bulletin ecarte -- massif=%s jour_couvert=%s "
+            "redige=%s diffuse=%s amendement=%s risque_maxi=%s estime=%s "
+            "motif=%s source=%s",
+            row["massif_id"], row["jour_validite"], row["date_bulletin"],
+            row["date_diffusion"], row["amendement"], row["risque_maxi"],
+            row["risque_estime"], row["motif"], row["fichier_source"],
+        )
+    return discards.height
+
+
 def write_warehouse(
     frames: dict[str, pl.DataFrame],
     out_dir: str | Path,
@@ -225,6 +301,12 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         # - un jour peut recevoir un bulletin du soir puis un amendement le
         #   lendemain matin (constate le 31/03/2016). On retient la redaction la
         #   plus tardive, qui est l'information valide en dernier ressort.
+        #
+        # Cette vue est reductrice : elle passe de 23 533 bulletins a 23 268
+        # lignes. `log_daily_collapse_discards()` journalise au build chaque
+        # ligne ainsi ecartee -- l'`ORDER BY` ci-dessous et le tri de cette
+        # fonction doivent rester identiques. Table de passage complete :
+        # docs/reconciliation.md.
         con.execute(
             """
             CREATE OR REPLACE VIEW risque_journalier AS
@@ -341,6 +423,7 @@ def build(
     paths = iter_xml_files(raw_dir)
     parsed = parse_all(paths, report)
     frames = to_frames(parsed, report)
+    report.daily_collapse_dropped = log_daily_collapse_discards(frames["bulletins"])
     report.stray_dirs = stray_parquet_dirs(out_dir)
     written = write_warehouse(frames, out_dir, replace=replace)
     if db_path is not None:

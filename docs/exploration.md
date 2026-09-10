@@ -63,13 +63,28 @@ Le passage C→D (saison 2023-2024) est la vraie rupture ; A→B→C et D→E→
   absents de la table du doc. `-1` est vraisemblablement « non renseigné ».
 - **`VIGILANCE`** : le doc dit « vide ». Valeur `JAUNE` observée en 2016.
 - **`RISQUE1 = "-1"` : risque non estimé.** Le doc affirme « toujours renseigné, valeur de 1 à 5 ».
-  En réalité **4 247 bulletins sur 12 488** (34 % du corpus 2016-2022) portent `-1`, avec un
+  En réalité **4 250 bulletins sur les 23 533 du corpus, soit 18,1 %**, portent `-1`, avec un
   commentaire du type « Information neige et avalanche rédigée à partir d'informations réduites »
-  et un résumé « Pas d'enneigement ». Ces bulletins se concentrent en novembre (1 571), mai
+  et un résumé « Pas d'enneigement ». Ces bulletins se concentrent en novembre (1 572), mai
   (1 345), décembre (566), juin (497) : début et fin de saison. `RISQUEMAXI` y est vide.
+
   C'est une **sentinelle, pas une mesure** : laissée telle quelle dans une colonne entière, elle
   fausse toute moyenne. Le même `-1` sert de « sans objet » pour `PLUIENEIGE` et `MERNUAGES`
   (documenté) et apparaît aussi sur `TEMPSSENSIBLE`.
+
+  La sentinelle n'est en usage que sur **cinq saisons, 2016-2017 à 2020-2021 : 4 247 bulletins
+  sur les 11 240 de ces saisons, soit 37,8 %**. Les trois restants sont isolés (un en 2015-2016,
+  un en 2023-2024, un en 2024-2025) et les saisons 2021-2022, 2022-2023 et 2025-2026 n'en
+  comptent aucun. Ces bulletins portent aussi une `DATEVALIDITE` trompeuse, cause d'une perte
+  silencieuse de 2 471 jours-massif : voir [reconciliation.md](reconciliation.md).
+
+  > **Dénominateur.** Sauf mention contraire, tout pourcentage de ce document se rapporte au
+  > corpus complet — **23 533 bulletins**, 11 massifs pyrénéens, saisons 2015-2016 à 2025-2026,
+  > après déduplication. Les versions antérieures de ce document annonçaient ici « 4 247 sur
+  > 12 488 (34 % du corpus 2016-2022) » et, au § 2 bis, « 4 250 (18 % du corpus) » : deux
+  > dénominateurs différents pour un même fait, dont l'un — 12 488 — ne correspond ni à un
+  > nombre de bulletins ni à un nombre de fichiers de l'archive. Seuls les deux comptages
+  > ci-dessus, 4 250 / 23 533 et 4 247 / 11 240, sont vérifiables par requête.
 - **`SS241`/`SS242`** (avant 2024) sont renommés **`SS24Min`/`SS24Max`** (2024+). Même sémantique,
   attribut différent — silence du doc sur l'ancien nom.
 - **`SECTEURSS1`/`SECTEURSS2`** sur `NEIGEFRAICHE` et **`ALTITUDEVENT1/2`** sur `BSH/METEO`
@@ -123,6 +138,15 @@ cinq libellés pour quatre éléments.
 - **Formats de date hétérogènes.** 2016 : fraction de seconde à 7 chiffres **et suffixe `Z` (UTC)**.
   2017+ : datetime naïf, heure locale. Le même champ change de fuseau — `fromisoformat` seul ne suffit pas.
 - **`DATEVALIDITE` absent en 2016** (attribut et élément `<DateValidite>` apparaissent en 2017 et 2019).
+- **`DATEVALIDITE` ne désigne pas le jour couvert.** Le jour décrit par le bulletin est porté par
+  `DATEECHEANCE`. Les deux attributs coïncident sur la totalité des bulletins estimés — 18 869
+  sur 18 869 — ce qui rend la confusion indétectable en pleine saison. Hors saison ils divergent
+  de 1 à 4 jours : `DATEVALIDITE` y annonce la date du **prochain** bulletin (« valable
+  jusqu'au… »). Le massif 64 rédige les 17, 18, 19 et 20 novembre 2016 quatre bulletins portant
+  tous `DATEVALIDITE="2016-11-21"`, pour des `DATEECHEANCE` régulièrement espacées.
+  Indexer sur `DATEVALIDITE` écrase ces journées les unes sur les autres : **2 471 jours-massif
+  disparaissaient ainsi**, silencieusement, d'une vue agrégée à la journée.
+  `DATEECHEANCE` est renseignée sur les 23 533 bulletins. Détail : [reconciliation.md](reconciliation.md).
 - **Rééditions non signalées.** Le 22/02/2023, Aspe-Ossau a deux fichiers, même `DATEBULLETIN`,
   `AMENDEMENT="false"` **pour les deux** ; seul `DATEDIFFUSION` diffère. Contenu métier
   (`RESUME`, `STABILITE`, `QUALITE`) strictement identique — seules les images ont été regénérées.
@@ -146,8 +170,10 @@ cinq libellés pour quatre éléments.
 L'échantillon de 33 fichiers n'avait pas fait apparaître les points suivants, tous confirmés
 sur l'intégralité des Pyrénées 2016-2026.
 
-- **`RISQUE1 = "-1"` : 4 250 bulletins (18 % du corpus).** Détaillé en 1.2. C'est de loin
-  l'écart le plus lourd de conséquence : sans neutralisation, toute moyenne de risque est fausse.
+- **`RISQUE1 = "-1"` : 4 250 bulletins sur 23 533, soit 18,1 % du corpus.** Détaillé en 1.2,
+  qui donne aussi la concentration saisonnière (37,8 % sur 2016-2017 → 2020-2021) et fixe le
+  dénominateur employé partout ici. C'est de loin l'écart le plus lourd de conséquence : sans
+  neutralisation, toute moyenne de risque est fausse.
 - **Un bulletin technique usurpe un identifiant de massif.** `MOYENNE_MONTAGNE_20161104143704.xml`
   porte `ID="3"` (Mont-Blanc au référentiel) avec `MASSIF="MOYENNE MONTAGNE"`, et pour tout
   contenu : « LES BULLETINS DE RISQUE AVALANCHE NE SONT PAS PRODUITS SUR LES MASSIFS DE MOYENNE
@@ -173,15 +199,17 @@ sur l'intégralité des Pyrénées 2016-2026.
 
 1. Détecter la racine (`Bulletins` wrapper ou non) et itérer sur les enfants réels.
 2. Clé métier = `(massif_id, date_bulletin)` ; dédup par `date_diffusion` max.
-3. Ignorer totalement les `<Content>` base64 (93 % du poids, aucune valeur analytique).
-4. Normaliser `LOC1`/`LOC2` en trois colonnes : type (`altitude`/`orientation`/`aucune`),
+3. Jour couvert = `DATEECHEANCE`, **jamais** `DATEVALIDITE` : hors saison, cette dernière porte
+   la date du prochain bulletin et fusionne des journées distinctes.
+4. Ignorer totalement les `<Content>` base64 (93 % du poids, aucune valeur analytique).
+5. Normaliser `LOC1`/`LOC2` en trois colonnes : type (`altitude`/`orientation`/`aucune`),
    seuil d'altitude, secteur.
-5. Renommer `EVOLURISQUE*` en `risque*_evolution` **typé comme un indice**, pas comme un code.
-6. Harmoniser les directions de vent sur une convention unique + valeur `VRB`.
-7. Fallback d'attributs par époque : `SS24Min` ← `SS241`, etc.
-8. Parser les dates avec gestion explicite du `Z` et des fractions de seconde.
-9. Extraire les textes par concaténation des descendants, jamais par le seul texte direct.
-10. Contrôler la cohérence entre `ID` et libellé de massif plutôt que de faire confiance à l'un
+6. Renommer `EVOLURISQUE*` en `risque*_evolution` **typé comme un indice**, pas comme un code.
+7. Harmoniser les directions de vent sur une convention unique + valeur `VRB`.
+8. Fallback d'attributs par époque : `SS24Min` ← `SS241`, etc.
+9. Parser les dates avec gestion explicite du `Z` et des fractions de seconde.
+10. Extraire les textes par concaténation des descendants, jamais par le seul texte direct.
+11. Contrôler la cohérence entre `ID` et libellé de massif plutôt que de faire confiance à l'un
     des deux isolément.
-11. Valider le prologue XML de toute réponse HTTP : le code 200 ne garantit rien.
-12. Saison = novembre→mai, dérivée de `DATEBULLETIN` (`season_start = year if month >= 9 else year - 1`).
+12. Valider le prologue XML de toute réponse HTTP : le code 200 ne garantit rien.
+13. Saison = novembre→mai, dérivée de `DATEBULLETIN` (`season_start = year if month >= 9 else year - 1`).
