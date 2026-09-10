@@ -1,11 +1,21 @@
 """Deduplication, schema stable entre epoques, et sortie Parquet/DuckDB."""
 
+import logging
+from datetime import timedelta
+
 import duckdb
 import polars as pl
 import pytest
 
 from bra_analytics import schema
-from bra_analytics.build import build, parse_all, to_frames, write_warehouse
+from bra_analytics.build import (
+    build,
+    daily_collapse_discards,
+    log_daily_collapse_discards,
+    parse_all,
+    to_frames,
+    write_warehouse,
+)
 from bra_analytics.parser import parse_file
 
 from .conftest import FIXTURES, fixture
@@ -368,3 +378,108 @@ def test_repertoires_etrangers_signales(tmp_path) -> None:
     assert report.stray_dirs == ["table_disparue"]
     assert "table_disparue" in report.summary()
     assert (fantome / "data.parquet").exists()
+
+
+# --------------------------------------------------------------------------
+# Collapse quotidienne : ce que `risque_journalier` ecarte doit se voir
+# --------------------------------------------------------------------------
+
+def _reedition(nom: str = "v6_2026_aspe_ossau.xml") -> pl.DataFrame:
+    """Un bulletin et sa reedition deux heures plus tard, meme echeance.
+
+    Cas reel apparu en 2023-2024 : `DATEBULLETIN` passe de 16:00 a 18:00, donc
+    la dedup sur `(massif_id, date_bulletin)` ne les rapproche pas -- c'est la
+    cle elle-meme qui bouge. Seule l'echeance les reunit.
+    """
+    df = frames_from([nom])["bulletins"]
+    tardive = df.with_columns(
+        date_bulletin=pl.col("date_bulletin") + timedelta(hours=2),
+        date_diffusion=pl.col("date_diffusion") + timedelta(hours=2),
+    )
+    return pl.concat([df, tardive])
+
+
+def test_collapse_ecarte_la_redaction_la_plus_ancienne() -> None:
+    """Deux bulletins pour un meme jour couvert : le plus ancien est ecarte."""
+    deux = _reedition()
+    assert deux.height == 2
+    assert deux["jour_validite"].n_unique() == 1
+
+    ecartees = daily_collapse_discards(deux)
+    assert ecartees.height == 1
+    # C'est bien la premiere redaction qui saute, pas la derniere.
+    assert ecartees["date_bulletin"][0] == deux["date_bulletin"].min()
+    assert ecartees["motif"][0].startswith("jour deja couvert")
+
+
+def test_collapse_ne_signale_rien_sans_collision() -> None:
+    """Sans jour couvert deux fois, aucune ligne n'est perdue -- donc aucun bruit."""
+    frames = frames_from(ALL_FIXTURES)
+    assert daily_collapse_discards(frames["bulletins"]).height == 0
+
+
+def test_collapse_laisse_exactement_une_ligne_par_jour_couvert() -> None:
+    """L'invariant de la vue : ce qui reste apres retrait des ecartees est unique.
+
+    Verrouille l'accord entre l'arbitrage Python de `daily_collapse_discards`
+    et celui du `row_number()` de `risque_journalier`. Les deux doivent trier
+    a l'identique ; si l'un derive, le journal decrit un arbitrage qui n'est
+    plus celui de la vue.
+    """
+    corpus = pl.concat([
+        _reedition("v6_2026_aspe_ossau.xml"),
+        _reedition("v4_2024_andorre.xml"),
+        frames_from(["v3_2023_aspe_ossau.xml"])["bulletins"],
+    ])
+    ecartees = daily_collapse_discards(corpus)
+    assert ecartees.height == 2
+
+    restantes = corpus.join(
+        ecartees.select("massif_id", "date_bulletin"),
+        on=["massif_id", "date_bulletin"],
+        how="anti",
+    )
+    assert restantes.height == corpus.height - ecartees.height
+    assert restantes.select("massif_id", "jour_validite").is_duplicated().sum() == 0
+    # La ligne retenue pour chaque jour est la redaction la plus tardive.
+    for (massif, jour), groupe in corpus.group_by(["massif_id", "jour_validite"]):
+        gardee = restantes.filter(
+            (pl.col("massif_id") == massif) & (pl.col("jour_validite") == jour)
+        )
+        assert gardee.height == 1
+        assert gardee["date_bulletin"][0] == groupe["date_bulletin"].max()
+
+
+def test_chaque_ligne_ecartee_produit_un_avertissement(caplog) -> None:
+    """Aucune perte silencieuse : une ligne de journal par bulletin perdu.
+
+    Une vue SQL est une projection, elle ne peut rien journaliser -- c'est ce
+    qui a permis a 2 471 bulletins mal dates de disparaitre sans qu'aucun
+    compteur ne bouge (docs/reconciliation.md).
+    """
+    deux = _reedition()
+    with caplog.at_level(logging.WARNING, logger="bra_analytics.build"):
+        perdues = log_daily_collapse_discards(deux)
+
+    assert perdues == 1
+    avertissements = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert len(avertissements) == 1
+    trace = avertissements[0].getMessage()
+    # Le journal doit permettre de retrouver la ligne exacte, pas seulement d'en
+    # connaitre le nombre.
+    assert "collapse quotidienne" in trace
+    assert "massif=65" in trace
+    assert "jour_couvert=2026-02-12" in trace
+    assert "v6_2026_aspe_ossau.xml" in trace
+
+
+def test_le_rapport_de_build_compte_les_lignes_ecartees(tmp_path) -> None:
+    """Le total apparait dans `bra build`, pas seulement dans le journal."""
+    source = tmp_path / "raw"
+    source.mkdir()
+    for nom in ("v3_2023_aspe_ossau.xml", "v6_2026_aspe_ossau.xml"):
+        (source / nom).write_bytes(fixture(nom).read_bytes())
+
+    report, _ = build(source, tmp_path / "warehouse", None)
+    assert report.daily_collapse_dropped == 0
+    assert "collapse quotidienne" in report.summary()

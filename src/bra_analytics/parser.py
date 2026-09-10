@@ -377,10 +377,25 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
 
     # Le risque annonce porte sur l'echeance (J+1 en regle generale), pas sur la
     # date de redaction. Une serie indexee sur `jour_bulletin` est decalee d'un
-    # jour. `DATEVALIDITE` n'existant pas en 2016, on retombe sur `DATEECHEANCE`.
+    # jour.
+    #
+    # Le jour couvert est porte par `DATEECHEANCE`, pas par `DATEVALIDITE`. Les
+    # deux coincident sur la totalite des bulletins estimes (18 869 sur 18 869),
+    # ce qui rend la confusion facile et sans consequence visible en pleine
+    # saison. Elles divergent hors saison : `DATEVALIDITE` y annonce la date du
+    # *prochain* bulletin -- « valable jusqu'au... » -- et non le jour decrit.
+    # Le massif 64 redige ainsi les 17, 18, 19 et 20 novembre 2016 quatre
+    # bulletins portant tous `DATEVALIDITE="2016-11-21"`, pour des `DATEECHEANCE`
+    # regulierement espacees du 18 au 21. Prendre `DATEVALIDITE` en premier
+    # ecrase ces quatre jours en un seul et fait disparaitre 2 471 bulletins de
+    # la vue journaliere. Voir docs/reconciliation.md.
+    #
+    # `DATEECHEANCE` est renseignee sur les 23 533 bulletins du corpus ; le
+    # repli sur `DATEVALIDITE` n'est donc jamais emprunte aujourd'hui, il ne
+    # couvre qu'une archive future qui omettrait l'attribut.
     date_validite = parse_datetime(node.get("DATEVALIDITE") or node.findtext("DateValidite"))
     date_echeance = parse_datetime(node.get("DATEECHEANCE"))
-    reference = date_validite or date_echeance
+    reference = date_echeance or date_validite
 
     version = detect_schema_version(node)
     saison_debut, saison = season_of(date_bulletin)

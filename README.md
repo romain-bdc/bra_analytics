@@ -15,6 +15,9 @@ schéma unique.
   correspondance XML, ses unités et ses pièges. Le point d'entrée pour exploiter le dataset.
 - **[docs/exploration.md](docs/exploration.md)** — écarts constatés entre les données réelles et
   le descriptif technique officiel du 26/10/2023. À lire avant toute interprétation.
+- **[docs/reconciliation.md](docs/reconciliation.md)** — table de passage chiffrée des 27 006
+  fichiers XML aux 23 267 jours-massif des séries, ligne à ligne. À lire dès qu'un comptage
+  diverge d'un autre.
 
 ## Installation
 
@@ -148,17 +151,26 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
 - **Indexer sur `jour_validite`, pas sur `jour_bulletin`.** Un BRA est rédigé vers 16 h pour le
   lendemain : le risque décrit porte sur l'échéance. Une série indexée sur la date de rédaction
   est décalée d'un jour. La vue `risque_journalier` applique déjà cette règle.
+  `jour_validite` dérive de `DATEECHEANCE` et **non** de `DATEVALIDITE` : hors saison, cette
+  dernière porte la date du prochain bulletin et fusionne des journées distinctes
+  (voir [docs/reconciliation.md](docs/reconciliation.md)).
 - **Un jour peut recevoir deux bulletins.** Le bulletin du soir couvre J+1 ; un amendement émis
-  le lendemain matin (`amendement = true`) recouvre la journée en cours. Les deux sont conservés
-  dans `bulletins` et arbitrés dans `risque_journalier` (rédaction la plus tardive).
+  le lendemain matin (`amendement = true`) recouvre la journée en cours. Depuis 2023-2024 s'y
+  ajoute la réédition : le même bulletin rediffusé une à deux heures plus tard avec un
+  `DATEBULLETIN` déplacé, que la déduplication ne peut pas rapprocher puisque c'est la clé qui
+  bouge. Les deux cas sont conservés dans `bulletins` et arbitrés dans `risque_journalier`
+  (rédaction la plus tardive) : **265 lignes** sur 23 533, dont 48 portent un indice différent de
+  celui retenu. `bra build` journalise chacune en `WARNING` et `bra check` en donne le total —
+  l'écart entre les deux comptages n'est jamais silencieux.
 - **`massif_id` est la seule clé stable.** Le libellé change de graphie selon l'époque
   (`ASPE-OSSAU` → `Aspe Ossau`, `ANDORRE` → `Andorre (massif)`). La colonne `massif_nom` porte
   le libellé normalisé du référentiel, `massif_nom_source` celui du fichier.
 - **`risque_estime = false` signale un bulletin sans estimation chiffrée** (début et fin de
   saison, faute d'enneigement). La source y met `RISQUE1 = -1` ; la pipeline convertit cette
-  sentinelle en valeur nulle pour ne pas fausser les moyennes. Cela concerne ~34 % des bulletins
-  2016-2022 : filtrer sur `risque_estime` avant tout agrégat, ou s'appuyer sur `profil_saison`
-  qui l'exclut déjà.
+  sentinelle en valeur nulle pour ne pas fausser les moyennes. Cela concerne **4 250 bulletins
+  sur 23 533, soit 18,1 % du corpus**, très concentrés : 4 247 d'entre eux tombent sur les cinq
+  saisons 2016-2017 à 2020-2021, où ils pèsent 37,8 % des 11 240 bulletins. Filtrer sur
+  `risque_estime` avant tout agrégat, ou s'appuyer sur `profil_saison` qui l'exclut déjà.
 - **`risque1_evolution` est un second indice de risque**, pas un code d'évolution, malgré le nom
   de l'attribut source `EVOLURISQUE1`. `risque_maxi = max(risque1, risque1_evolution)`.
 - **`loc_type`** indique si `risque1`/`risque2` se distinguent par altitude (`altitude_seuil_m`
