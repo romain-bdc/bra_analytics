@@ -114,6 +114,44 @@ Bloc `<CARTOUCHERISQUE><RISQUE>`, le cœur analytique du bulletin.
 > correspond aux bulletins de début et de fin de saison, quand le manteau est insuffisant. Ces
 > lignes ont `risque1` et `risque_maxi` à `NULL` : **sans filtrer sur `risque_estime`, toute
 > moyenne est faussée.**
+>
+> **Six lignes font exception** : `RISQUE1="-1"` y coexiste avec un `RISQUEMAXI` renseigné
+> (cinq en mars 2020, une le 05/11/2023). Elles sont donc `risque_estime = false` **et** comptées
+> dans les moyennes. Pour « ce que la source a refusé d'estimer », filtrer sur `risque_estime` ;
+> pour « ce qui sort effectivement du calcul », sur `risque_maxi IS NULL`. La vue
+> `saison_fenetre` publie les deux comptages séparément (`non_estimes`, `hors_moyenne`) et
+> `bra check` signale le cas sous `non_estime_avec_maxi`.
+
+> ### ⚠ Rupture de série : la fin du `-1` en juin 2021
+>
+> **La pratique du `RISQUE1="-1"` s'arrête au 14 juin 2021.** Elle court du 04/11/2016 au
+> 14/06/2021 — aucun cas avant, aucun après. Après cette date, les mêmes journées marginales
+> (début et fin de saison, manteau insuffisant) reçoivent **un indice réel, généralement 1**.
+>
+> Cette rupture n'affecte pas le parsing : les deux encodages se lisent sans ambiguïté. Elle
+> affecte **l'interprétation**, et c'est une rupture de série au même titre que la rupture de
+> schéma de 2024 — à ceci près qu'elle est invisible dans la structure du fichier, donc
+> qu'aucun `schema_version` ne la signale.
+>
+> Conséquence directe : à nivologie identique, une saison 2016-2021 ressort **plus haute** qu'une
+> saison 2021-2026, parce que ses journées à faible risque sont exclues de la moyenne alors que
+> celles des saisons récentes y entrent. Mesuré sur les saisons comparables :
+>
+> | Portée | Moyenne 2016-2021 | Moyenne 2021-2026 | Écart |
+> |---|---|---|---|
+> | Saison entière | 2,339 | 2,012 | **0,327** |
+> | Fenêtre `commune` | 2,339 | 2,031 | **0,308** |
+> | Fenêtre `coeur` | 2,356 | 2,258 | **0,098** |
+>
+> *(moyennes de `risque_maxi` pondérées par bulletin, saisons comparables uniquement.)*
+>
+> **70 % de l'écart apparent entre les deux époques est un artefact d'encodage.** Et la fenêtre
+> `commune` n'en corrige presque rien : c'est `coeur` qui fait le travail.
+>
+> **Ne pas imputer les `-1` en 1 pour « réparer » la série.** Ce serait un choix analytique — il
+> suppose que toute journée non estimée aurait porté l'indice 1 — et non une correction
+> technique. Le contournement retenu est une restriction de période, pas une imputation : voir
+> § 8.
 
 ### 2.4 Localisation du risque
 
@@ -331,3 +369,119 @@ Palette documentée dans le descriptif technique.
 > **Codes hors palette.** Les données contiennent aussi `-1`, `5`, `8`, `9`, `10`, `11`, `12`,
 > `15` et `81`, absents du descriptif. Ils sont conservés bruts dans `temps_sensible`, avec
 > `temps_sensible_libelle` à `NULL`. `-1` signifie vraisemblablement « non renseigné ».
+
+---
+
+## 8. Fenêtres de comparaison inter-saisons
+
+Deux saisons ne se comparent pas sur leurs bornes brutes. Deux obstacles s'y opposent, et ils
+n'appellent pas la même réponse.
+
+1. **Les saisons n'ont pas la même durée.** La diffusion commence entre le 21 octobre et le
+   6 novembre, s'arrête entre le 7 et le 15 juin.
+2. **Les journées marginales changent d'encodage en juin 2021** (voir § 2.3). C'est le problème
+   lourd : il déplace les moyennes.
+
+D'où deux fenêtres nommées, définies une seule fois dans
+[`src/bra_analytics/fenetres.py`](../src/bra_analytics/fenetres.py) et reprises telles quelles
+par le SQL, la CLI et le tableau de bord.
+
+| Fenêtre | Bornes | Usage | Comparaison de moyennes |
+|---|---|---|---|
+| `coeur` | **15 décembre → 15 avril** | toute comparaison inter-saisons d'indice de risque | **oui** |
+| `commune` | **6 novembre → 7 juin** | couverture, volumétrie, durée de saison, disponibilité des champs | **non** |
+| `saison_complete` | bornes réelles de la saison | lecture d'une saison prise isolément | **non** |
+
+Les bornes se lisent sur `jour_validite` — la journée couverte, grain de toute analyse. Un BRA
+étant rédigé la veille pour le lendemain, les mêmes fenêtres se lisent **5 novembre → 6 juin** et
+**14 décembre → 14 avril** en date de rédaction. Ne pas mélanger les deux lectures.
+
+### Pourquoi ces bornes-là
+
+**`commune` est l'intersection des spans réels**, hors saisons écartées : l'ouverture la plus
+tardive est le 6 novembre (2025-2026), la fermeture la plus précoce le 7 juin (2023-2024).
+
+> **`commune` ne corrige pas le problème du `-1`.** Elle couvre novembre, mai et juin, où la
+> sentinelle est massive : 845 bulletins non estimés en 2016-2017 contre 0 en 2022-2023. Une
+> moyenne comparée sur cette fenêtre reproduit l'artefact presque intégralement (écart 0,327 →
+> 0,308). Elle sert à mesurer ce que l'archive contient, jamais à comparer des indices.
+
+**`coeur` est calée sur la pratique du `-1`, mesurée saison par saison :**
+
+| Saison | Dernier `-1` d'automne | Premier `-1` de printemps |
+|---|---|---|
+| 2016-2017 | 12 décembre | 28 avril |
+| 2017-2018 | 11 décembre | 27 avril |
+| 2018-2019 | **13 décembre** | 30 avril |
+| 2019-2020 | 12 décembre | *(interrompue au 26 mars)* |
+| 2020-2021 | 11 décembre | 30 avril |
+
+L'intervalle exempt de toute sentinelle, toutes saisons confondues, court donc du **14 décembre
+au 26 avril**. `coeur` s'y inscrit avec une marge d'un jour à l'ouverture et de onze jours à la
+fermeture. Résultat vérifié : **0 bulletin non estimé sur chacune des saisons comparables**, pour
+une couverture de 96,9 % à 100 %.
+
+### Saisons écartées
+
+Écartées des comparaisons, mais **nommées et conservées** dans l'entrepôt — une saison retirée en
+silence est une saison qu'on redécouvre au milieu d'une analyse. La colonne `comparable` de
+`saison_fenetre` porte le drapeau, `motif_exclusion` la raison.
+
+| Saison | Motif |
+|---|---|
+| 2015-2016 | saison partielle : l'archive démarre le 10 mars 2016, après l'ouverture des deux fenêtres |
+| 2019-2020 | interrompue le 26 mars 2020 (confinement) : tronquée sur les deux fenêtres |
+
+### Vue `saison_fenetre`
+
+Une ligne par saison et par portée. C'est le tableau de référence de toute comparaison.
+
+| Colonne | Description |
+|---|---|
+| `fenetre` | `coeur`, `commune` ou `saison_complete` |
+| `comparable` | la saison entre-t-elle dans une comparaison sur cette fenêtre |
+| `motif_exclusion` | raison de l'exclusion, `NULL` si la saison est comparable |
+| `bulletins` | jours-massifs couverts dans la fenêtre |
+| `massifs_actifs` | massifs réellement diffusés **sur la saison** — dénominateur de la couverture |
+| `massifs_presents` | massifs présents dans la fenêtre |
+| `non_estimes` | bulletins que la source a refusé d'estimer (`risque_estime = false`) |
+| `hors_moyenne` | bulletins effectivement exclus du calcul (`risque_maxi IS NULL`) |
+| `jours_fenetre` | durée **nominale** de la fenêtre, années bissextiles comprises |
+| `couverture_pct` | `bulletins / (massifs_actifs × jours_fenetre)` |
+| `risque_moyen` | moyenne de `risque_maxi` sur la fenêtre |
+
+> **La couverture se rapporte aux massifs actifs, pas à un effectif figé.** Andorre (ID 71) n'est
+> plus diffusé en 2025-2026 : rapporter cette saison à onze massifs la plafonnerait à 91 % alors
+> qu'elle est complète sur les dix massifs qui existent.
+
+> **`jours_fenetre` est calculé, pas codé en dur.** La fenêtre `coeur` compte 123 jours les
+> années bissextiles et 122 les autres.
+
+`risque_journalier` porte par ailleurs un booléen `fenetre_coeur` et `fenetre_commune` par ligne :
+filtrer dessus plutôt que de recopier des bornes dans une requête, qui divergeraient de la
+définition.
+
+```sql
+SELECT saison, risque_moyen, couverture_pct, massifs_actifs
+FROM saison_fenetre
+WHERE fenetre = 'coeur' AND comparable
+ORDER BY saison;
+```
+
+En ligne de commande : `bra fenetres` republie ce tableau, mesures et justifications comprises.
+
+### Périmètre : le bulletin technique de 2016
+
+Un message technique (« les BRA ne sont pas produits sur les massifs de moyenne montagne ») est
+diffusé le 04/11/2016 sous `ID="3"` — le Mont-Blanc au référentiel — avec
+`MASSIF="MOYENNE MONTAGNE"`. La ligne hérite donc d'un massif, d'une zone et d'un département qui
+ne sont pas les siens.
+
+**Un filtre posé sur `zone` ne l'écarte pas pour la bonne raison** : il la classe dans les Alpes,
+et la laisserait passer si le même incident se reproduisait sous un identifiant pyrénéen. Le
+filtre correct est la colonne `massif_coherent`, qui compare l'`ID` au libellé `MASSIF` en
+tolérant les variantes de graphie recensées. Toutes les vues de comparaison la filtrent.
+
+Sans elle, `bra info` comptait **12 massifs** en 2015-2016 sur une chaîne qui en a onze, et
+faisait démarrer la saison au **4 février** au lieu du 9 mars. `bra info` liste désormais les
+lignes écartées au lieu de les faire disparaître.

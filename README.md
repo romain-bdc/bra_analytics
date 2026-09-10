@@ -24,8 +24,8 @@ uv sync --extra dev
 
 ## Utilisation
 
-Les quatre commandes s'enchaînent dans cet ordre : **récupérer**, **construire**, **vérifier**,
-**consulter**.
+Les commandes s'enchaînent dans cet ordre : **récupérer**, **construire**, **vérifier**,
+**consulter**, **comparer**.
 
 ### 1. `bra fetch` — récupérer le XML source
 
@@ -93,18 +93,53 @@ rapide de vérifier qu'une ingestion a bien produit ce qu'on attendait.
 ```
 Bulletins par saison :
   saison            n  massifs  debut       fin          risque moy.
-  2015-2016       415       12  2016-02-04  2016-04-24          2.52
+  2015-2016       414       11  2016-03-09  2016-04-24          2.52
   2016-2017      2445       11  2016-11-03  2017-06-13          2.31
   ...
   2019-2020      1563       11  2019-10-30  2020-03-25          2.16
   ...
   2025-2026      2205       10  2025-11-05  2026-06-07          2.19
+
+  La colonne « risque moy. » porte sur la saison entiere : elle n'est
+  pas comparable d'une saison a l'autre. Voir `bra fenetres`.
+
+Ecartees du tableau (1 couple(s) saison/massif) — ID et libelle se contredisent :
+  2015-2016  ID=3 (Mont-Blanc) porte MASSIF='MOYENNE MONTAGNE' — 1 bulletin(s)
 ```
 
-Cette sortie se lit aussi comme un diagnostic. Trois anomalies y sautent aux yeux, et toutes
-sont réelles : 12 massifs en 2015-2016 (un bulletin technique usurpe un identifiant), une saison
-2019-2020 qui s'arrête au 25 mars (confinement), et 10 massifs en 2025-2026 (le massif Andorre
-n'est plus diffusé).
+Cette sortie se lit aussi comme un diagnostic. Deux faits d'archive y sautent aux yeux, et les
+deux sont réels : une saison 2019-2020 qui s'arrête au 25 mars (confinement) et 10 massifs en
+2025-2026 (le massif Andorre n'est plus diffusé). Le troisième — un bulletin technique de 2016
+diffusé sous un identifiant alpin — est désormais écarté du tableau et listé en dessous : il
+comptait auparavant pour un douzième massif pyrénéen et faisait démarrer la saison au 4 février.
+
+### 5. `bra fenetres` — comparer des saisons entre elles
+
+```bash
+uv run bra fenetres
+```
+
+Le « risque moyen » de `bra info` **ne se compare pas d'une saison à l'autre** : jusqu'en juin
+2021 les journées sans enneigement portaient `RISQUE1="-1"` et sortaient des moyennes, depuis
+elles reçoivent un indice réel et y entrent. À nivologie identique, les saisons anciennes
+ressortent donc plus hautes. Cette commande publie, par saison et par fenêtre, ce qui rend une
+comparaison légitime : nombre de bulletins, massifs actifs, non-estimés, couverture, indice moyen.
+
+```
+=== coeur  (15 decembre -> 15 avril) ===
+  usage        : toute comparaison inter-saisons d'indice de risque
+  justification: Aucune saison n'y emploie la sentinelle `RISQUE1=-1` : 0 bulletin non
+                 estime sur chacune des saisons comparables. [...]
+
+  saison      bulletins  massifs  non est.  jours   couv.  risque
+  2016-2017        1341       11         0    122  99.9 %   2.386
+  ...
+  2025-2026        1220       10         0    122 100.0 %   2.573
+```
+
+Deux fenêtres, deux usages : `coeur` (15 déc → 15 avr) pour comparer des indices, `commune`
+(6 nov → 7 juin) pour comparer des couvertures. Les bornes sont mesurées, pas choisies — le
+détail du calcul est dans [le glossaire, § 8](docs/glossaire.md#8-fenêtres-de-comparaison-inter-saisons).
 
 Une commande auxiliaire, `bra massifs`, affiche le référentiel des 36 massifs.
 
@@ -127,7 +162,8 @@ La base DuckDB expose chaque table, plus trois vues de travail :
 |---|---|---|
 | `risque_journalier` | 1 ligne / massif / **jour couvert** | séries temporelles |
 | `couverture` | 1 ligne / massif / saison | repérer les trous d'archive |
-| `profil_saison` | 1 ligne / massif / saison | comparaisons inter-saisons |
+| `profil_saison` | 1 ligne / massif / saison | profil d'une saison, massif par massif |
+| `saison_fenetre` | 1 ligne / saison / fenêtre | **comparaisons inter-saisons** |
 
 Partitionnement par saison nivologique (`2025-2026` = septembre 2025 → août 2026), dérivé de
 `DATEBULLETIN` et non du chemin source — les deux divergent en 2016.
@@ -163,10 +199,34 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   le libellé normalisé du référentiel, `massif_nom_source` celui du fichier.
 - **`risque_estime = false` signale un bulletin sans estimation chiffrée** (début et fin de
   saison, faute d'enneigement). La source y met `RISQUE1 = -1` ; la pipeline convertit cette
+<<<<<<< HEAD
   sentinelle en valeur nulle pour ne pas fausser les moyennes. Cela concerne **4 250 bulletins
   sur 23 533, soit 18,1 % du corpus**, très concentrés : 4 247 d'entre eux tombent sur les cinq
   saisons 2016-2017 à 2020-2021, où ils pèsent 37,8 % des 11 240 bulletins. Filtrer sur
   `risque_estime` avant tout agrégat, ou s'appuyer sur `profil_saison` qui l'exclut déjà.
+=======
+  sentinelle en valeur nulle pour ne pas fausser les moyennes. Cela concerne ~34 % des bulletins
+  2016-2022 : filtrer sur `risque_estime` avant tout agrégat, ou s'appuyer sur `profil_saison`
+  qui l'exclut déjà.
+  Six lignes font exception : `RISQUE1 = -1` y coexiste avec un `RISQUEMAXI` renseigné, si bien
+  qu'elles sont non estimées **et** comptées dans les moyennes (`bra check` les signale sous
+  `non_estime_avec_maxi`).
+- **La pratique du `-1` s'arrête en juin 2021 : c'est une rupture de série.** Elle court du
+  04/11/2016 au 14/06/2021, sans aucun cas avant ni après. Ensuite, les mêmes journées marginales
+  reçoivent un indice réel, généralement 1, et entrent donc dans les moyennes. Conséquence : à
+  nivologie identique une saison 2016-2021 ressort plus haute qu'une saison récente, et **70 % de
+  l'écart apparent entre les deux époques est un artefact d'encodage** (0,327 point sur la saison
+  entière, 0,098 sur la fenêtre `coeur`). Contrairement à la rupture de schéma de 2024, celle-ci
+  est invisible dans la structure du fichier : aucun `schema_version` ne la signale.
+- **Ne jamais comparer deux saisons sur leurs bornes brutes.** Utiliser la vue `saison_fenetre`,
+  ou les booléens `fenetre_coeur` / `fenetre_commune` de `risque_journalier`. La fenêtre `coeur`
+  (15 déc → 15 avr) est la seule sur laquelle aucune saison n'emploie la sentinelle ; `commune`
+  (6 nov → 7 juin) sert aux couvertures et **pas** aux moyennes. Les saisons 2015-2016 (partielle)
+  et 2019-2020 (Covid) sont étiquetées non comparables plutôt que supprimées. Voir
+  [le glossaire, § 8](docs/glossaire.md#8-fenêtres-de-comparaison-inter-saisons).
+- **Ne pas imputer les `-1` en 1 pour « réparer » la série.** Ce serait un choix analytique — il
+  suppose que toute journée non estimée aurait porté l'indice 1 — pas une correction technique.
+>>>>>>> a8e009e (Comparer les saisons sur des fenetres mesurees plutot que sur leurs bornes brutes)
 - **`risque1_evolution` est un second indice de risque**, pas un code d'évolution, malgré le nom
   de l'attribut source `EVOLURISQUE1`. `risque_maxi = max(risque1, risque1_evolution)`.
 - **`loc_type`** indique si `risque1`/`risque2` se distinguent par altitude (`altitude_seuil_m`
@@ -180,8 +240,11 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   partielles (07/02/2023 : 8 bulletins au lieu de 36) ; 2 fichiers sur 27 006 sont corrompus
   côté serveur (réponse « 500 » servie sous un code HTTP 200).
 - **Un bulletin usurpe un identifiant** : `ID=3` (Mont-Blanc) avec `MASSIF="MOYENNE MONTAGNE"`
-  en 2016 — un message technique, pas un bulletin. `bra check` le signale ; l'écarter avec
-  `WHERE massif_id IN (SELECT id FROM massifs_pyrenees)` ou par le contrôle de cohérence.
+  en 2016 — un message technique, pas un bulletin. L'écarter avec `WHERE massif_coherent`, la
+  colonne qui compare l'`ID` au libellé source. **Un filtre sur `zone` ne convient pas** : la
+  ligne hérite d'une zone alpine de son identifiant usurpé, donc un tel filtre la classe au lieu
+  de l'écarter, et la laisserait passer sous un identifiant pyrénéen. Les vues de comparaison la
+  filtrent déjà ; `bra info` et `bra check` la listent.
 - **`schema_version` décrit la structure du fichier, pas la saison.** Un bulletin dégradé récent
   peut présenter les traits d'une époque ancienne (absence de bloc `BSH`, par exemple).
 - **Les directions de vent sont harmonisées** en convention anglaise (`N`…`NW`, plus `VRB`),

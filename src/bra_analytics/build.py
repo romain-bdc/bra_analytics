@@ -22,7 +22,8 @@ import duckdb
 import polars as pl
 
 from . import schema
-from .massifs import BY_ID
+from .fenetres import FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES
+from .massifs import BY_ID, libelle_coherent
 from .parser import ParseError, ParsedBulletin, parse_file
 
 logger = logging.getLogger(__name__)
@@ -99,6 +100,12 @@ def to_frames(parsed: Sequence[ParsedBulletin], report: BuildReport | None = Non
         massif = BY_ID.get(row["massif_id"])
         row["massif_nom"] = massif.nom if massif else None
         row["zone"] = massif.zone if massif else None
+        # Marque des la construction, pas seulement dans le rapport `bra check` :
+        # les vues de comparaison ont besoin de l'ecarter, et un controle qui ne
+        # laisse pas de colonne ne peut pas etre filtre.
+        row["massif_coherent"] = libelle_coherent(
+            row["massif_id"], row.get("massif_nom_source")
+        )
         bulletins.append(row)
 
     df = _frame(bulletins, schema.BULLETINS)
@@ -274,6 +281,17 @@ def write_warehouse(
     return written
 
 
+def _litteral(texte: str) -> str:
+    """Chaine Python -> litteral texte SQL.
+
+    `repr()` ne convient pas : sur une chaine contenant une apostrophe il rend
+    des guillemets doubles, que SQL lit comme un identifiant de colonne et non
+    comme du texte. Les motifs d'exclusion sont redigees en francais, donc
+    pleins d'apostrophes.
+    """
+    return "'" + texte.replace("'", "''") + "'"
+
+
 def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
     """Cree une base DuckDB exposant l'entrepot en vues, plus une vue d'analyse."""
     warehouse = Path(warehouse).resolve()
@@ -312,9 +330,11 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
             SELECT * EXCLUDE (rang) FROM (
               SELECT
                 saison,
+                saison_debut,
                 massif_id,
                 massif_nom,
                 zone,
+                massif_coherent,
                 jour_validite,
                 jour_bulletin,
                 date_bulletin,
@@ -331,6 +351,15 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
                 enneigement_limite_sud_m,
                 schema_version,
                 format_famille,
+                """
+            # Appartenance aux fenetres de comparaison, portee par la ligne
+            # plutot que laissee a chaque requete : une borne recopiee a la main
+            # dans un notebook est une borne qui divergera de la definition.
+            + ",\n".join(
+                f"                {f.sql_predicat()} AS fenetre_{f.nom}" for f in FENETRES
+            )
+            + ",\n"
+            + """
                 row_number() OVER (
                     PARTITION BY massif_id, jour_validite
                     ORDER BY date_bulletin DESC, date_diffusion DESC
@@ -341,6 +370,83 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
             WHERE rang = 1
             """
         )
+        # Une ligne par saison et par fenetre : le tableau de reference des
+        # comparaisons inter-saisons.
+        #
+        # `massifs_actifs` se compte sur la saison entiere, et sert de
+        # denominateur a la couverture. Le compter sur un effectif constant de
+        # 11 ferait plafonner 2025-2026 a 91 % alors que le massif 71 (Andorre)
+        # n'est simplement plus diffuse : la saison est complete sur les
+        # massifs qui existent.
+        #
+        # Les saisons non comparables ne sont pas filtrees mais etiquetees.
+        # `bra check` a montre qu'une lacune signalee se traite ; une lacune
+        # supprimee se redecouvre au milieu d'une analyse.
+        motifs = ", ".join(
+            f"({_litteral(saison)}, {_litteral(motif)})"
+            for saison, motif in SAISONS_NON_COMPARABLES.items()
+        )
+        portees = "\n              UNION ALL BY NAME\n".join(
+            f"              (SELECT '{f.nom}' AS fenetre, {f.comparable_entre_saisons} "
+            f"AS comparable_entre_saisons, {f.sql_duree()} AS jours_fenetre, * "
+            f"FROM base WHERE fenetre_{f.nom})"
+            for f in FENETRES
+        )
+        con.execute(
+            f"""
+            CREATE OR REPLACE VIEW saison_fenetre AS
+            WITH base AS (
+              SELECT * FROM risque_journalier WHERE massif_coherent
+            ),
+            actifs AS (
+              SELECT saison, count(DISTINCT massif_id) AS massifs_actifs
+              FROM base GROUP BY saison
+            ),
+            exclusions(saison, motif_exclusion) AS (VALUES {motifs}),
+            portee AS (
+              -- La saison entiere n'a pas de duree nominale : sa couverture se
+              -- rapporte au span observe, calcule plus bas.
+              (SELECT '{SAISON_COMPLETE}' AS fenetre, false AS comparable_entre_saisons,
+                      CAST(NULL AS BIGINT) AS jours_fenetre, * FROM base)
+              UNION ALL BY NAME
+{portees}
+            )
+            SELECT
+                p.saison,
+                p.fenetre,
+                p.comparable_entre_saisons AND e.motif_exclusion IS NULL AS comparable,
+                e.motif_exclusion,
+                count(*)                                        AS bulletins,
+                a.massifs_actifs,
+                count(DISTINCT p.massif_id)                     AS massifs_presents,
+                -- Deux comptages voisins, volontairement distincts. Six
+                -- bulletins de l'archive portent `RISQUE1=-1` -- la source
+                -- refuse d'estimer -- tout en publiant un `RISQUEMAXI` reel :
+                -- ils sont non estimes *et* comptes dans la moyenne. Confondre
+                -- les deux colonnes ferait diverger ce tableau de la moyenne
+                -- qu'il est cense expliquer.
+                count(*) FILTER (NOT p.risque_estime)           AS non_estimes,
+                count(*) FILTER (p.risque_maxi IS NULL)         AS hors_moyenne,
+                min(p.jour_validite)                            AS premier_jour,
+                max(p.jour_validite)                            AS dernier_jour,
+                coalesce(
+                    any_value(p.jours_fenetre),
+                    date_diff('day', min(p.jour_validite), max(p.jour_validite)) + 1
+                )                                               AS jours_fenetre,
+                round(100.0 * count(*) / (a.massifs_actifs * coalesce(
+                    any_value(p.jours_fenetre),
+                    date_diff('day', min(p.jour_validite), max(p.jour_validite)) + 1
+                )), 1)                                          AS couverture_pct,
+                round(avg(p.risque_maxi), 3)                    AS risque_moyen
+            FROM portee p
+            JOIN actifs a USING (saison)
+            LEFT JOIN exclusions e USING (saison)
+            GROUP BY p.saison, p.fenetre, p.comparable_entre_saisons,
+                     e.motif_exclusion, a.massifs_actifs
+            ORDER BY p.saison, p.fenetre
+            """
+        )
+
         # Couverture : ce qui manque compte autant que ce qui est present.
         # L'archive comporte des journees partielles (07/02/2023 : 8 bulletins
         # sur 36) et le massif 71 disparait en 2025-2026.

@@ -8,6 +8,7 @@ import threading
 from datetime import date, datetime
 from pathlib import Path
 
+from .fenetres import DEFAUT, FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES
 from .fetch import BraFetcher, season_days
 from .massifs import ALPES, CORSE, MASSIFS, PYRENEES
 
@@ -89,16 +90,89 @@ def cmd_info(args: argparse.Namespace) -> int:
         raise SystemExit(f"base absente : {db} (lancer `bra build`)")
     con = duckdb.connect(str(db), read_only=True)
     try:
+        # `massif_coherent` ecarte les lignes dont l'`ID` et le libelle `MASSIF`
+        # se contredisent. Sans ce filtre, le message technique de 2016 diffuse
+        # sous `ID="3"` (Mont-Blanc) comptait pour un douzieme massif pyreneen
+        # et avancait le debut de la saison 2015-2016 au 4 fevrier.
         print("Bulletins par saison :")
         rows = con.execute(
             "SELECT saison, count(*) n, count(DISTINCT massif_id) massifs, "
             "min(jour_bulletin) du, max(jour_bulletin) au, "
             "round(avg(risque_maxi), 2) risque_moyen "
-            "FROM bulletins GROUP BY saison ORDER BY saison"
+            "FROM bulletins WHERE massif_coherent GROUP BY saison ORDER BY saison"
         ).fetchall()
         print(f"  {'saison':<12}{'n':>7}{'massifs':>9}  {'debut':<12}{'fin':<12}{'risque moy.':>12}")
         for saison, n, massifs, debut, fin, moyen in rows:
             print(f"  {saison:<12}{n:>7}{massifs:>9}  {str(debut):<12}{str(fin):<12}{str(moyen):>12}")
+
+        print(
+            "\n  La colonne « risque moy. » porte sur la saison entiere : elle n'est"
+            "\n  pas comparable d'une saison a l'autre. Voir `bra fenetres`."
+        )
+
+        # Ecartees, mais nommees : une ligne retiree en silence est une ligne
+        # qu'on redecouvre au milieu d'une analyse.
+        ecartees = con.execute(
+            "SELECT saison, massif_id, any_value(massif_nom) AS attendu, "
+            "any_value(massif_nom_source) AS lu, count(*) AS n "
+            "FROM bulletins WHERE NOT massif_coherent GROUP BY saison, massif_id "
+            "ORDER BY saison, massif_id"
+        ).fetchall()
+        if ecartees:
+            print(f"\nEcartees du tableau ({len(ecartees)} couple(s) saison/massif) —"
+                  " ID et libelle se contredisent :")
+            for saison, mid, attendu, lu, n in ecartees:
+                print(f"  {saison}  ID={mid} ({attendu}) porte MASSIF={lu!r} — {n} bulletin(s)")
+    finally:
+        con.close()
+    return 0
+
+
+def cmd_fenetres(args: argparse.Namespace) -> int:
+    """Publie, par saison et par fenetre, ce qui rend deux saisons comparables."""
+    import duckdb
+
+    db = Path(args.db)
+    if not db.exists():
+        raise SystemExit(f"base absente : {db} (lancer `bra build`)")
+
+    portees = [(f.nom, f) for f in FENETRES] + [(SAISON_COMPLETE, None)]
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        for nom, fenetre in portees:
+            titre = f"{nom}" + (f"  ({fenetre.libelle})" if fenetre else "")
+            print(f"\n=== {titre} ===")
+            if fenetre:
+                print(f"  usage        : {fenetre.usage}")
+                print(f"  justification: {fenetre.justification}")
+                if not fenetre.comparable_entre_saisons:
+                    print("  /!\\ ne pas comparer de moyennes de risque sur cette fenetre :"
+                          " elle couvre les mois ou le `-1` est massif")
+            else:
+                print("  usage        : lecture d'une saison prise isolement")
+                print("  /!\\ non comparable entre saisons : bornes et encodage des journees"
+                      "\n       marginales varient d'une saison a l'autre")
+            rows = con.execute(
+                "SELECT saison, comparable, bulletins, massifs_actifs, non_estimes, "
+                "jours_fenetre, couverture_pct, risque_moyen, motif_exclusion "
+                "FROM saison_fenetre WHERE fenetre = ? ORDER BY saison",
+                [nom],
+            ).fetchall()
+            print(f"\n  {'saison':<11}{'bulletins':>10}{'massifs':>9}{'non est.':>10}"
+                  f"{'jours':>7}{'couv.':>8}{'risque':>8}")
+            for saison, comparable, n, m, ne, jf, cv, rm, motif in rows:
+                # L'asterisque ne marque que l'exclusion propre a la saison. Le
+                # fait qu'une *fenetre* interdise la comparaison est annonce une
+                # fois en tete : le repeter sur chaque ligne noierait le signal.
+                marque = "*" if motif else " "
+                print(f"  {saison:<11}{n:>10}{m:>9}{ne:>10}{jf:>7}"
+                      f"{str(cv) + ' %':>8}{str(rm):>8} {marque}")
+        print("\n* saison ecartee des comparaisons inter-saisons, quelle que soit"
+              " la fenetre :")
+        for saison, motif in SAISONS_NON_COMPARABLES.items():
+            print(f"    {saison} — {motif}")
+        print(f"\nFenetre par defaut des comparaisons inter-saisons : {DEFAUT.nom}"
+              f" ({DEFAUT.libelle}).")
     finally:
         con.close()
     return 0
@@ -212,6 +286,12 @@ def build_parser() -> argparse.ArgumentParser:
     i = sub.add_parser("info", help="resume de l'entrepot")
     i.add_argument("--db", default="warehouse/bra.duckdb")
     i.set_defaults(func=cmd_info)
+
+    fen = sub.add_parser(
+        "fenetres", help="comparabilite des saisons, fenetre par fenetre"
+    )
+    fen.add_argument("--db", default="warehouse/bra.duckdb")
+    fen.set_defaults(func=cmd_fenetres)
 
     c = sub.add_parser("check", help="controler la coherence de l'entrepot")
     c.add_argument("--out", default="warehouse", help="repertoire de l'entrepot")

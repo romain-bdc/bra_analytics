@@ -8,7 +8,10 @@ docs/exploration.md section 1.4.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from typing import NamedTuple
+from urllib.parse import unquote
 
 
 class Massif(NamedTuple):
@@ -75,3 +78,48 @@ def zone_of(massif_id: int) -> str | None:
 def nom_of(massif_id: int) -> str | None:
     m = BY_ID.get(massif_id)
     return m.nom if m else None
+
+
+def slugify(name: str) -> str:
+    """Reduit un libelle de massif a une cle comparable entre epoques.
+
+    `ASPE-OSSAU`, `Aspe Ossau` et `Aspe%20Ossau` donnent tous `aspeossau`.
+    """
+    name = unquote(name)
+    name = unicodedata.normalize("NFKD", name)
+    name = "".join(c for c in name if not unicodedata.combining(c))
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+# Variantes de graphie qui ne se reduisent pas au meme slug que le libelle
+# de reference. Constatees dans l'archive 2016-2026.
+_ALIASES: dict[str, int] = {
+    "andorremassif": 71,          # `Andorre (massif)` (2024-2025)
+    "embrunnaisparpaillon": 20,   # double `n` jusqu'en 2025
+    "orlustbarthelemy": 72,       # `ORLU__ST_BARTHELEMY` (double underscore)
+    "hautearige": 70,
+}
+
+SLUG_TO_ID: dict[str, int] = {slugify(m.nom): m.id for m in MASSIFS} | _ALIASES
+
+
+def libelle_coherent(massif_id: int | None, nom_source: str | None) -> bool:
+    """L'`ID` du bulletin et son libelle `MASSIF` designent-ils le meme massif ?
+
+    L'`ID` est la cle stable, mais il n'est pas infaillible : en 2016 un message
+    technique (« les BRA ne sont pas produits sur les massifs de moyenne
+    montagne ») est diffuse sous `ID="3"` -- le Mont-Blanc au referentiel --
+    avec `MASSIF="MOYENNE MONTAGNE"`. La ligne herite alors d'un massif, d'une
+    zone et d'un departement qui ne sont pas les siens : sa zone est une
+    fiction, et un filtre de perimetre pose sur `zone` ne la retient ni ne
+    l'ecarte pour la bonne raison.
+
+    Un libelle absent est tenu pour coherent : rien ne contredit l'`ID`.
+    """
+    if nom_source is None or not nom_source.strip():
+        return True
+    reference = BY_ID.get(massif_id)
+    if reference is None:
+        return False  # ID hors referentiel : rien a quoi comparer
+    slug = slugify(nom_source)
+    return slug == slugify(reference.nom) or SLUG_TO_ID.get(slug) == massif_id

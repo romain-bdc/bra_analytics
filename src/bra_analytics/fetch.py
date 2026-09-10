@@ -13,7 +13,6 @@ Deux pieges de l'archive sont traites ici :
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Iterable, Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -24,7 +23,9 @@ from urllib.parse import unquote
 import httpx
 from threading import Lock
 
-from .massifs import MASSIFS
+# `slugify` et `SLUG_TO_ID` appartiennent au referentiel, pas au telechargement :
+# ils sont definis dans `massifs` et repris ici pour les appelants historiques.
+from .massifs import SLUG_TO_ID, slugify
 
 BASE_URL = "https://files.data.gouv.fr/meteofrance/data/BULLETIN/BRA"
 
@@ -32,29 +33,6 @@ _HREF = re.compile(r'href="[^"]*/xml/([^"]+\.xml)"', re.IGNORECASE)
 
 # Les BRA anterieurs a 2024 sont prefixes d'un BOM UTF-8.
 _BOM = b"\xef\xbb\xbf"
-
-
-def slugify(name: str) -> str:
-    """Reduit un libelle de massif a une cle comparable entre epoques.
-
-    `ASPE-OSSAU`, `Aspe Ossau` et `Aspe%20Ossau` donnent tous `aspeossau`.
-    """
-    name = unquote(name)
-    name = unicodedata.normalize("NFKD", name)
-    name = "".join(c for c in name if not unicodedata.combining(c))
-    return re.sub(r"[^a-z0-9]", "", name.lower())
-
-
-# Variantes de graphie qui ne se reduisent pas au meme slug que le libelle
-# de reference. Constatees dans l'archive 2016-2026.
-_ALIASES: dict[str, int] = {
-    "andorremassif": 71,          # `Andorre (massif)` (2024-2025)
-    "embrunnaisparpaillon": 20,   # double `n` jusqu'en 2025
-    "orlustbarthelemy": 72,       # `ORLU__ST_BARTHELEMY` (double underscore)
-    "hautearige": 70,
-}
-
-SLUG_TO_ID: dict[str, int] = {slugify(m.nom): m.id for m in MASSIFS} | _ALIASES
 
 
 def massif_id_from_filename(filename: str) -> int | None:

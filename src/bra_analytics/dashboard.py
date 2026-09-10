@@ -12,6 +12,7 @@ import json
 from datetime import date, timedelta
 from pathlib import Path
 
+from .fenetres import DEFAUT, FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES
 from .massifs import MASSIFS
 
 TEMPLATE = Path(__file__).parent / "templates" / "dashboard.html"
@@ -21,10 +22,17 @@ ABSENT = "."  # aucun bulletin ce jour-la
 SANS_INDICE = "0"  # bulletin publie sans estimation chiffree (risque_estime = false)
 
 
+# Les lignes dont l'`ID` et le libelle `MASSIF` se contredisent n'appartiennent
+# a aucun massif reel : leur zone est heritee d'un identifiant usurpe. Les
+# retenir sur un filtre de zone ferait entrer un bulletin technique alpin de
+# 2016 dans le perimetre pyreneen.
+PERIMETRE = "zone = ? AND massif_coherent"
+
+
 def _series(con, zone: str) -> tuple[date, list[dict]]:
     """Encode `risque_journalier` en une chaine par massif, alignee sur un jour zero commun."""
     bounds = con.execute(
-        "SELECT min(jour_validite), max(jour_validite) FROM risque_journalier WHERE zone = ?",
+        f"SELECT min(jour_validite), max(jour_validite) FROM risque_journalier WHERE {PERIMETRE}",
         [zone],
     ).fetchone()
     if bounds[0] is None:
@@ -34,7 +42,7 @@ def _series(con, zone: str) -> tuple[date, list[dict]]:
 
     rows = con.execute(
         "SELECT massif_id, any_value(massif_nom), jour_validite, risque_maxi "
-        "FROM risque_journalier WHERE zone = ? "
+        f"FROM risque_journalier WHERE {PERIMETRE} "
         "GROUP BY massif_id, jour_validite, risque_maxi",
         [zone],
     ).fetchall()
@@ -75,14 +83,34 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb", zone: str = "Pyrenees"
             "SELECT zone, count(*) FROM risque_journalier GROUP BY 1 ORDER BY 2 DESC"
         ).fetchall()
         formats = con.execute(
-            "SELECT format_famille, count(*) FROM risque_journalier WHERE zone = ? "
+            f"SELECT format_famille, count(*) FROM risque_journalier WHERE {PERIMETRE} "
             "GROUP BY 1 ORDER BY 1",
             [zone],
+        ).fetchall()
+        # Couverture et effectif de massifs par saison et par fenetre : la page
+        # les affiche au survol, pour qu'une moyenne ne soit jamais lue sans ce
+        # sur quoi elle est calculee.
+        portees = con.execute(
+            "SELECT fenetre, saison, comparable, bulletins, massifs_actifs, "
+            "non_estimes, hors_moyenne, jours_fenetre, couverture_pct, motif_exclusion "
+            "FROM saison_fenetre ORDER BY fenetre, saison"
         ).fetchall()
     finally:
         con.close()
 
     span = len(massifs[0]["serie"])
+    stats: dict[str, dict[str, dict]] = {}
+    for fen, saison, comparable, n, m_act, non_est, hors_moy, jours, couv, motif in portees:
+        stats.setdefault(fen, {})[saison] = {
+            "comparable": bool(comparable),
+            "bulletins": n,
+            "massifs_actifs": m_act,
+            "non_estimes": non_est,
+            "hors_moyenne": hors_moy,
+            "jours": jours,
+            "couverture": couv,
+            "motif": motif,
+        }
     return {
         "genere": date.today().isoformat(),
         "zone": zone,
@@ -91,6 +119,37 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb", zone: str = "Pyrenees"
         "massifs": massifs,
         "formats": [{"nom": f, "jours": n} for f, n in formats],
         "hors_zone": [{"zone": z, "jours": n} for z, n in zones if z != zone],
+        # Les bornes voyagent avec la page : elles sont definies une seule fois,
+        # dans `fenetres.py`, et ni le SQL ni le JavaScript ne les recopient.
+        "fenetres": [
+            {
+                "nom": f.nom,
+                "libelle": f.libelle,
+                "debut": list(f.debut),
+                "fin": list(f.fin),
+                "usage": f.usage,
+                "justification": f.justification,
+                "comparable": f.comparable_entre_saisons,
+            }
+            for f in FENETRES
+        ]
+        + [
+            {
+                "nom": SAISON_COMPLETE,
+                "libelle": "saison entiere",
+                "debut": None,
+                "fin": None,
+                "usage": "lecture d'une saison prise isolement",
+                "justification": (
+                    "Bornes et encodage des journees marginales varient d'une "
+                    "saison a l'autre."
+                ),
+                "comparable": False,
+            }
+        ],
+        "fenetre_defaut": DEFAUT.nom,
+        "saisons_exclues": SAISONS_NON_COMPARABLES,
+        "stats": stats,
     }
 
 

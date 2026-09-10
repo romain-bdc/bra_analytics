@@ -78,6 +78,13 @@ select{min-width:210px}
 :is(select,.toggle,summary):focus-visible{outline:2px solid var(--s1);outline-offset:2px}
 .bar .spacer{flex:1 1 auto}
 .scope{font-size:13px;color:var(--ink-muted)}
+.fenetre-note{margin:10px 0 0;font-size:13px;line-height:1.5;color:var(--ink-muted)}
+.fenetre-note b{color:var(--ink)}
+/* Avertissement porte par la fenetre elle-meme : il doit se voir sans se lire. */
+.fenetre-note.alerte{
+  border-left:3px solid var(--o4);padding:8px 0 8px 12px;background:var(--surface);
+}
+.hors{font-size:11px;font-family:var(--mono);color:var(--ink-muted)}
 
 /* ---------- tuiles ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1px;background:var(--rule);
@@ -143,18 +150,24 @@ footer a{color:var(--ink-2)}
 <div class="bar">
   <label for="sel">Massif</label>
   <select id="sel"></select>
-  <span class="scope" id="scope"></span>
+  <label for="fen">Fenêtre</label>
+  <select id="fen"></select>
   <span class="spacer"></span>
   <button class="toggle" id="tbl" aria-pressed="false">Voir les données</button>
 </div>
+<p class="fenetre-note" id="fnote"></p>
 
 <div class="kpis" id="kpis"></div>
 
 <section class="panel">
   <div class="phead"><h2>Indice moyen par saison</h2></div>
-  <p class="note">Moyenne du <code>risque_maxi</code> sur les jours effectivement estimés. Les journées
-  publiées sans indice chiffré — début et fin de saison, faute d'enneigement — sont exclues : les
-  compter comme des zéros abaisserait mécaniquement les premières saisons.</p>
+  <p class="note">Moyenne du <code>risque_maxi</code> sur les jours effectivement estimés, dans la
+  fenêtre sélectionnée. Les journées publiées sans indice chiffré sont exclues : les compter comme
+  des zéros abaisserait mécaniquement les premières saisons. Mais les exclure ne suffit pas —
+  jusqu'en juin 2021, ces journées portaient <code>RISQUE1=-1</code> et sortaient des moyennes ;
+  depuis, elles reçoivent un indice réel, généralement 1, et y entrent. D'où la fenêtre
+  <b>cœur</b> par défaut, où aucune saison n'emploie la sentinelle : c'est la seule sur laquelle
+  deux saisons se comparent. Les saisons écartées sont tracées en creux, hors de la courbe.</p>
   <div class="plot"><svg id="p1" viewBox="0 0 900 320" role="img" aria-label="Indice moyen par saison"></svg></div>
   <div class="tables" hidden><div class="scroller"><table id="t1"></table></div></div>
 </section>
@@ -171,7 +184,7 @@ footer a{color:var(--ink-2)}
 
 <section class="panel">
   <div class="phead"><h2>Massif par saison</h2></div>
-  <p class="note">Indice moyen de chaque massif, saison par saison. Le massif sélectionné dans la barre
+  <p class="note">Indice moyen de chaque massif, saison par saison, dans la fenêtre sélectionnée. Le massif sélectionné dans la barre
   du haut est encadré ; la grille reste complète pour garder la comparaison possible.</p>
   <div class="plot"><svg id="p3" viewBox="0 0 900 420" role="img" aria-label="Indice moyen par massif et par saison"></svg></div>
   <div class="legend" id="lg3"></div>
@@ -190,7 +203,9 @@ footer a{color:var(--ink-2)}
 <section class="panel">
   <div class="phead"><h2>Ce que l'archive ne dit pas</h2></div>
   <p class="note">Nombre de massifs pourvus d'un bulletin, jour par jour. Les creux sont des faits de
-  l'archive, pas des défauts d'ingestion : la saison 2019-2020 s'arrête net au 26 mars 2020, quelques
+  l'archive, pas des défauts d'ingestion. Ce panneau porte toujours sur la <b>saison entière</b>,
+  quelle que soit la fenêtre choisie : son objet est ce que l'archive contient, pas ce qu'une fenêtre
+  en retient. La saison 2019-2020 s'arrête net au 26 mars 2020, quelques
   journées isolées ne portent qu'une poignée de bulletins, et Andorre quitte la série en 2025-2026.</p>
   <div class="plot"><svg id="p5" viewBox="0 0 900 330" role="img" aria-label="Couverture de l'archive"></svg></div>
   <div class="legend" id="lg5"></div>
@@ -230,6 +245,34 @@ const seasons = [], seasonAt = new Int16Array(span), dosAt = new Int16Array(span
   }
 }
 const nS = seasons.length;
+
+/* ---------- fenetres de comparaison ----------
+   Une saison ne se compare a une autre que sur une periode equivalente. Deux
+   fenetres repondent a deux problemes distincts (voir src/bra_analytics/fenetres.py) :
+   `coeur` neutralise le changement d'encodage des journees marginales de juin 2021,
+   `commune` egalise les bornes de saison. Les bornes viennent du payload : les
+   recopier ici les ferait diverger de la definition Python. */
+const FENETRES = D.fenetres;
+const FEN_INDEX = new Map(FENETRES.map((f, i) => [f.nom, i]));
+/* La saison entiere sert de reference a tout ce qui decrit l'archive plutot que
+   de comparer des saisons : couverture, volumetrie, trous. */
+const K_COMPLETE = FEN_INDEX.get("saison_complete") ?? FENETRES.length - 1;
+/* Un bit par fenetre : le jour i appartient a la fenetre k si dansFen[k][i]. */
+const dansFen = FENETRES.map(f => {
+  const a = new Uint8Array(span);
+  if (!f.debut) { a.fill(1); return a; }          // saison entiere : tout le span
+  for (let i = 0; i < span; i++) {
+    const d = new Date(jour0 + i * DAY);
+    const y = d.getUTCFullYear(), m = d.getUTCMonth() + 1, j = d.getUTCDate();
+    const y0 = +seasons[seasonAt[i]].slice(0, 4);
+    const t = Date.UTC(y, m - 1, j);
+    a[i] = t >= Date.UTC(y0, f.debut[0] - 1, f.debut[1])
+        && t <= Date.UTC(y0 + 1, f.fin[0] - 1, f.fin[1]) ? 1 : 0;
+  }
+  return a;
+});
+const exclue = s => Object.prototype.hasOwnProperty.call(D.saisons_exclues, s);
+const motifExclusion = s => D.saisons_exclues[s];
 const CODES = D.massifs.map(m => {
   const a = new Uint8Array(span);
   for (let i = 0; i < span; i++) { const c = m.serie.charCodeAt(i); a[i] = c === 46 ? 255 : c - 48; }
@@ -237,7 +280,8 @@ const CODES = D.massifs.map(m => {
 });
 
 /* ---------- agregats ---------- */
-function aggregate(pick) {
+function aggregate(pick, kFen) {
+  const dans = dansFen[kFen];
   const par = seasons.map(() => ({ somme: 0, n: 0, lv: [0,0,0,0,0], sans: 0, jours: 0 }));
   const quinz = Array.from({ length: 24 }, () => [0, 0]);
   const quinzDerniere = Array.from({ length: 24 }, () => [0, 0]);
@@ -246,6 +290,7 @@ function aggregate(pick) {
   for (const mi of pick) {
     const a = CODES[mi];
     for (let i = 0; i < span; i++) {
+      if (!dans[i]) continue;
       const v = a[i]; if (v === 255) continue;
       const s = seasonAt[i], p = par[s];
       p.jours++; jours++; couv[s][dosAt[i]]++;
@@ -258,10 +303,14 @@ function aggregate(pick) {
   }
   return { par, quinz, quinzDerniere, couv, n, somme, sans, fort, jours };
 }
-const MATRICE = D.massifs.map((_, mi) => {
-  const s = aggregate([mi]).par;
-  return s.map(p => (p.n ? p.somme / p.n : null));
-});
+/* Matrice massif x saison, recalculee a chaque changement de fenetre. */
+let MATRICE = [];
+function matrice(kFen) {
+  MATRICE = D.massifs.map((_, mi) => {
+    const s = aggregate([mi], kFen).par;
+    return s.map(p => (p.n ? p.somme / p.n : null));
+  });
+}
 
 /* ---------- utilitaires ---------- */
 const el = (t, at = {}) => { const e = document.createElementNS(NS, t); for (const k in at) e.setAttribute(k, at[k]); return e; };
@@ -287,6 +336,24 @@ function survol(node, html) {
   node.addEventListener("pointerleave", () => { tip.style.opacity = "0"; });
 }
 
+/* ---------- lecture de la fenetre courante ---------- */
+let kFen = Math.max(0, FEN_INDEX.get(D.fenetre_defaut) ?? 0);
+const fenCourante = () => FENETRES[kFen];
+const statSaison = s => (D.stats[fenCourante().nom] || {})[s] || null;
+const etiqueteFenetre = () => ` · <span class="hors">${fenCourante().libelle}</span>`;
+
+/* Une moyenne ne se lit pas sans ce sur quoi elle porte : couverture, effectif
+   de massifs reellement diffuses, et le motif d'exclusion s'il y en a un. */
+function couvertureHtml(saison) {
+  const st = statSaison(saison);
+  if (!st) return "";
+  const couv = st.couverture.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
+  let html = `<br><span class="num">${couv} %</span> de couverture ·
+    <span class="num">${st.massifs_actifs}</span> massif${st.massifs_actifs > 1 ? "s" : ""} actif${st.massifs_actifs > 1 ? "s" : ""}`;
+  if (st.motif) html += `<br><b>saison écartée</b> — ${st.motif}`;
+  return html;
+}
+
 /* ---------- panneau 1 : indice moyen par saison ---------- */
 function p1(A) {
   const svg = document.getElementById("p1"); svg.textContent = "";
@@ -304,14 +371,30 @@ function p1(A) {
     const lab = el("text", { x: L - 10, y: y(t) + 3.5, "text-anchor": "end", class: "tick" });
     lab.textContent = dec(t, 2); svg.appendChild(lab);
   }
-  const pts = vals.map((v, i) => v == null ? null : [x(i), y(v)]).filter(Boolean);
-  svg.appendChild(el("path", { d: pts.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" "), fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" }));
+  /* La ligne ne relie que les saisons comparables : la faire passer par une
+     saison partielle ou tronquee donnerait a lire une tendance sur un point
+     qui n'en est pas un. Les saisons ecartees restent tracees, en creux. */
+  const cmp = seasons.map(s => !exclue(s));
+  let segment = [];
+  const segments = [];
+  vals.forEach((v, i) => {
+    if (v == null || !cmp[i]) { if (segment.length > 1) segments.push(segment); segment = []; return; }
+    segment.push([x(i), y(v)]);
+  });
+  if (segment.length > 1) segments.push(segment);
+  for (const seg of segments) {
+    svg.appendChild(el("path", { d: seg.map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join(" "), fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" }));
+  }
 
   const iMax = vals.indexOf(Math.max(...finis)), iMin = vals.indexOf(Math.min(...finis));
   const etiquettes = new Set([iMax, iMin, nS - 1]);
   vals.forEach((v, i) => {
     if (v == null) return;
-    svg.appendChild(el("circle", { cx: x(i), cy: y(v), r: 4.5, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2 }));
+    svg.appendChild(el("circle", {
+      cx: x(i), cy: y(v), r: 4.5,
+      fill: cmp[i] ? "var(--s1)" : "var(--surface)",
+      stroke: cmp[i] ? "var(--surface)" : "var(--ink-muted)", "stroke-width": 2,
+    }));
     if (etiquettes.has(i)) {
       const bas = i === iMin;
       const t = el("text", { x: x(i), y: y(v) + (bas ? 20 : -13), "text-anchor": i === nS - 1 && i !== iMin && i !== iMax ? "end" : "middle", class: "dlabel" });
@@ -319,8 +402,9 @@ function p1(A) {
     }
     const zone = el("rect", { x: x(i) - (W - L - R) / (2 * nS), y: T, width: (W - L - R) / nS, height: H - B - T, fill: "transparent", class: "hit" });
     const p = A.par[i];
-    survol(zone, `<b>${seasons[i]}</b><br>indice moyen <span class="num">${dec(v)}</span><br>
-      <span class="num">${nb(p.n)}</span> jours estimés · <span class="num">${nb(p.sans)}</span> sans indice`);
+    survol(zone, `<b>${seasons[i]}</b>${etiqueteFenetre()}<br>indice moyen <span class="num">${dec(v)}</span><br>
+      <span class="num">${nb(p.n)}</span> jours estimés · <span class="num">${nb(p.sans)}</span> sans indice
+      ${couvertureHtml(seasons[i])}`);
     svg.appendChild(zone);
   });
   seasons.forEach((s, i) => {
@@ -330,8 +414,16 @@ function p1(A) {
   const ax = el("text", { x: L - 10, y: T - 6, "text-anchor": "end", class: "tick" });
   ax.textContent = "indice"; svg.appendChild(ax);
 
-  table("t1", "Indice moyen par saison", ["Saison", "Indice moyen", "Jours estimés", "Sans indice", "Jours ≥ 4"],
-    seasons.map((s, i) => [s, dec(vals[i]), nb(A.par[i].n), nb(A.par[i].sans), nb(A.par[i].lv[3] + A.par[i].lv[4])]));
+  table("t1", "Indice moyen par saison",
+    ["Saison", "Indice moyen", "Jours estimés", "Sans indice", "Jours ≥ 4", "Massifs", "Couverture", "Comparable"],
+    seasons.map((s, i) => {
+      const st = statSaison(s);
+      return [s, dec(vals[i]), nb(A.par[i].n), nb(A.par[i].sans),
+        nb(A.par[i].lv[3] + A.par[i].lv[4]),
+        st ? nb(st.massifs_actifs) : "—",
+        st ? st.couverture.toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " %" : "—",
+        cmp[i] ? "oui" : `non — ${motifExclusion(s)}`];
+    }));
 }
 
 /* ---------- panneau 2 : repartition des indices ---------- */
@@ -354,7 +446,7 @@ function p2(A) {
       if (!c) return;
       const h = (H - B - T) * c / tot, yy = y(acc / tot) - h;
       const r = el("rect", { x: cx - larg / 2, y: yy + 1, width: larg, height: Math.max(1, h - 2), fill, rx: 2, class: "hit" });
-      survol(r, `<b>${seasons[i]}</b> · ${nom}<br><span class="num">${nb(c)}</span> jours — <span class="num">${pct(c, tot)}</span>`);
+      survol(r, `<b>${seasons[i]}</b> · ${nom}${etiqueteFenetre()}<br><span class="num">${nb(c)}</span> jours — <span class="num">${pct(c, tot)}</span>${couvertureHtml(seasons[i])}`);
       svg.appendChild(r); acc += c;
     });
     const t = el("text", { x: cx, y: H - B + 20, "text-anchor": "middle", class: "tick" });
@@ -476,7 +568,7 @@ function p5(A, nSel) {
       const step = pas(c);
       const r = el("rect", { x: L + d * rw, y: yy, width: Math.max(1.2, rw), height: rh, fill: `var(${RAMPE[step]})`, class: "hit" });
       const ms = Date.UTC(+seasons[s].slice(0, 4), 8, 1) + d * DAY;
-      survol(r, `<b>${dateFr(ms)}</b><br><span class="num">${c}</span> massif${c > 1 ? "s" : ""} sur ${nSel} pourvu${c > 1 ? "s" : ""}`);
+      survol(r, `<b>${dateFr(ms)}</b><br><span class="num">${c}</span> massif${c > 1 ? "s" : ""} sur ${nSel} pourvu${c > 1 ? "s" : ""}${couvertureHtml(seasons[s])}`);
       svg.appendChild(r);
     }
   });
@@ -522,6 +614,7 @@ function kpis(A, nSel) {
     ["Jours en risque fort", pct(A.fort, A.n), `indice ≥ 4 · ${nb(A.fort)} jours`],
     ["Sans indice chiffré", pct(A.sans, A.jours), `${nb(A.sans)} bulletins`],
     ["Massifs suivis", nb(nSel), nSel === 1 ? "sélection" : "Pyrénées"],
+    ["Fenêtre", fenCourante().nom, fenCourante().libelle],
   ];
   document.getElementById("kpis").innerHTML = cases
     .map(([k, v, n]) => `<div class="kpi"><span class="k">${k}</span><span class="v">${v}</span><span class="n">${n}</span></div>`).join("");
@@ -532,17 +625,34 @@ const sel = document.getElementById("sel");
 sel.innerHTML = `<option value="-1">Tous les massifs (${D.massifs.length})</option>`
   + D.massifs.map((m, i) => `<option value="${i}">${m.nom} — ${m.departement}</option>`).join("");
 
+const fen = document.getElementById("fen");
+fen.innerHTML = FENETRES.map((f, i) =>
+  `<option value="${i}"${i === kFen ? " selected" : ""}>${f.nom} — ${f.libelle}</option>`).join("");
+
+/* La note dit ce que la fenetre autorise, et surtout ce qu'elle interdit. */
+function noteFenetre() {
+  const f = fenCourante();
+  const n = document.getElementById("fnote");
+  n.classList.toggle("alerte", !f.comparable);
+  n.innerHTML = f.comparable
+    ? `<b>Comparaison inter-saisons.</b> ${f.usage}. ${f.justification}`
+    : `<b>Non comparable entre saisons.</b> ${f.usage}. ${f.justification}`;
+}
+
 function dessine() {
   const v = +sel.value;
   const pick = v < 0 ? D.massifs.map((_, i) => i) : [v];
-  const A = aggregate(pick);
-  document.getElementById("scope").textContent = v < 0
-    ? "toute la chaîne pyrénéenne"
-    : `massif ${D.massifs[v].id} · ${nb(A.jours)} jours couverts`;
+  const A = aggregate(pick, kFen);
+  matrice(kFen);
+  noteFenetre();
   kpis(A, pick.length);
-  p1(A); p2(A); p3(pick); p4(A); p5(A, pick.length);
+  p1(A); p2(A); p3(pick); p4(A);
+  /* La couverture se lit toujours sur la saison entiere : son objet est ce que
+     l'archive contient, pas ce qu'une fenetre en retient. */
+  p5(aggregate(pick, K_COMPLETE), pick.length);
 }
 sel.addEventListener("change", dessine);
+fen.addEventListener("change", () => { kFen = +fen.value; dessine(); });
 
 const bouton = document.getElementById("tbl");
 bouton.addEventListener("click", () => {

@@ -23,6 +23,9 @@ BULLETINS: dict[str, pl.DataType] = {
     "massif_nom": pl.Utf8,
     "zone": pl.Utf8,
     "massif_nom_source": pl.Utf8,
+    # `ID` et libelle `MASSIF` se recoupent-ils ? Faux = la ligne herite d'un
+    # massif, d'une zone et d'un departement qui ne sont pas les siens.
+    "massif_coherent": pl.Boolean,
     "type_bulletin": pl.Utf8,
     "producteur": pl.Utf8,
     "amendement": pl.Boolean,

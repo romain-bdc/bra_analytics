@@ -73,6 +73,11 @@ def check_bulletins(df: pl.DataFrame) -> list[Anomalie]:
         "estimation annoncee mais RISQUE1 vide",
     )
     add(
+        "non_estime_avec_maxi", "signal",
+        ~pl.col("risque_estime") & pl.col("risque_maxi").is_not_null(),
+        "RISQUE1=-1 mais RISQUEMAXI renseigne : compte dans les moyennes",
+    )
+    add(
         "risque_non_estime", "signal",
         ~pl.col("risque_estime"),
         "bulletins sans estimation chiffree (hors saison, sous-neige)",
