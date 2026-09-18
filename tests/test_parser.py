@@ -340,7 +340,7 @@ def test_jour_validite_suit_l_echeance_et_non_la_validite() -> None:
     valable jusqu'au 07 (`DATEVALIDITE`), faute de bulletin d'ici la. Prendre
     `DATEVALIDITE` pour jour couvert empile plusieurs journees sur la meme cle
     `(massif_id, jour_validite)` : c'est ce qui faisait disparaitre 2 471
-    bulletins de `risque_journalier` (docs/reconciliation.md).
+    bulletins de `risque_journalier`.
     """
     row = head("v2_2016_pays_basque_risque_non_estime.xml")
     assert row["jour_bulletin"] == date(2016, 11, 3)

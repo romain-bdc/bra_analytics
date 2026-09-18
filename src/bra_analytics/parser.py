@@ -388,7 +388,7 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
     # bulletins portant tous `DATEVALIDITE="2016-11-21"`, pour des `DATEECHEANCE`
     # regulierement espacees du 18 au 21. Prendre `DATEVALIDITE` en premier
     # ecrase ces quatre jours en un seul et fait disparaitre 2 471 bulletins de
-    # la vue journaliere. Voir docs/reconciliation.md.
+    # la vue journaliere.
     #
     # `DATEECHEANCE` est renseignee sur les 23 533 bulletins du corpus ; le
     # repli sur `DATEVALIDITE` n'est donc jamais emprunte aujourd'hui, il ne

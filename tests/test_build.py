@@ -455,7 +455,7 @@ def test_chaque_ligne_ecartee_produit_un_avertissement(caplog) -> None:
 
     Une vue SQL est une projection, elle ne peut rien journaliser -- c'est ce
     qui a permis a 2 471 bulletins mal dates de disparaitre sans qu'aucun
-    compteur ne bouge (docs/reconciliation.md).
+    compteur ne bouge.
     """
     deux = _reedition()
     with caplog.at_level(logging.WARNING, logger="bra_analytics.build"):

@@ -116,7 +116,7 @@ def check_bulletins(df: pl.DataFrame) -> list[Anomalie]:
     # Ecart entre `bulletins` et `risque_journalier` : la vue ne garde qu'une
     # redaction par jour couvert. Le build le journalise ligne a ligne ; on le
     # rappelle ici en volume pour qu'un `bra check` sur un entrepot deja
-    # construit ne laisse pas l'ecart inexplique. Voir docs/reconciliation.md.
+    # construit ne laisse pas l'ecart inexplique.
     couverts = (
         df.filter(pl.col("jour_validite").is_not_null())
         .group_by(["massif_id", "jour_validite"])
