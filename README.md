@@ -199,15 +199,10 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   le libellé normalisé du référentiel, `massif_nom_source` celui du fichier.
 - **`risque_estime = false` signale un bulletin sans estimation chiffrée** (début et fin de
   saison, faute d'enneigement). La source y met `RISQUE1 = -1` ; la pipeline convertit cette
-<<<<<<< HEAD
   sentinelle en valeur nulle pour ne pas fausser les moyennes. Cela concerne **4 250 bulletins
   sur 23 533, soit 18,1 % du corpus**, très concentrés : 4 247 d'entre eux tombent sur les cinq
   saisons 2016-2017 à 2020-2021, où ils pèsent 37,8 % des 11 240 bulletins. Filtrer sur
   `risque_estime` avant tout agrégat, ou s'appuyer sur `profil_saison` qui l'exclut déjà.
-=======
-  sentinelle en valeur nulle pour ne pas fausser les moyennes. Cela concerne ~34 % des bulletins
-  2016-2022 : filtrer sur `risque_estime` avant tout agrégat, ou s'appuyer sur `profil_saison`
-  qui l'exclut déjà.
   Six lignes font exception : `RISQUE1 = -1` y coexiste avec un `RISQUEMAXI` renseigné, si bien
   qu'elles sont non estimées **et** comptées dans les moyennes (`bra check` les signale sous
   `non_estime_avec_maxi`).
@@ -226,7 +221,6 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   [le glossaire, § 8](docs/glossaire.md#8-fenêtres-de-comparaison-inter-saisons).
 - **Ne pas imputer les `-1` en 1 pour « réparer » la série.** Ce serait un choix analytique — il
   suppose que toute journée non estimée aurait porté l'indice 1 — pas une correction technique.
->>>>>>> a8e009e (Comparer les saisons sur des fenetres mesurees plutot que sur leurs bornes brutes)
 - **`risque1_evolution` est un second indice de risque**, pas un code d'évolution, malgré le nom
   de l'attribut source `EVOLURISQUE1`. `risque_maxi = max(risque1, risque1_evolution)`.
 - **`loc_type`** indique si `risque1`/`risque2` se distinguent par altitude (`altitude_seuil_m`
