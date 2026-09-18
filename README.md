@@ -15,9 +15,6 @@ schéma unique.
   correspondance XML, ses unités et ses pièges. Le point d'entrée pour exploiter le dataset.
 - **[docs/exploration.md](docs/exploration.md)** — écarts constatés entre les données réelles et
   le descriptif technique officiel du 26/10/2023. À lire avant toute interprétation.
-- **[docs/reconciliation.md](docs/reconciliation.md)** — table de passage chiffrée des 27 006
-  fichiers XML aux 23 267 jours-massif des séries, ligne à ligne. À lire dès qu'un comptage
-  diverge d'un autre.
 
 ## Installation
 
@@ -152,8 +149,7 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   lendemain : le risque décrit porte sur l'échéance. Une série indexée sur la date de rédaction
   est décalée d'un jour. La vue `risque_journalier` applique déjà cette règle.
   `jour_validite` dérive de `DATEECHEANCE` et **non** de `DATEVALIDITE` : hors saison, cette
-  dernière porte la date du prochain bulletin et fusionne des journées distinctes
-  (voir [docs/reconciliation.md](docs/reconciliation.md)).
+  dernière porte la date du prochain bulletin et fusionne des journées distinctes.
 - **Un jour peut recevoir deux bulletins.** Le bulletin du soir couvre J+1 ; un amendement émis
   le lendemain matin (`amendement = true`) recouvre la journée en cours. Depuis 2023-2024 s'y
   ajoute la réédition : le même bulletin rediffusé une à deux heures plus tard avec un

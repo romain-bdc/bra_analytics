@@ -76,7 +76,7 @@ Le passage C→D (saison 2023-2024) est la vraie rupture ; A→B→C et D→E→
   sur les 11 240 de ces saisons, soit 37,8 %**. Les trois restants sont isolés (un en 2015-2016,
   un en 2023-2024, un en 2024-2025) et les saisons 2021-2022, 2022-2023 et 2025-2026 n'en
   comptent aucun. Ces bulletins portent aussi une `DATEVALIDITE` trompeuse, cause d'une perte
-  silencieuse de 2 471 jours-massif : voir [reconciliation.md](reconciliation.md).
+  silencieuse de 2 471 jours-massif (§ 2).
 
   > **Dénominateur.** Sauf mention contraire, tout pourcentage de ce document se rapporte au
   > corpus complet — **23 533 bulletins**, 11 massifs pyrénéens, saisons 2015-2016 à 2025-2026,
@@ -146,7 +146,7 @@ cinq libellés pour quatre éléments.
   tous `DATEVALIDITE="2016-11-21"`, pour des `DATEECHEANCE` régulièrement espacées.
   Indexer sur `DATEVALIDITE` écrase ces journées les unes sur les autres : **2 471 jours-massif
   disparaissaient ainsi**, silencieusement, d'une vue agrégée à la journée.
-  `DATEECHEANCE` est renseignée sur les 23 533 bulletins. Détail : [reconciliation.md](reconciliation.md).
+  `DATEECHEANCE` est renseignée sur les 23 533 bulletins.
 - **Rééditions non signalées.** Le 22/02/2023, Aspe-Ossau a deux fichiers, même `DATEBULLETIN`,
   `AMENDEMENT="false"` **pour les deux** ; seul `DATEDIFFUSION` diffère. Contenu métier
   (`RESUME`, `STABILITE`, `QUALITE`) strictement identique — seules les images ont été regénérées.

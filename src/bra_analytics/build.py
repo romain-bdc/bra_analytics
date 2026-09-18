@@ -305,8 +305,7 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         # Cette vue est reductrice : elle passe de 23 533 bulletins a 23 268
         # lignes. `log_daily_collapse_discards()` journalise au build chaque
         # ligne ainsi ecartee -- l'`ORDER BY` ci-dessous et le tri de cette
-        # fonction doivent rester identiques. Table de passage complete :
-        # docs/reconciliation.md.
+        # fonction doivent rester identiques.
         con.execute(
             """
             CREATE OR REPLACE VIEW risque_journalier AS
