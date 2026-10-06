@@ -141,7 +141,10 @@ Deux fenêtres, deux usages : `coeur` (15 déc → 15 avr) pour comparer des ind
 (6 nov → 7 juin) pour comparer des couvertures. Les bornes sont mesurées, pas choisies — le
 détail du calcul est dans [le glossaire, § 8](docs/glossaire.md#8-fenêtres-de-comparaison-inter-saisons).
 
-Une commande auxiliaire, `bra massifs`, affiche le référentiel des 36 massifs.
+Deux commandes auxiliaires : `bra massifs` affiche le référentiel des 36 massifs ;
+`bra contours` vérifie que les contours versionnés (Météo-France, Licence Ouverte 2.0) se
+raccordent aux 36 identifiants et régénère leur version web — voir
+[docs/contours.md](docs/contours.md).
 
 ## Sortie
 

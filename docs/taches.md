@@ -91,9 +91,10 @@ massifs groupés par chaîne, qui perd la géographie mais conserve le classemen
 36 identifiants raccordés et les écarts listés, la licence tranchée par écrit — ou le repli acté
 dans la spec.
 
-**Résolution (6 octobre 2026)** : repli acté, et c'est la meilleure source. Le GeoJSON des massifs
-publié par Météo-France (Licence Ouverte 2.0) couvre les 36 identifiants, Andorre comprise, par
-leur `massif_id` entier. Le jeu EAWS est sous CC0 mais n'a pas de `FR-71`, et ses identifiants
+**Résolution (6 octobre 2026)** : repli acté, mais pas celui qui était écrit. Aucun shapefile
+SAFRAN/S2M n'a été trouvé ; c'est le GeoJSON des massifs joint par Météo-France au jeu
+data.gouv.fr de l'archive BRA elle-même (Licence Ouverte 2.0) qui a été retenu. Il couvre
+les 36 identifiants, Andorre comprise, par leur `massif_id` entier. Le jeu EAWS est sous CC0 mais n'a pas de `FR-71`, et ses identifiants
 sont sur deux chiffres (`FR-01`, pas `FR-1`) ; sa variante `_elevation` ne subdivise pas les
 massifs français. Voir [`contours.md`](contours.md) et [`recherche-contours.md`](recherche-contours.md).
 
@@ -253,7 +254,7 @@ situations typiques sont affichées avec leur restriction d'époque.
 - Export CSV des données et PNG de l'image sur chaque graphe.
 - État complet des filtres dans l'URL ; aucune réinitialisation entre écrans.
 - Attribution « données Météo-France, Licence Ouverte 2.0 » et date de l'archive intégrée,
-  visibles sur chaque page.
+  visibles sur chaque page ; sur la carte, attribution des contours en plus (spec § 7).
 
 **Fait quand** : une URL collée dans un autre navigateur reproduit exactement le même écran ;
 chaque graphe exporte les données qui le composent, pas une reconstruction ; l'attribution est

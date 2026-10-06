@@ -76,3 +76,11 @@ def test_bra_contours_ecrit_la_version_web_et_signale_les_ecarts(tmp_path, capsy
 def test_contours_versionnes_raccordes_aux_36_massifs() -> None:
     """Le fichier Meteo-France versionne couvre exactement le referentiel."""
     assert geo.raccordement(geo.charger(geo.SOURCE)).complet
+
+
+def test_version_web_versionnee_a_jour() -> None:
+    """`massifs.web.geojson` est versionne parce que la page l'embarque sans
+    reseau. Il doit rester exactement ce que `bra contours` produit du fichier
+    d'origine : un fichier genere qui derive en silence decale la carte."""
+    attendu = geo.version_web(geo.charger(geo.SOURCE))
+    assert geo.charger(geo.WEB) == attendu

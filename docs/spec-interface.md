@@ -297,7 +297,9 @@ Toute comparaison de saisons est tronquée à période égale par défaut, et le
 sous-titre du graphe et non en note de bas de page.
 
 L'attribution est obligatoire et visible : **données Météo-France, Licence Ouverte 2.0**, avec la
-date de l'archive utilisée.
+date de l'archive utilisée. Là où la carte s'affiche s'y ajoute celle des contours :
+**contours des massifs Météo-France, Licence Ouverte 2.0, version du 15/02/2024**
+([`contours.md`](contours.md)).
 
 Le vocabulaire reste descriptif. « Au-dessus de la médiane des neuf saisons comparables » est
 correct ; « tendance au réchauffement » ne l'est pas — dix saisons ne sont pas un signal

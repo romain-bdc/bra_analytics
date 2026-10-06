@@ -154,3 +154,15 @@ def simplifier(geojson: dict, tolerance: float, decimales: int = 4) -> dict:
             "geometry": {"type": g["type"], "coordinates": coords},
         })
     return {"type": "FeatureCollection", "features": features}
+
+
+def version_web(source: dict) -> dict:
+    """Ce que la page embarque : contours simplifies, propriete `code` seule.
+
+    Les libelles et la zone viennent de `massifs.py`, qui fait foi ; les
+    garder ici en ferait une seconde source, a la graphie deja differente.
+    """
+    simple = simplifier(source, tolerance=TOLERANCE)
+    for f in simple["features"]:
+        f["properties"] = {"code": f["properties"]["code"]}
+    return simple

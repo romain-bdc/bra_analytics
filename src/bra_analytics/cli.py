@@ -265,12 +265,10 @@ def cmd_contours(args: argparse.Namespace) -> int:
     if r.en_trop:
         print(f"  contours hors referentiel : {', '.join(map(str, r.en_trop))}")
     if r.complet:
-        print("  raccordement complet : 36 massifs, aucun contour en trop")
+        print(f"  raccordement complet : {len(source['features'])} massifs, "
+              "aucun contour en trop")
 
-    simple = geo.simplifier(source, tolerance=args.tolerance)
-    # Seul `code` voyage : les libelles viennent de `massifs.py`, qui fait foi.
-    for f in simple["features"]:
-        f["properties"] = {"code": f["properties"]["code"]}
+    simple = geo.version_web(source)
     out = Path(args.out)
     out.write_text(json.dumps(simple, separators=(",", ":")) + "\n", encoding="utf-8")
     print(f"version web : {out} ({out.stat().st_size / 1024:.0f} Ko)")
@@ -343,8 +341,6 @@ def build_parser() -> argparse.ArgumentParser:
     g = sub.add_parser("contours", help="raccorder et simplifier les contours des massifs")
     g.add_argument("--source", default=str(geo.SOURCE), help="GeoJSON d'origine")
     g.add_argument("--out", default=str(geo.WEB), help="GeoJSON simplifie")
-    g.add_argument("--tolerance", type=float, default=geo.TOLERANCE,
-                   help="tolerance de simplification, en degres")
     g.set_defaults(func=cmd_contours)
 
     m = sub.add_parser("massifs", help="lister le referentiel des massifs")
