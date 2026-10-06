@@ -4,7 +4,7 @@ Les altitudes de reference du BRA varient d'un massif et d'une epoque a
 l'autre : paliers d'enneigement 1500/1800/2400 (ou 1200/1500/1800,
 1500/1800/2100) jusqu'en 2020-2021, puis 1500/2000/2500 ; neige fraiche
 mesuree a 1800 m ; vent bas a 1000, 1500 ou 2000 m, vent haut a 2000 ou
-3000 m. Trois tranches fixes les ramenent a une grille commune (spec § 4.2).
+3000 m. Trois tranches fixes les ramenent a une grille commune (spec section 4.2).
 
 **Bornes fermees a gauche** : [0, 1800), [1800, 2400), [2400, +inf). Les
 paliers de l'archive tombent pile sur 1800 et 2400. La spec ecrivait
@@ -12,7 +12,7 @@ paliers de l'archive tombent pile sur 1800 et 2400. La spec ecrivait
 avant 2021 et laisse la tranche haute vide jusqu'au changement de paliers,
 rendant toute serie de la tranche haute incomparable de part et d'autre de
 2021. Fermees a gauche, les deux epoques donnent un palier par tranche
-(mesure : `bra audit`, § 4).
+(mesure : `bra audit`, section 4).
 
 Un palier est rattache a la tranche qui contient son altitude. Une tranche
 sans palier reste vide : **aucune interpolation**. Une altitude `-1`

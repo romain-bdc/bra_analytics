@@ -56,16 +56,53 @@ def _tables(con: duckdb.DuckDBPyConnection) -> list[str]:
     return [t for t in schema.TABLES if t in presentes]
 
 
-def disponibilite(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
-    """Part de valeurs non nulles, par table, champ et saison.
+# Champs dont la valeur existe mais ne veut pas dire ce que son nom annonce,
+# selon la famille de format. Avant 2024, `NEIGEFRAICHE` porte `SECTEURSS1` /
+# `SECTEURSS2` : `SS241` / `SS242` sont les cumuls de deux secteurs, et
+# `SS242="-1"` signifie « pas de second secteur ». Ranges dans `cumul_min_cm` /
+# `cumul_max_cm`, ils n'en sont ni le minimum ni le maximum. *Infere* de la
+# structure du fichier (aucun descriptif de l'ancien format) ; la regle de
+# parsing est a arreter en T7. Ces lignes ne comptent pas comme disponibles.
+SEMANTIQUE_DIVERGENTE: dict[tuple[str, str], tuple[str, str]] = {
+    ("neige_fraiche", "cumul_min_cm"): (
+        "legacy", "avant 2024, SS241 est le cumul du premier secteur, pas un minimum"),
+    ("neige_fraiche", "cumul_max_cm"): (
+        "legacy", "avant 2024, SS242 est le cumul d'un second secteur, pas un maximum"),
+}
 
-    Colonnes : `table`, `champ`, `saison`, `lignes`, `non_nulles`, `part`
-    (arrondie a 4 decimales pour que le rapport soit reproductible).
+_ENTIERS = (pl.Int8, pl.Int16, pl.Int32, pl.Int64)
+
+
+def _compte_exploitable(table: str, champ: str) -> str:
+    """Agregat SQL comptant les valeurs exploitables d'un champ.
+
+    Exploitable = non nul, et pour un entier different de `-1` : la source
+    emploie `-1` comme sentinelle (paliers, epaisseurs, meteo legacy) et la
+    pipeline ne le convertit en nul que pour `RISQUE1`, `PLUIENEIGE` et
+    `MERNUAGES`. Une colonne pleine de `-1` n'est pas une colonne disponible.
+    """
+    conds = [f'"{champ}" IS NOT NULL']
+    if schema.TABLES[table][champ] in _ENTIERS:
+        conds.append(f'"{champ}" <> -1')
+    if (table, champ) in SEMANTIQUE_DIVERGENTE:
+        famille, _ = SEMANTIQUE_DIVERGENTE[(table, champ)]
+        conds.append(f"format_famille <> '{famille}'")
+    return f"count(*) FILTER ({' AND '.join(conds)})"
+
+
+def disponibilite(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
+    """Part de valeurs exploitables, par table, champ et saison.
+
+    Exploitable : voir `_compte_exploitable` -- ni nul, ni `-1`, ni porteur
+    d'un sens different de celui du champ (`SEMANTIQUE_DIVERGENTE`).
+    Colonnes : `table`, `champ`, `saison`, `lignes`, `non_nulles` (valeurs
+    exploitables), `part` (arrondie a 4 decimales pour que le rapport soit
+    reproductible).
     """
     morceaux = []
     for table in _tables(con):
         champs = [c for c in schema.TABLES[table] if c not in _HORS_AUDIT]
-        comptes = ", ".join(f'count("{c}") AS "{c}"' for c in champs)
+        comptes = ", ".join(f'{_compte_exploitable(table, c)} AS "{c}"' for c in champs)
         large = _frame(
             con,
             f"SELECT saison, count(*) AS lignes, {comptes} "
@@ -90,7 +127,7 @@ def disponibilite(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
 
 
 # --------------------------------------------------------------------------
-# Metriques de la spec (§ 5) et champs dont elles dependent
+# Metriques de la spec (section 5) et champs dont elles dependent
 # --------------------------------------------------------------------------
 
 CALCULABLE = "calculable"
@@ -142,7 +179,7 @@ METRIQUES: tuple[Metrique, ...] = (
     Metrique("risque", "Second indice",
              ("bulletins.risque1", "bulletins.risque2", "bulletins.loc_type"),
              indice=("bulletins.risque1", "bulletins.risque2")),
-    # Prevue au cadrage, ecartee par la spec § 5.1 : on la garde ici pour que
+    # Prevue au cadrage, ecartee par la spec section 5.1 : on la garde ici pour que
     # l'audit dise pourquoi, plutot que de la faire disparaitre.
     Metrique("risque", "Indices naturel et accidentel",
              ("bulletins.naturel", "bulletins.accidentel"),
@@ -196,7 +233,7 @@ def statuts(dispo: pl.DataFrame, metriques: tuple[Metrique, ...] = METRIQUES) ->
       indice chiffre d'un champ texte.
 
     Un champ est tenu pour present sur une saison des qu'il y porte une valeur
-    non nulle. Le seuil est volontairement bas : un champ rare par nature
+    exploitable (voir `disponibilite`). Le seuil est volontairement bas : un champ rare par nature
     (`sat2`, `altitude_seuil_m`) n'est pas un champ absent, et la part mesuree
     reste publiee a cote pour qui veut juger de sa densite.
     """
@@ -226,6 +263,12 @@ def statuts(dispo: pl.DataFrame, metriques: tuple[Metrique, ...] = METRIQUES) ->
                 })
                 statut = SOUS_ENSEMBLE
                 motif = "absent sur une partie des saisons : " + ", ".join(manquants)
+                raisons = [
+                    SEMANTIQUE_DIVERGENTE[tuple(r.split("."))][1]
+                    for r in manquants if tuple(r.split(".")) in SEMANTIQUE_DIVERGENTE
+                ]
+                if raisons:
+                    motif += " (" + " ; ".join(raisons) + ")"
             else:
                 statut, motif = NON_CALCULABLE, "aucune saison ne réunit ses champs"
         lignes.append({
@@ -242,37 +285,24 @@ def statuts(dispo: pl.DataFrame, metriques: tuple[Metrique, ...] = METRIQUES) ->
 # Mesures ciblees : ce qui fonde les tranches normees et les seuils
 # --------------------------------------------------------------------------
 
-# Altitudes de reference par source. Elles fondent les tranches normees de la
-# spec § 4.2 : si celles d'un massif tombent toutes dans une tranche, la
-# comparaison entre massifs sur cette tranche n'a pas de sens.
-_ALTITUDES = {
-    "enneigement": f"SELECT saison, massif_id, altitude_m AS alt FROM ({_source('enneigement')})",
-    "neige_fraiche": (
-        f"SELECT saison, massif_id, altitude_mesure_m AS alt FROM ({_source('neige_fraiche')})"
-    ),
-    "vent_bas": f"SELECT saison, massif_id, vent_altitude_basse_m AS alt FROM ({_source('bulletins')})",
-    "vent_haut": f"SELECT saison, massif_id, vent_altitude_haute_m AS alt FROM ({_source('bulletins')})",
-}
-
-
 def altitudes_reference(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
     """Altitudes distinctes par massif, saison et source.
 
+    Lues dans la vue `palier_tranche`, qui porte seule la correspondance
+    source -> colonne d'altitude : la recopier ici ferait deux definitions a
+    tenir d'accord. Les sentinelles `-1` restent dans la liste, pour etre vues.
     Colonnes : `massif_id`, `saison`, `source`, `altitudes` (valeurs triees,
-    jointes par `/`), `lignes` (lignes non nulles mesurees).
+    jointes par `/`), `lignes` (paliers mesures).
     """
-    requetes = "\nUNION ALL\n".join(
-        f"SELECT '{nom}' AS source, * FROM ({sql})" for nom, sql in _ALTITUDES.items()
-    )
     return _frame(
         con,
-        f"""
+        """
         SELECT massif_id, saison, source,
                -- tri numerique : un tri texte placerait 900 apres 1500
-               array_to_string(list_sort(list_distinct(list(alt))), '/') AS altitudes,
+               array_to_string(list_sort(list_distinct(list(altitude_m))), '/') AS altitudes,
                count(*) AS lignes
-        FROM ({requetes})
-        WHERE alt IS NOT NULL
+        FROM palier_tranche
+        WHERE massif_coherent AND altitude_m IS NOT NULL
         GROUP BY ALL
         ORDER BY massif_id, saison, source
         """,
@@ -280,12 +310,13 @@ def altitudes_reference(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
 
 
 def meteo_par_origine(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
-    """Part non nulle de chaque champ meteo, par saison et `origine`.
+    """Part de valeurs exploitables de chaque champ meteo, par saison et `origine`.
 
+    Exploitable au sens de `disponibilite` : ni nul, ni `-1`.
     Colonnes : `saison`, `origine`, `champ`, `lignes`, `part`.
     """
     champs = [c for c in schema.METEO if c not in _HORS_AUDIT | {"origine", "rang", "echeance"}]
-    comptes = ", ".join(f'count("{c}") AS "{c}"' for c in champs)
+    comptes = ", ".join(f'{_compte_exploitable("meteo", c)} AS "{c}"' for c in champs)
     large = _frame(
         con,
         f"SELECT saison, origine, count(*) AS lignes, {comptes} "
@@ -300,19 +331,34 @@ def meteo_par_origine(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
     )
 
 
-def ecarts_meteo(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
-    """Champs renseignes en prevision mais jamais dans l'historique, par saison.
+# Un champ que l'historique porte deux fois moins souvent que la prevision ne
+# soutient pas la convention : la serie extraite serait trouee de moitie.
+DENSITE_HISTORIQUE_MIN = 0.5
 
-    La convention d'extraction (spec § 4.3) prefere l'historique a la
+
+def ecarts_meteo(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
+    """Champs que l'historique ne porte pas aussi bien que la prevision.
+
+    La convention d'extraction (spec section 4.3) prefere l'historique a la
     prevision pour un meme jour : elle n'est tenable que pour les champs que
-    l'historique porte effectivement. Colonnes : `saison`, `champ`.
+    l'historique porte effectivement. Un champ est en ecart quand sa part dans
+    l'historique est inferieure a `DENSITE_HISTORIQUE_MIN` fois sa part en
+    prevision -- absent ou simplement trop rare. Colonnes : `saison`,
+    `champ`, `part_prevision`, `part_historique`.
     """
     parts = meteo_par_origine(con)
-    prev = parts.filter((pl.col("origine") == "prevision") & (pl.col("part") > 0))
-    hist = parts.filter((pl.col("origine") == "historique") & (pl.col("part") > 0))
+    prev = (
+        parts.filter((pl.col("origine") == "prevision") & (pl.col("part") > 0))
+        .select("saison", "champ", part_prevision="part")
+    )
+    hist = (
+        parts.filter(pl.col("origine") == "historique")
+        .select("saison", "champ", part_historique="part")
+    )
     return (
-        prev.join(hist, on=["saison", "champ"], how="anti")
-        .select("saison", "champ")
+        prev.join(hist, on=["saison", "champ"], how="left")
+        .with_columns(pl.col("part_historique").fill_null(0.0))
+        .filter(pl.col("part_historique") < DENSITE_HISTORIQUE_MIN * pl.col("part_prevision"))
         .sort("saison", "champ")
     )
 
@@ -323,15 +369,16 @@ def _quantiles(con: duckdb.DuckDBPyConnection) -> list[tuple]:
     `quantile_disc` plutot que `quantile_cont` : les valeurs sont entieres, et
     un quantile interpole (37,5 km/h) n'a jamais ete ecrit dans un bulletin.
     """
-    # `cumul_max_cm` n'est un maximum que depuis 2024 : avant, `SS242` porte le
-    # cumul d'un second secteur, `-1` quand il n'y en a pas (voir § 9 du
-    # rapport). Sa distribution ne se lit donc que sur la famille moderne.
+    # `cumul_max_cm` n'a pas le meme sens selon la famille de format
+    # (`SEMANTIQUE_DIVERGENTE`) : sa distribution ne se lit que hors de la
+    # famille ou il porte autre chose qu'un maximum.
+    famille_exclue, _ = SEMANTIQUE_DIVERGENTE[("neige_fraiche", "cumul_max_cm")]
     series = (
         ("vent_haut_vitesse_kmh", "meteo", "prevision", "origine = 'prevision'", "km/h"),
         ("vent_bas_vitesse_kmh", "meteo", "prevision", "origine = 'prevision'", "km/h"),
         ("iso_0_m", "meteo", "prevision", "origine = 'prevision'", "m"),
-        ("cumul_max_cm", "neige_fraiche", "historique, moderne",
-         "origine = 'historique' AND format_famille = 'moderne'", "cm"),
+        ("cumul_max_cm", "neige_fraiche", f"historique, hors {famille_exclue}",
+         f"origine = 'historique' AND format_famille <> '{famille_exclue}'", "cm"),
     )
     lignes = []
     for champ, table, libelle, filtre, unite in series:
@@ -380,7 +427,10 @@ def _matrice(dispo: pl.DataFrame, table: str, saisons: list[str]) -> str:
 
 
 def _plages(saisons: list[str], toutes: list[str]) -> str:
-    """`2016-2017 → 2019-2020, 2022-2023` : runs contigus dans l'ordre des saisons."""
+    """Runs contigus de saisons : `2016-2017 -> 2019-2020, 2022-2023`.
+
+    Le rendu Markdown remplace `->` par une fleche.
+    """
     rang = {s: i for i, s in enumerate(toutes)}
     runs: list[list[str]] = []
     for s in sorted(saisons, key=rang.__getitem__):
@@ -398,10 +448,11 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
     dernier jour couvert, qui ne change qu'avec les donnees.
     """
     from .massifs import BY_ID
+    from .tranches import TRANCHES
 
     dispo = disponibilite(con)
     saisons = sorted(dispo.filter(pl.col("table") == "bulletins")["saison"].unique().to_list())
-    st = statuts(dispo)
+    statuts_metriques = statuts(dispo)
 
     total, ecartes, dernier = con.execute(
         "SELECT count(*), count(*) FILTER (NOT massif_coherent), "
@@ -430,8 +481,10 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
         f"`massif_coherent`). **{ecartes}** ligne(s) écartée(s) parce que leur `ID` et "
         "leur libellé se contredisent — voir `bra info`.\n"
         "- Les tables filles sont restreintes aux bulletins retenus, par leur clé.\n"
-        "- Une part se lit en % des lignes de la table pour la saison : `0` = jamais "
-        "renseigné, `100` = toujours, `—` = table vide cette saison-là. Une part non "
+        "- Une part se lit en % des lignes de la table pour la saison, et ne compte que "
+        "les valeurs **exploitables** : ni nulles, ni `-1` (sentinelle de la source), ni "
+        "porteuses d'un autre sens que celui du champ (§ 9). `0` = jamais exploitable, "
+        "`100` = toujours, `—` = table vide cette saison-là. Une part non "
         "nulle s'affiche au moins à 0,1 %, pour qu'une présence rare ne passe pas pour "
         "une absence.\n"
     )
@@ -446,21 +499,30 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
         "- **sous-ensemble** : sur une partie des saisons seulement, listées ;\n"
         "- **non calculable** : aucune saison ne les réunit, ou la métrique attend un "
         "indice chiffré d'un champ texte.\n\n"
-        "« Présent » veut dire au moins une valeur non nulle dans la saison : un champ "
+        "« Présent » veut dire au moins une valeur exploitable dans la saison : un champ "
         "rare par nature (`sat2`, `altitude_seuil_m`) n'est pas un champ absent. La "
         "densité se lit dans les matrices du § 2. *Calculable* ne veut pas dire "
         "*comparable* : les règles de fenêtre (`coeur`, saisons comparables) "
         "s'appliquent en plus.\n"
     )
     lignes_st = []
-    for row in st.iter_rows(named=True):
+    for row in statuts_metriques.iter_rows(named=True):
         portee = row["saisons"] if row["statut"] == SOUS_ENSEMBLE else ""
         lignes_st.append((row["bloc"], row["metrique"], f"**{row['statut']}**",
                           _plages(portee.split(", "), saisons) if portee else "",
                           row["motif"]))
     s.append(_md(["bloc", "métrique", "statut", "saisons", "motif"], lignes_st) + "\n")
 
-    s.append("## 2. Part de valeurs non nulles, champ × saison (%)\n")
+    s.append("## 2. Part de valeurs exploitables, champ × saison (%)\n")
+    s.append(
+        "Champs comptés à 0 sur une famille de format parce qu'ils y portent autre "
+        "chose que ce que leur nom annonce :\n\n"
+        + "\n".join(
+            f"- `{t}.{c}` (famille `{fam}`) : {raison}."
+            for (t, c), (fam, raison) in SEMANTIQUE_DIVERGENTE.items()
+        )
+        + "\n"
+    )
     for table in _tables(con):
         s.append(f"### `{table}`\n")
         s.append(_matrice(dispo, table, saisons) + "\n")
@@ -489,7 +551,9 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
 
     s.append("## 4. Altitudes de référence par massif\n")
     s.append(
-        "Elles fondent les tranches normées (< 1800 m, 1800–2400 m, > 2400 m, spec § 4.2). "
+        "Elles fondent les tranches normées ("
+        + ", ".join(t.libelle for t in TRANCHES)
+        + ", spec § 4.2 ; § 10 ci-dessous). "
         "Une ligne par jeu d'altitudes distinct ; les saisons qui le partagent sont "
         "regroupées. Sources : `enneigement.altitude_m` (paliers d'épaisseur), "
         "`neige_fraiche.altitude_mesure_m`, `bulletins.vent_altitude_basse_m` / "
@@ -532,9 +596,17 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
     ) + "\n")
 
     s.append("## 6. Situations avalancheuses typiques : `sat1` / `sat2`\n")
+    # Les saisons ou `sat1` existe se lisent dans la mesure, pas dans une
+    # annee recopiee : si la source l'etendait a d'autres saisons, la table
+    # suivrait.
+    saisons_sat = sorted(
+        dispo.filter((pl.col("table") == "bulletins") & (pl.col("champ") == "sat1")
+                     & (pl.col("non_nulles") > 0))["saison"].to_list()
+    )
     sat = con.execute(
         "SELECT saison, count(*), count(sat1), count(sat2) FROM bulletins "
-        "WHERE massif_coherent AND saison_debut >= 2023 GROUP BY 1 ORDER BY 1"
+        "WHERE massif_coherent AND list_contains(?, saison) GROUP BY 1 ORDER BY 1",
+        [saisons_sat],
     ).fetchall()
     s.append(_md(
         ["saison", "bulletins", "% sat1", "% sat2"],
@@ -569,9 +641,9 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
         "La convention d'extraction préfère l'historique (analyse) à la prévision pour un "
         "même jour. Elle n'est tenable que pour les champs que l'historique porte.\n"
     )
-    mpo = meteo_par_origine(con)
-    champs_m = mpo["champ"].unique(maintain_order=True).to_list()
-    parts = {(sa, o, c): p for sa, o, c, _, p in mpo.iter_rows()}
+    parts_meteo = meteo_par_origine(con)
+    champs_m = parts_meteo["champ"].unique(maintain_order=True).to_list()
+    parts = {(sa, o, c): p for sa, o, c, _, p in parts_meteo.iter_rows()}
     lignes_m = []
     for sa in saisons:
         for o in ("prevision", "historique"):
@@ -580,18 +652,28 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
     s.append(_md(["saison", "origine", *[f"`{c}`" for c in champs_m]], lignes_m) + "\n")
     ecarts = ecarts_meteo(con)
     if ecarts.height:
-        s.append("Champs renseignés en prévision mais **jamais** dans l'historique :\n")
-        s.append(_md(["saison", "champ"], ecarts.rows()) + "\n")
+        s.append(
+            "Champs que l'historique porte moins de "
+            f"{_pct(DENSITE_HISTORIQUE_MIN)} % aussi souvent que la prévision — la "
+            "convention ne tient pas pour eux :\n"
+        )
+        s.append(_md(
+            ["saison", "champ", "% prévision", "% historique"],
+            [(sa, f"`{c}`", _pct(pp), _pct(ph)) for sa, c, pp, ph in ecarts.rows()],
+        ) + "\n")
     else:
-        s.append("Aucun champ renseigné en prévision n'est absent de l'historique.\n")
+        s.append(
+            "Tout champ porté par la prévision l'est au moins à "
+            f"{_pct(DENSITE_HISTORIQUE_MIN)} % aussi souvent par l'historique.\n"
+        )
     s.append(
         "> **Limite de la mesure.** `-1` vaut « sans objet » pour `PLUIENEIGE` (temps sec) "
         "et `MERNUAGES` (pas de mer de nuages), et le parser le convertit en nul. Pour "
         "ces deux champs, l'entrepôt ne distingue donc pas un attribut absent d'une "
         "valeur sans objet : une part basse y décrit la météo autant que le format. "
-        "Le XML 2024 en donne un cas : `MERNUAGES` figure dans la prévision et plus "
-        "dans le bloc `BSH`, sans que l'écart soit visible ici quand la prévision dit "
-        "`-1`.\n"
+        "Depuis 2024, `MERNUAGES` figure dans la prévision et plus dans le bloc `BSH` : "
+        "l'écart ressort ci-dessus grâce aux rares jours où la prévision annonce une mer "
+        "de nuages, mais il est invisible bulletin par bulletin quand elle dit `-1`.\n"
     )
 
     s.append("## 9. Sentinelles `-1` restées dans l'entrepôt\n")
@@ -603,10 +685,11 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
     sent = sentinelles(con)
     if sent.height:
         cles = sent.select("table", "champ").unique(maintain_order=True).rows()
-        n_par = {(t, c, sa): n for t, c, sa, _, n in sent.iter_rows()}
+        sentinelles_par = {(t, c, sa): n for t, c, sa, _, n in sent.iter_rows()}
         s.append(_md(
             ["champ", *saisons],
-            [(f"`{t}.{c}`", *(n_par.get((t, c, sa), 0) for sa in saisons)) for t, c in cles],
+            [(f"`{t}.{c}`", *(sentinelles_par.get((t, c, sa), 0) for sa in saisons))
+             for t, c in cles],
         ) + "\n")
     else:
         s.append("Aucun `-1` résiduel.\n")
@@ -643,13 +726,14 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
 
 def _section_tranches(con: duckdb.DuckDBPyConnection, saisons: list[str]) -> str:
     """§ 10 : ce que les tranches normees permettent de comparer (T5)."""
-    from .tranches import TRANCHES
+    from .tranches import HAUTE, MOYENNE, TRANCHES
 
     s = ["## 10. Tranches d'altitude normées (vue `palier_tranche`)\n"]
     s.append(
         "Bornes fermées à gauche, définies une fois dans `tranches.py` : "
         + ", ".join(f"**{t.nom}** {t.libelle}" for t in TRANCHES)
-        + ". Les paliers de l'archive tombent pile sur 1800 et 2400 m : fermées à gauche, "
+        + f". Les paliers de l'archive tombent pile sur {MOYENNE.min_m} et {HAUTE.min_m} m : "
+        "fermées à gauche, "
         "les deux époques de paliers d'enneigement (1500/1800/2400 puis 1500/2000/2500) "
         "donnent chacune un palier par tranche. Une altitude `-1` n'entre dans aucune "
         "tranche.\n"
@@ -668,19 +752,19 @@ def _section_tranches(con: duckdb.DuckDBPyConnection, saisons: list[str]) -> str
         "construction, sauf changement d'altitude en cours de saison.\n"
     )
     srcs = resume["source"].unique(maintain_order=True).to_list()
-    par = {(src, sa): (c, u) for src, sa, c, u in resume.iter_rows()}
+    # (source, saison) -> (couples massif x saison, dont a tranche unique)
+    comptes = {(src, sa): (n, u) for src, sa, n, u in resume.iter_rows()}
     lignes = []
     for src in srcs:
-        cells = []
-        for sa in saisons:
-            if (src, sa) in par:
-                c, u = par[(src, sa)]
-                cells.append(f"{u}/{c}")
-            else:
-                cells.append(None)
-        tot_c = sum(par[(src, sa)][0] for sa in saisons if (src, sa) in par)
-        tot_u = sum(par[(src, sa)][1] for sa in saisons if (src, sa) in par)
-        lignes.append((src, *cells, f"{_pct(tot_u / tot_c) if tot_c else '—'} %"))
+        presents = [comptes[(src, sa)] for sa in saisons if (src, sa) in comptes]
+        total_couples = sum(n for n, _ in presents)
+        total_uniques = sum(u for _, u in presents)
+        cells = [
+            f"{comptes[(src, sa)][1]}/{comptes[(src, sa)][0]}" if (src, sa) in comptes else None
+            for sa in saisons
+        ]
+        part = _pct(total_uniques / total_couples) if total_couples else "—"
+        lignes.append((src, *cells, f"{part} %"))
     s.append(_md(["source", *saisons, "part"], lignes) + "\n")
 
     couverts = _frame(
@@ -689,7 +773,7 @@ def _section_tranches(con: duckdb.DuckDBPyConnection, saisons: list[str]) -> str
         "FROM palier_tranche WHERE massif_coherent AND tranche IS NOT NULL "
         "GROUP BY ALL",
     )
-    n = {(a, b, c): m for a, b, c, m in couverts.iter_rows()}
+    massifs_par = {(src, tr, sa): m for src, tr, sa, m in couverts.iter_rows()}
     s.append(
         "### Massifs disposant d'au moins un palier, par tranche\n\n"
         "Une case vide est une tranche sans aucune donnée pour cette source et cette "
@@ -697,13 +781,10 @@ def _section_tranches(con: duckdb.DuckDBPyConnection, saisons: list[str]) -> str
     )
     s.append(_md(
         ["source", "tranche", *saisons],
-        [(src, t.nom, *(n.get((src, t.nom, sa)) for sa in saisons))
+        [(src, t.nom, *(massifs_par.get((src, t.nom, sa)) for sa in saisons))
          for src in srcs for t in TRANCHES],
     ) + "\n")
     return "\n".join(s)
-
-
-_ENTIERS = (pl.Int8, pl.Int16, pl.Int32, pl.Int64)
 
 
 def sentinelles(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
@@ -747,7 +828,7 @@ def sentinelles(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
 def concentration_tranches(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
     """Tranches normees couvertes par les paliers de chaque massif et saison.
 
-    Spec § 4.2 : si les altitudes de reference d'un massif tombent toutes dans
+    Spec section 4.2 : si les altitudes de reference d'un massif tombent toutes dans
     une tranche, la comparaison entre massifs sur les autres tranches n'a pas
     de sens. Colonnes : `source`, `massif_id`, `saison`, `altitudes`,
     `tranches` (dans l'ordre basse -> haute), `n_tranches`. Les altitudes

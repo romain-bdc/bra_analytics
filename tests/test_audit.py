@@ -114,7 +114,7 @@ def test_ecarts_entre_prevision_et_historique_meteo() -> None:
         "t(massif_id, date_bulletin, saison, origine, iso_0_m, mer_nuages_m)"
     )
     ecarts = audit.ecarts_meteo(c)
-    assert ecarts.rows() == [("2023-2024", "mer_nuages_m")]
+    assert ecarts.select("saison", "champ").rows() == [("2023-2024", "mer_nuages_m")]
 
 
 def test_rapport_reproductible(con) -> None:
@@ -158,3 +158,56 @@ def test_sentinelles_non_converties(con) -> None:
     par_saison = dict(zip(nf["saison"], nf["sentinelles"]))
     assert par_saison.get("2022-2023", 0) > 0
     assert par_saison.get("2025-2026", 0) == 0
+
+
+def test_une_sentinelle_ne_rend_pas_un_champ_disponible(con) -> None:
+    """`-1` n'est pas une valeur. Aspe-Ossau 2023 porte `SS242="-1"` sur chaque
+    jour : la colonne est remplie, mais rien n'y est exploitable."""
+    dispo = audit.disponibilite(con)
+    ligne = dispo.filter(
+        (dispo["table"] == "neige_fraiche") & (dispo["champ"] == "cumul_max_cm")
+        & (dispo["saison"] == "2022-2023")
+    ).row(0, named=True)
+    assert ligne["part"] < 1.0
+
+
+def test_neige_fraiche_legacy_hors_calcul(con) -> None:
+    """Avant 2024, `cumul_max_cm` porte le cumul d'un second secteur, pas un
+    maximum (`SECTEURSS2` dans le XML legacy). Les metriques de neige fraiche
+    ne sont calculables que sur la famille moderne."""
+    statuts = audit.statuts(audit.disponibilite(con))
+    ligne = _statut(statuts, "Épisodes de chute")
+    assert ligne["statut"] == "sous-ensemble"
+    assert ligne["saisons"] == "2023-2024, 2024-2025, 2025-2026"
+    assert "secteur" in ligne["motif"]
+
+
+def test_un_champ_rare_dans_l_historique_est_un_ecart() -> None:
+    """Porte par un tiers seulement des lignes d'historique, contre toutes les
+    lignes de prevision, un champ ne soutient pas la convention § 4.3 : la
+    serie extraite serait trouee aux deux tiers."""
+    c = duckdb.connect()
+    c.execute(
+        "CREATE VIEW bulletins AS SELECT * FROM (VALUES "
+        "(65, TIMESTAMP '2024-01-17 16:00', '2023-2024', true, 'moderne')) "
+        "t(massif_id, date_bulletin, saison, massif_coherent, format_famille)"
+    )
+    nuls = ", ".join(
+        f"NULL::{t} AS {n}" for n, t in (
+            ("vent_bas_vitesse_kmh", "INTEGER"), ("vent_haut_vitesse_kmh", "INTEGER"),
+            ("iso_moins10_m", "INTEGER"), ("limite_pluie_neige_m", "INTEGER"),
+            ("temps_sensible", "INTEGER"), ("mer_nuages_m", "INTEGER"),
+            ("vent_bas_direction", "VARCHAR"), ("vent_haut_direction", "VARCHAR"),
+            ("temps_sensible_libelle", "VARCHAR"),
+        )
+    )
+    c.execute(
+        f"CREATE VIEW meteo AS SELECT massif_id, date_bulletin, saison, origine, iso_0_m, {nuls} "
+        "FROM (VALUES "
+        "(65, TIMESTAMP '2024-01-17 16:00', '2023-2024', 'prevision', 2000), "
+        "(65, TIMESTAMP '2024-01-17 16:00', '2023-2024', 'historique', 1800), "
+        "(65, TIMESTAMP '2024-01-17 16:00', '2023-2024', 'historique', NULL), "
+        "(65, TIMESTAMP '2024-01-17 16:00', '2023-2024', 'historique', NULL)) "
+        "t(massif_id, date_bulletin, saison, origine, iso_0_m)"
+    )
+    assert ("2023-2024", "iso_0_m") in audit.ecarts_meteo(c).select("saison", "champ").rows()

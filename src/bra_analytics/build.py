@@ -496,7 +496,7 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
             """
         )
 
-        # Paliers d'altitude rattaches aux tranches normees (spec § 4.2). Un
+        # Paliers d'altitude rattaches aux tranches normees (spec section 4.2). Un
         # format long : une ligne par valeur mesuree a une altitude, quelle que
         # soit sa source. Une tranche sans palier n'a pas de ligne -- rien n'est
         # interpole -- et une altitude sentinelle (-1) garde sa ligne avec une
@@ -508,8 +508,12 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         #
         # Neige fraiche : avant 2024, `cumul_min_cm` / `cumul_max_cm` portent
         # `SS241` / `SS242`, qui sont les cumuls de deux secteurs et non une
-        # fourchette (voir docs/disponibilite.md § 9). La vue les transmet tels
+        # fourchette (voir docs/disponibilite.md section 9). La vue les transmet tels
         # quels avec `format_famille` ; la regle de parsing est a arreter en T7.
+        #
+        # Les jointures sur `bulletins` ne perdent aucune ligne : `to_frames()`
+        # ne conserve une ligne fille que pour une cle retenue dans la table
+        # mere, donc toute ligne fille a son bulletin.
         presentes = {r[0] for r in con.execute("SELECT view_name FROM duckdb_views()").fetchall()}
         if {"enneigement", "neige_fraiche", "meteo"} <= presentes:
             con.execute(
