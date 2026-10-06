@@ -1,4 +1,4 @@
-"""Interface en ligne de commande : `bra fetch`, `bra build`, `bra info`, `bra ui`."""
+"""Interface en ligne de commande : `bra fetch`, `bra build`, `bra info`, `bra audit`, `bra ui`."""
 
 from __future__ import annotations
 
@@ -251,6 +251,27 @@ def cmd_check(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_audit(args: argparse.Namespace) -> int:
+    """Disponibilite champ x saison, ecrite dans `docs/disponibilite.md`."""
+    import duckdb
+
+    from .audit import rapport
+
+    db = Path(args.db)
+    if not db.exists():
+        raise SystemExit(f"base absente : {db} (lancer `bra build`)")
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        texte = rapport(con)
+    finally:
+        con.close()
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(texte, encoding="utf-8")
+    print(f"audit de disponibilite : {out}")
+    return 0
+
+
 def cmd_massifs(args: argparse.Namespace) -> int:
     print(f"{'id':>4}  {'nom':<24}{'zone':<16}departement")
     for m in MASSIFS:
@@ -310,6 +331,11 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--fragment", action="store_true",
                    help="omettre doctype et <html> (page destinee a etre hebergee)")
     d.set_defaults(func=cmd_dashboard)
+
+    a = sub.add_parser("audit", help="disponibilite des champs saison par saison")
+    a.add_argument("--db", default="warehouse/bra.duckdb")
+    a.add_argument("--out", default="docs/disponibilite.md", help="document de sortie")
+    a.set_defaults(func=cmd_audit)
 
     m = sub.add_parser("massifs", help="lister le referentiel des massifs")
     m.set_defaults(func=cmd_massifs)

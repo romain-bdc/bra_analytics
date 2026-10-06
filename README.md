@@ -141,6 +141,19 @@ Deux fenêtres, deux usages : `coeur` (15 déc → 15 avr) pour comparer des ind
 (6 nov → 7 juin) pour comparer des couvertures. Les bornes sont mesurées, pas choisies — le
 détail du calcul est dans [le glossaire, § 8](docs/glossaire.md#8-fenêtres-de-comparaison-inter-saisons).
 
+### 6. `bra audit` — mesurer ce que les champs permettent
+
+```bash
+uv run bra audit
+```
+
+Écrit [`docs/disponibilite.md`](docs/disponibilite.md) : part de valeurs non nulles par champ et
+par saison, distribution de `loc_type`, altitudes de référence par massif, couverture de
+l'enneigement, `sat1`/`sat2`, distributions des champs à seuil, bloc météo selon `origine`, et
+sentinelles `-1` restées dans l'entrepôt. Chaque métrique de la spec y reçoit un statut
+(calculable, sur un sous-ensemble de saisons, non calculable) **dérivé** de ces mesures. Le
+document est déterministe : le relancer après chaque `bra build` et versionner le diff.
+
 Une commande auxiliaire, `bra massifs`, affiche le référentiel des 36 massifs.
 
 ## Sortie
