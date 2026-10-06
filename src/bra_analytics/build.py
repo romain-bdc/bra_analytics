@@ -337,6 +337,9 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
             CREATE OR REPLACE VIEW risque_journalier AS
             SELECT
               * EXCLUDE (rang),
+              -- Deux gardes, deux roles : celle du `min` empeche une ligne
+              -- usurpee de fixer le jour 1 de son massif ; celle du `CASE`
+              -- exterieur lui refuse un rang, puisqu'elle n'est d'aucun massif.
               CASE WHEN massif_coherent THEN date_diff(
                 'day',
                 min(CASE WHEN massif_coherent THEN jour_validite END)
