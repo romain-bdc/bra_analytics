@@ -160,7 +160,7 @@ La base DuckDB expose chaque table, plus trois vues de travail :
 
 | Vue | Grain | Usage |
 |---|---|---|
-| `risque_journalier` | 1 ligne / massif / **jour couvert** | séries temporelles |
+| `risque_journalier` | 1 ligne / massif / **jour couvert** | séries temporelles, sur deux axes : `jour_validite` (calendaire) et `jour_de_saison` (rang depuis l'ouverture du massif) |
 | `couverture` | 1 ligne / massif / saison | repérer les trous d'archive |
 | `profil_saison` | 1 ligne / massif / saison | profil d'une saison, massif par massif |
 | `saison_fenetre` | 1 ligne / saison / fenêtre | **comparaisons inter-saisons** |

@@ -483,3 +483,47 @@ def test_le_rapport_de_build_compte_les_lignes_ecartees(tmp_path) -> None:
     report, _ = build(source, tmp_path / "warehouse", None)
     assert report.daily_collapse_dropped == 0
     assert "collapse quotidienne" in report.summary()
+
+
+# --------------------------------------------------------------------------
+# Second axe temporel : jour_de_saison
+# --------------------------------------------------------------------------
+
+def _jours_de_saison(tmp_path) -> dict[tuple[int, str], int | None]:
+    db = tmp_path / "bra.duckdb"
+    build(FIXTURES, tmp_path / "warehouse", db)
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        rows = con.execute(
+            "SELECT massif_id, jour_validite, jour_de_saison FROM risque_journalier"
+        ).fetchall()
+    finally:
+        con.close()
+    return {(m, str(j)): n for m, j, n in rows}
+
+
+def test_jour_de_saison_part_du_premier_jour_du_massif(tmp_path) -> None:
+    """Un massif ouvert tard demarre a 1, pas au decalage calendaire de la saison.
+
+    En 2015-2016 l'archive livre Aspe-Ossau des le 10/03 et Couserans le 31/03
+    seulement. Compte depuis une date commune, Couserans demarrerait a 22.
+    """
+    jours = _jours_de_saison(tmp_path)
+    assert jours[(65, "2016-03-10")] == 1
+    assert jours[(69, "2016-03-31")] == 1
+    assert jours[(69, "2016-04-01")] == 2
+    # Saison suivante : le compte repart de 1 pour chaque couple massif x saison.
+    assert jours[(64, "2016-11-04")] == 1
+
+
+def test_jour_de_saison_ignore_le_bulletin_technique_de_2016(tmp_path) -> None:
+    """Le message technique du 05/02/2016 usurpe `ID="3"` : il ne doit pas
+    avancer le premier jour du Mont-Blanc.
+
+    Compte avec lui, le vrai premier bulletin du Mont-Blanc (11/03/2016)
+    porterait le jour 36. La ligne usurpee n'appartient a aucun massif : elle
+    n'a pas de jour de saison.
+    """
+    jours = _jours_de_saison(tmp_path)
+    assert jours[(3, "2016-03-11")] == 1
+    assert jours[(3, "2016-02-05")] is None

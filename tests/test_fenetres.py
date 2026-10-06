@@ -134,17 +134,25 @@ def test_saison_fenetre_ecarte_la_ligne_hors_perimetre(tmp_path) -> None:
     C'est la regression qui a rendu ces fenetres necessaires : sur l'archive
     complete, `bra info` annoncait 12 massifs en 2015-2016 et faisait demarrer
     la saison au 4 fevrier, deux artefacts d'un seul bulletin technique.
+
+    On ne teste pas l'absence de l'ID 3 : le Mont-Blanc est un vrai massif, et
+    la fixture `v1_2016_mont_blanc.xml` le fait figurer legitimement en
+    2015-2016. Seule la ligne usurpee doit disparaitre.
     """
     out, db = tmp_path / "warehouse", tmp_path / "bra.duckdb"
     build(FIXTURES, out, db)
 
     con = duckdb.connect(str(db), read_only=True)
     try:
-        massifs = con.execute(
-            "SELECT DISTINCT massif_id FROM saison_fenetre "
-            "JOIN risque_journalier USING (saison) WHERE massif_coherent"
-        ).fetchall()
-        assert 3 not in {m for (m,) in massifs}
+        actifs, premier = con.execute(
+            "SELECT massifs_actifs, premier_jour FROM saison_fenetre "
+            "WHERE saison = '2015-2016' AND fenetre = ?", [fenetres.SAISON_COMPLETE]
+        ).fetchone()
+        # Aspe-Ossau, Couserans, Mont-Blanc -- pas de quatrieme massif fantome.
+        assert actifs == 3
+        # Premier vrai bulletin : Aspe-Ossau, echeance du 10/03. Le message
+        # technique du 05/02 n'avance plus la saison.
+        assert str(premier) == "2016-03-10"
 
         # La vue reste interrogeable pour chaque portee attendue.
         portees = {f for (f,) in con.execute(
