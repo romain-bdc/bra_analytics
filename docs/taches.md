@@ -91,6 +91,12 @@ massifs groupés par chaîne, qui perd la géographie mais conserve le classemen
 36 identifiants raccordés et les écarts listés, la licence tranchée par écrit — ou le repli acté
 dans la spec.
 
+**Résolution (6 octobre 2026)** : repli acté, et c'est la meilleure source. Le GeoJSON des massifs
+publié par Météo-France (Licence Ouverte 2.0) couvre les 36 identifiants, Andorre comprise, par
+leur `massif_id` entier. Le jeu EAWS est sous CC0 mais n'a pas de `FR-71`, et ses identifiants
+sont sur deux chiffres (`FR-01`, pas `FR-1`) ; sa variante `_elevation` ne subdivise pas les
+massifs français. Voir [`contours.md`](contours.md) et [`recherche-contours.md`](recherche-contours.md).
+
 ---
 
 ## Lot 1 — Modèle

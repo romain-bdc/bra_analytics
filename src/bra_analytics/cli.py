@@ -251,6 +251,33 @@ def cmd_check(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_contours(args: argparse.Namespace) -> int:
+    """Raccorde les contours au referentiel et ecrit leur version web."""
+    import json
+
+    from . import geo
+
+    source = geo.charger(args.source)
+    r = geo.raccordement(source)
+    print(f"contours : {len(source['features'])} entites, source {args.source}")
+    if r.manquants:
+        print(f"  massifs sans contour : {', '.join(map(str, r.manquants))}")
+    if r.en_trop:
+        print(f"  contours hors referentiel : {', '.join(map(str, r.en_trop))}")
+    if r.complet:
+        print("  raccordement complet : 36 massifs, aucun contour en trop")
+
+    simple = geo.simplifier(source, tolerance=args.tolerance)
+    # Seul `code` voyage : les libelles viennent de `massifs.py`, qui fait foi.
+    for f in simple["features"]:
+        f["properties"] = {"code": f["properties"]["code"]}
+    out = Path(args.out)
+    out.write_text(json.dumps(simple, separators=(",", ":")) + "\n", encoding="utf-8")
+    print(f"version web : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    # Un ecart est signale par le code de sortie, pas seulement affiche.
+    return 0 if r.complet else 1
+
+
 def cmd_massifs(args: argparse.Namespace) -> int:
     print(f"{'id':>4}  {'nom':<24}{'zone':<16}departement")
     for m in MASSIFS:
@@ -310,6 +337,15 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--fragment", action="store_true",
                    help="omettre doctype et <html> (page destinee a etre hebergee)")
     d.set_defaults(func=cmd_dashboard)
+
+    from . import geo
+
+    g = sub.add_parser("contours", help="raccorder et simplifier les contours des massifs")
+    g.add_argument("--source", default=str(geo.SOURCE), help="GeoJSON d'origine")
+    g.add_argument("--out", default=str(geo.WEB), help="GeoJSON simplifie")
+    g.add_argument("--tolerance", type=float, default=geo.TOLERANCE,
+                   help="tolerance de simplification, en degres")
+    g.set_defaults(func=cmd_contours)
 
     m = sub.add_parser("massifs", help="lister le referentiel des massifs")
     m.set_defaults(func=cmd_massifs)

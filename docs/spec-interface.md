@@ -312,14 +312,13 @@ libre. Les sous-massifs et les points de mesure.
 
 ## 9. Risques
 
-Les **contours géographiques des massifs** ne sont pas dans le repo, et la carte d'accueil en
-dépend. La source est identifiée : les micro-régions EAWS, dont le jeu français reprend le
-découpage BRA avec des identifiants `FR-<massif_id>` directement raccordables au référentiel
-(détail et URL dans [`taches.md`](taches.md), T3). Le risque restant n'est donc plus de trouver la
-donnée mais de **vérifier sa licence** avant une mise en ligne publique : elle n'est pas affichée
-sur le site de diffusion. Tant que ce point n'est pas tranché, la carte reste en local. Replis
-possibles : le shapefile des massifs SAFRAN/S2M côté Météo-France, sous Licence Ouverte, ou une
-grille de massifs groupés par chaîne.
+Les **contours géographiques des massifs** sont résolus (T3, [`contours.md`](contours.md)) :
+le GeoJSON publié par Météo-France dans le jeu data.gouv.fr de l'archive BRA, sous **Licence
+Ouverte 2.0**, versionné dans le repo. Sa propriété `code` est le `massif_id` lui-même et couvre
+les 36 massifs, Andorre comprise. Les micro-régions EAWS, d'abord envisagées, sont sous CC0 —
+la crainte d'une licence non affichée était infondée — mais n'ont pas de contour pour le
+massif 71 ; elles restent documentées comme alternative. L'attribution des contours s'ajoute à
+celle des données (§ 7).
 
 Le second est la **couverture incomplète** : 11 massifs sur 36 sont ingérés. L'extension aux Alpes
 et à la Corse multiplie le cache brut par environ trois — de l'ordre de 90 000 fichiers et une
