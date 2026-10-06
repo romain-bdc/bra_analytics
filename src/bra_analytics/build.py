@@ -25,6 +25,7 @@ from . import schema
 from .fenetres import FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES
 from .massifs import BY_ID, libelle_coherent
 from .parser import ParseError, ParsedBulletin, parse_file
+from .tranches import sql_case as sql_case_tranche
 
 logger = logging.getLogger(__name__)
 
@@ -494,6 +495,67 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
             GROUP BY saison, massif_id
             """
         )
+
+        # Paliers d'altitude rattaches aux tranches normees (spec § 4.2). Un
+        # format long : une ligne par valeur mesuree a une altitude, quelle que
+        # soit sa source. Une tranche sans palier n'a pas de ligne -- rien n'est
+        # interpole -- et une altitude sentinelle (-1) garde sa ligne avec une
+        # tranche nulle : elle reste visible, elle n'entre dans aucune tranche.
+        #
+        # `jour` est la date que decrit la valeur (releve, cumul, echeance),
+        # pas `jour_validite` : le bloc historique d'un bulletin decrit les
+        # sept jours precedents.
+        #
+        # Neige fraiche : avant 2024, `cumul_min_cm` / `cumul_max_cm` portent
+        # `SS241` / `SS242`, qui sont les cumuls de deux secteurs et non une
+        # fourchette (voir docs/disponibilite.md § 9). La vue les transmet tels
+        # quels avec `format_famille` ; la regle de parsing est a arreter en T7.
+        presentes = {r[0] for r in con.execute("SELECT view_name FROM duckdb_views()").fetchall()}
+        if {"enneigement", "neige_fraiche", "meteo"} <= presentes:
+            con.execute(
+                f"""
+                CREATE OR REPLACE VIEW palier_tranche AS
+                WITH b AS (
+                  SELECT massif_id, date_bulletin, massif_coherent, format_famille,
+                         vent_altitude_basse_m, vent_altitude_haute_m
+                  FROM bulletins
+                ),
+                paliers AS (
+                  SELECT 'enneigement' AS source, e.saison, e.massif_id, e.date_bulletin,
+                         e.origine, CAST(e.date_enneigement AS DATE) AS jour,
+                         e.altitude_m, e.epaisseur_nord_cm, e.epaisseur_sud_cm
+                  FROM enneigement e
+                  UNION ALL BY NAME
+                  SELECT 'neige_fraiche' AS source, n.saison, n.massif_id, n.date_bulletin,
+                         n.origine, CAST(n.date_cumul AS DATE) AS jour,
+                         n.altitude_mesure_m AS altitude_m, n.cumul_min_cm, n.cumul_max_cm
+                  FROM neige_fraiche n
+                  UNION ALL BY NAME
+                  SELECT 'vent_bas' AS source, m.saison, m.massif_id, m.date_bulletin,
+                         m.origine, CAST(m.echeance AS DATE) AS jour,
+                         b.vent_altitude_basse_m AS altitude_m,
+                         m.vent_bas_vitesse_kmh AS vent_vitesse_kmh,
+                         m.vent_bas_direction AS vent_direction
+                  FROM meteo m JOIN b USING (massif_id, date_bulletin)
+                  UNION ALL BY NAME
+                  SELECT 'vent_haut' AS source, m.saison, m.massif_id, m.date_bulletin,
+                         m.origine, CAST(m.echeance AS DATE) AS jour,
+                         b.vent_altitude_haute_m AS altitude_m,
+                         m.vent_haut_vitesse_kmh AS vent_vitesse_kmh,
+                         m.vent_haut_direction AS vent_direction
+                  FROM meteo m JOIN b USING (massif_id, date_bulletin)
+                )
+                SELECT
+                  p.source, p.saison, p.massif_id, p.date_bulletin, p.origine, p.jour,
+                  p.altitude_m,
+                  {sql_case_tranche('p.altitude_m')} AS tranche,
+                  p.epaisseur_nord_cm, p.epaisseur_sud_cm,
+                  p.cumul_min_cm, p.cumul_max_cm,
+                  p.vent_vitesse_kmh, p.vent_direction,
+                  b.format_famille, b.massif_coherent
+                FROM paliers p JOIN b USING (massif_id, date_bulletin)
+                """
+            )
 
         con.execute("CHECKPOINT")
     finally:

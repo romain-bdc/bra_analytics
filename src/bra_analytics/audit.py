@@ -635,6 +635,71 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
         "un maximum, et toute métrique de neige fraîche (spec § 5.2) doit attendre "
         "qu'une règle de parsing soit arrêtée.\n"
     )
+
+    if "palier_tranche" in {r[0] for r in con.execute("SELECT view_name FROM duckdb_views()").fetchall()}:
+        s.append(_section_tranches(con, saisons))
+    return "\n".join(s)
+
+
+def _section_tranches(con: duckdb.DuckDBPyConnection, saisons: list[str]) -> str:
+    """§ 10 : ce que les tranches normees permettent de comparer (T5)."""
+    from .tranches import TRANCHES
+
+    s = ["## 10. Tranches d'altitude normées (vue `palier_tranche`)\n"]
+    s.append(
+        "Bornes fermées à gauche, définies une fois dans `tranches.py` : "
+        + ", ".join(f"**{t.nom}** {t.libelle}" for t in TRANCHES)
+        + ". Les paliers de l'archive tombent pile sur 1800 et 2400 m : fermées à gauche, "
+        "les deux époques de paliers d'enneigement (1500/1800/2400 puis 1500/2000/2500) "
+        "donnent chacune un palier par tranche. Une altitude `-1` n'entre dans aucune "
+        "tranche.\n"
+    )
+    conc = concentration_tranches(con)
+    resume = (
+        conc.group_by("source", "saison")
+        .agg(couples=pl.len(), une_seule=(pl.col("n_tranches") == 1).sum())
+        .sort("source", "saison")
+    )
+    s.append(
+        "### Couples massif × saison dont tous les paliers tombent dans une seule tranche\n\n"
+        "Pour ces couples, la comparaison entre massifs n'a de sens que sur la tranche "
+        "occupée ; sur les deux autres il n'y a rien à comparer. Neige fraîche et vent "
+        "ont **une** altitude de référence par bulletin : une seule tranche par "
+        "construction, sauf changement d'altitude en cours de saison.\n"
+    )
+    srcs = resume["source"].unique(maintain_order=True).to_list()
+    par = {(src, sa): (c, u) for src, sa, c, u in resume.iter_rows()}
+    lignes = []
+    for src in srcs:
+        cells = []
+        for sa in saisons:
+            if (src, sa) in par:
+                c, u = par[(src, sa)]
+                cells.append(f"{u}/{c}")
+            else:
+                cells.append(None)
+        tot_c = sum(par[(src, sa)][0] for sa in saisons if (src, sa) in par)
+        tot_u = sum(par[(src, sa)][1] for sa in saisons if (src, sa) in par)
+        lignes.append((src, *cells, f"{_pct(tot_u / tot_c) if tot_c else '—'} %"))
+    s.append(_md(["source", *saisons, "part"], lignes) + "\n")
+
+    couverts = _frame(
+        con,
+        "SELECT source, tranche, saison, count(DISTINCT massif_id) AS massifs "
+        "FROM palier_tranche WHERE massif_coherent AND tranche IS NOT NULL "
+        "GROUP BY ALL",
+    )
+    n = {(a, b, c): m for a, b, c, m in couverts.iter_rows()}
+    s.append(
+        "### Massifs disposant d'au moins un palier, par tranche\n\n"
+        "Une case vide est une tranche sans aucune donnée pour cette source et cette "
+        "saison : aucune valeur n'y est interpolée.\n"
+    )
+    s.append(_md(
+        ["source", "tranche", *saisons],
+        [(src, t.nom, *(n.get((src, t.nom, sa)) for sa in saisons))
+         for src in srcs for t in TRANCHES],
+    ) + "\n")
     return "\n".join(s)
 
 
@@ -676,4 +741,35 @@ def sentinelles(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
         .filter(pl.col("sentinelles") > 0)
         .select("table", "champ", "saison", "lignes", "sentinelles")
         .sort("table", "champ", "saison")
+    )
+
+
+def concentration_tranches(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
+    """Tranches normees couvertes par les paliers de chaque massif et saison.
+
+    Spec § 4.2 : si les altitudes de reference d'un massif tombent toutes dans
+    une tranche, la comparaison entre massifs sur les autres tranches n'a pas
+    de sens. Colonnes : `source`, `massif_id`, `saison`, `altitudes`,
+    `tranches` (dans l'ordre basse -> haute), `n_tranches`. Les altitudes
+    sentinelles (sans tranche) sont exclues du compte.
+    """
+    from .tranches import TRANCHES
+
+    ordre = " ".join(f"WHEN '{t.nom}' THEN {i}" for i, t in enumerate(TRANCHES))
+    return _frame(
+        con,
+        f"""
+        SELECT source, massif_id, saison,
+               array_to_string(list_sort(list_distinct(list(altitude_m))), '/') AS altitudes,
+               array_to_string(
+                 list_transform(
+                   list_sort(list_distinct(list(CASE tranche {ordre} END))),
+                   i -> ['{"', '".join(t.nom for t in TRANCHES)}'][i + 1]
+                 ), ', ') AS tranches,
+               count(DISTINCT tranche) AS n_tranches
+        FROM palier_tranche
+        WHERE massif_coherent AND tranche IS NOT NULL
+        GROUP BY ALL
+        ORDER BY source, massif_id, saison
+        """,
     )

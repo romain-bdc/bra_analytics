@@ -169,7 +169,7 @@ warehouse/
   bra.duckdb                                   vues sur l'ensemble
 ```
 
-La base DuckDB expose chaque table, plus trois vues de travail :
+La base DuckDB expose chaque table, plus des vues de travail :
 
 | Vue | Grain | Usage |
 |---|---|---|
@@ -177,6 +177,7 @@ La base DuckDB expose chaque table, plus trois vues de travail :
 | `couverture` | 1 ligne / massif / saison | repérer les trous d'archive |
 | `profil_saison` | 1 ligne / massif / saison | profil d'une saison, massif par massif |
 | `saison_fenetre` | 1 ligne / saison / fenêtre | **comparaisons inter-saisons** |
+| `palier_tranche` | 1 ligne / valeur mesurée à une altitude | enneigement, neige fraîche et vent par tranche normée (< 1800, 1800–2400, ≥ 2400 m) |
 
 Partitionnement par saison nivologique (`2025-2026` = septembre 2025 → août 2026), dérivé de
 `DATEBULLETIN` et non du chemin source — les deux divergent en 2016.
