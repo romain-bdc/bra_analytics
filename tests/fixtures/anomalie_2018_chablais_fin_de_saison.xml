@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="INA" ID="1" MASSIF="CHABLAIS" PRODUCTEUR="CDM741" DATEBULLETIN="2018-06-11T13:24:00" DATEECHEANCE="2018-11-01T18:00:00" DATEVALIDITE="2018-11-01T18:00:00" DATEDIFFUSION="2018-06-11T13:28:45" AMENDEMENT="false">
+  <DateValidite>2018-11-01T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="0" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="/" COMMENTAIRE="Fin de saison ... Rendez-vous début novembre..." />
+    <PENTE NE="false" E="false" SE="false" S="false" SW="false" W="false" NW="false" N="false" COMMENTAIRE="non renseigné" />
+    </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>- Rendez-vous début novembre, pour une nouvelle saison et la reprise des bulletins neige et avalanches.
+	Pour vos randonnées estivales, n'oubliez pas qu'en montagne, le temps change vite.
+	Avant de partir, informez-vous sur les conditions météorologiques et leur évolution.
+	Sur ce site ou sur l'Appli mobile de Météo-France : des prévisions météo détaillées,
+	Sur répondeur : le bulletin montagne de votre département
+	3250 ou 08 99 71 02 XX (XX n° du département).
+</TEXTE>
+  </STABILITE>
+</BULLETINS_NEIGE_AVALANCHE>

@@ -436,3 +436,17 @@ def test_date_de_diffusion_malformee_toleree() -> None:
 def test_typebulletin_absent_avant_2017() -> None:
     assert head("v1_2016_aspe_ossau.xml")["type_bulletin"] is None
     assert head("v3_2023_aspe_ossau.xml")["type_bulletin"] == "BRA"
+
+
+def test_risque1_zero_vaut_non_estime() -> None:
+    """Chablais, 11/06/2018 : avis de fin de saison (`TYPEBULLETIN="INA"`,
+    « Rendez-vous debut novembre »), `RISQUE1="0"` et `RISQUEMAXI="/"`.
+
+    Seul `0` des 77 479 bulletins de l'archive 2016-2026 : hors de l'echelle
+    1-5, c'est un refus d'estimer, comme `-1`, pas un indice. Lu tel quel, il
+    produisait l'unique erreur `risque1_hors_echelle` de `bra check`.
+    """
+    (b,) = parse_file(fixture("anomalie_2018_chablais_fin_de_saison.xml"))
+    assert b.bulletin["risque1"] is None
+    assert b.bulletin["risque_maxi"] is None
+    assert b.bulletin["risque_estime"] is False
