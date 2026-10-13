@@ -195,6 +195,93 @@ sur l'intégralité des Pyrénées 2016-2026.
 - **Volumétrie.** 27 006 fichiers / 3,7 Go de XML brut pour les 11 massifs pyrénéens ;
   après dédoublonnage, **23 533 bulletins**, soit 3 473 fichiers redondants (12,9 %).
 
+## 2 ter. Constats issus des 36 massifs (90 054 fichiers, 11 saisons)
+
+Extension aux Alpes et à la Corse (tâche T1, 6-7 octobre 2026). Sauf mention contraire, les
+chiffres de ce paragraphe portent sur les 36 massifs ; ceux des paragraphes précédents restent
+pyrénéens.
+
+**Volumétrie et coût.**
+
+| Étape | Mesure |
+|---|---|
+| `bra fetch --massifs alpes,corse`, 11 saisons | 63 035 fichiers téléchargés en 2 h 56 min (6 workers) ; cache de 3,9 à 13,0 Go |
+| Reprise (même commande, relancée) | 13 fichiers récupérés en 12 min : échecs transitoires du premier passage |
+| Cache final | **90 054 fichiers**, 13,0 Go |
+| `bra build --replace` | **4 min**, **7 Go de mémoire** au pic, 19 Mo de Parquet |
+| Bulletins après déduplication | **77 488** (12 565 publications redondantes écartées, 14 %) |
+| `risque_journalier` | 76 853 jours-massif ; 635 bulletins écartés par la collapse quotidienne, dont 162 à indice différent, tous journalisés |
+
+Le pic mémoire est neuf : 40 s et quelques centaines de Mo sur les Pyrénées. Le build charge tout
+le corpus parsé avant d'écrire ; à 36 massifs il reste sous 8 Go, mais un ajout de saisons le
+rapprochera des limites d'une machine modeste.
+
+**Fichiers en erreur à la source.** Neuf fichiers annoncés par le listing ne sont pas
+téléchargeables, à chaque tentative : le serveur sert une page HTML d'erreur sous un code 200,
+comme pour les deux cas pyrénéens. Tous tombent en 2021-2022 — la même période :
+
+```
+BEAUFORTAIN_20210314142752   VANOISE_20210426135903       HAUTE-TARENTAISE_20211130143037
+PELVOUX_20211202153619       VERCORS_20220101142303       VANOISE_20220113141624
+MERCANTOUR_20220405142047    BELLEDONNE_20220516140631    VERCORS_20221202150136
+```
+
+S'y ajoute un fichier valide mais vide : `ARAVIS_20190328145058.xml` ne contient que
+`<Bulletins nombre="0"/>`, seul fichier Aravis du jour. `bra build` le compte en erreur de
+parsing ; c'est un jour sans bulletin, pas un défaut de la pipeline.
+
+**Massifs absents.** Le massif **22 (Haut-Var Haut-Verdon) n'est diffusé qu'à partir du
+22 novembre 2018** : absent des listings de la source avant cette date (vérifié au 15/01/2018),
+il donne 35 massifs aux saisons 2015-2016 à 2017-2018. Le massif 71 manque en 2025-2026 (§ 1.4).
+
+**2019-2020 : l'arrêt n'est pas le même partout.** L'estimation s'arrête fin mars dans toutes les
+zones, mais la diffusion non :
+
+| Zone | Dernier jour couvert | Jours-massif après le 26/03/2020 | dont non estimés |
+|---|---|---|---|
+| Pyrénées | 26/03/2020 | 0 | — |
+| Corse | 18/03/2020 | 0 | — |
+| Alpes du Nord | 11/06/2020 | 434 | 434 |
+| Alpes du Sud | 11/06/2020 | 243 | 243 |
+
+Les Alpes publient, après le confinement, des bulletins sans indice et **par intermittence** :
+690 jours-massif manquent en avril dans leur span. D'où une saison qui court jusqu'en juin dans
+`bra info`, mais trouée — et toujours non comparable.
+
+**Journées absentes pour tous les massifs.** Les 2 492 jours-massif manquants à l'intérieur des
+spans se répartissent ainsi, selon le nombre de massifs absents le même jour :
+
+| Massifs absents le même jour | Jours | Jours-massif |
+|---|---|---|
+| 1 | 50 | 50 |
+| 2 à 9 | 105 | 484 |
+| 10 à 29 | 64 | 1 361 |
+| 30 à 36 | 17 | 597 |
+
+Les dix-sept journées quasi totales correspondent à des **répertoires de la source vides** (le
+bulletin du jour J se trouve dans le répertoire de J−1) : 12 au 20/03/2016 (début de l'archive),
+29/04/2019, 15/02/2020 (30 massifs), 12, 13, 14 et 17/12/2020, 4 et 5/02/2025. Les manques de 10
+à 29 massifs sont pour l'essentiel l'intermittence alpine de 2019-2020 ; les manques isolés, des
+jours sans fichier pour un massif donné.
+
+**Un avis de fin de saison daté de novembre.** `CHABLAIS_20180611132845.xml`
+(`TYPEBULLETIN="INA"`) annonce « Rendez-vous début novembre » avec `RISQUE1="0"`,
+`RISQUEMAXI="/"` et une `DATEECHEANCE` au 01/11/2018, **143 jours** après sa rédaction ; tous les
+autres bulletins couvrent J à J+3. Seul `0` de l'archive, il produisait l'unique erreur
+`risque1_hors_echelle` : il est désormais lu comme non estimé, au même titre que `-1`. Son jour
+fictif du 01/11/2018 est écarté, et journalisé, par la collapse quotidienne au profit du vrai
+bulletin de 2018-2019.
+
+**`INA` n'est pas une anomalie.** `TYPEBULLETIN` vaut `BRA` (61 156), `INA` (14 482), `AMENDEMENT`
+(548) ou manque (1 302, saison 2015-2016). `INA` — « Information Neige et Avalanche » — est le
+bulletin réduit des journées marginales, celui qui porte `RISQUE1="-1"`.
+
+**Ce qui ne change pas.** Les dates de la pratique du `-1` sont **identiques** sur les 36 massifs
+et sur les Pyrénées : la fenêtre `coeur` tient, sans aucun bulletin non estimé sur les saisons
+comparables. L'intersection des spans s'élargit à 4 novembre → 7 juin ; `commune` (6 novembre)
+reste incluse dans chaque saison. En revanche la part de l'écart inter-époques imputable à
+l'encodage tombe de 70 % à **47 %** (glossaire § 2.3).
+
 ## 3. Conséquences retenues pour le parser
 
 1. Détecter la racine (`Bulletins` wrapper ou non) et itérer sur les enfants réels.

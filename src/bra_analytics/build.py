@@ -320,8 +320,8 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         #   lendemain matin (constate le 31/03/2016). On retient la redaction la
         #   plus tardive, qui est l'information valide en dernier ressort.
         #
-        # Cette vue est reductrice : elle passe de 23 533 bulletins a 23 268
-        # lignes. `log_daily_collapse_discards()` journalise au build chaque
+        # Cette vue est reductrice : sur les 36 massifs elle passe de 77 488
+        # bulletins a 76 853 lignes (23 533 a 23 268 sur les Pyrenees). `log_daily_collapse_discards()` journalise au build chaque
         # ligne ainsi ecartee -- l'`ORDER BY` ci-dessous et le tri de cette
         # fonction doivent rester identiques.
         #

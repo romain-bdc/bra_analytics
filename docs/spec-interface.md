@@ -33,7 +33,7 @@ cherche un chiffre ou un graphe partageable.
 | Contrôles de cohérence | Fait, erreurs vs signaux | `bra check` |
 | Documentation des champs | Fait | `docs/glossaire.md` |
 | Page statique Pyrénées | Fait, 5 sections | `bra dashboard` |
-| **Couverture géographique complète** | **11 massifs sur 36** | à faire |
+| Couverture géographique complète | Fait : 36 massifs, 77 488 bulletins | `bra fetch`, T1 |
 | **Couche métriques** | **à faire** | § 5 |
 | **Les quatre écrans** | **partiellement : la fiche existe en germe** | § 6 |
 
@@ -86,10 +86,10 @@ du périmètre réel de la vue experte.
 
 « Moyenne du risque sur dix saisons, une valeur par massif » est la bonne intention, mais la
 moyenne brute sur dix saisons est **méthodologiquement fausse** sur ce corpus, et le repo l'a
-déjà établi chiffres en main : la sentinelle `RISQUE1=-1` s'arrête au 14 juin 2021, si bien qu'une
+déjà établi chiffres en main : la sentinelle `RISQUE1=-1` s'arrête au 11 juin 2021, si bien qu'une
 moyenne qui couvre les deux époques mélange deux conventions d'encodage. L'écart mesuré est de
-0,327 point sur la saison entière contre 0,098 sur la fenêtre `coeur` — autrement dit 70 % de
-l'écart serait un artefact.
+0,327 point sur la saison entière contre 0,098 sur la fenêtre `coeur` sur les Pyrénées — 70 % de
+l'écart serait un artefact —, et 0,368 contre 0,196 sur les 36 massifs, soit 47 %.
 
 La métrique d'accueil est donc définie ainsi, et pas autrement :
 
@@ -322,10 +322,8 @@ la crainte d'une licence non affichée était infondée — mais n'ont pas de co
 massif 71 ; elles restent documentées comme alternative. L'attribution des contours s'ajoute à
 celle des données (§ 7).
 
-Le second est la **couverture incomplète** : 11 massifs sur 36 sont ingérés. L'extension aux Alpes
-et à la Corse multiplie le cache brut par environ trois — de l'ordre de 90 000 fichiers et une
-douzaine de gigaoctets à télécharger, pour quelques dizaines de mégaoctets de Parquet. C'est long
-mais sans difficulté ; c'est à lancer avant de construire l'accueil.
+La **couverture incomplète** est résolue (T1) : les 36 massifs sont ingérés — 90 054 fichiers,
+13 Go de XML, trois heures de téléchargement, quatre minutes de build pour 19 Mo de Parquet.
 
 Les deux autres sont des restrictions de série à étiqueter, pas à corriger : `sat1` / `sat2`
 n'existent que depuis 2024, et la table `tendances` s'arrête en 2023 avec une sémantique

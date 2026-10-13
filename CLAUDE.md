@@ -5,8 +5,8 @@ Instructions permanentes pour travailler dans ce repo. À lire avant toute modif
 ## Ce que fait ce repo
 
 Pipeline d'ingestion et d'agrégation des Bulletins d'Estimation du Risque d'Avalanche de
-Météo-France (mars 2016 → juin 2026 ; 36 massifs au référentiel, 11 pyrénéens actuellement
-ingérés), et interface d'analyse historique construite dessus.
+Météo-France (mars 2016 → juin 2026 ; les 36 massifs du référentiel sont ingérés), et interface
+d'analyse historique construite dessus.
 
 Le parsing des six formats XML historiques, la déduplication, l'entrepôt Parquet et les vues
 DuckDB sont faits et éprouvés. Ce qui reste à construire est la couche métriques et les écrans :
@@ -43,8 +43,8 @@ uv run bra ui                                              # interface web DuckD
 uv run pytest
 ```
 
-`fetch` est idempotent et reprenable (cache sous `data/raw/`). `build` reconstruit intégralement
-l'entrepôt, environ 40 s pour les 11 saisons pyrénéennes. Après toute modification du parsing ou
+`fetch` est idempotent et reprenable (cache sous `data/raw/`, 13 Go pour les 36 massifs). `build`
+reconstruit intégralement l'entrepôt : environ 4 minutes et 7 Go de mémoire pour les 36 massifs. Après toute modification du parsing ou
 d'une vue : `bra build --replace && bra check && pytest`.
 
 ## Règles de données — non négociables
@@ -58,11 +58,12 @@ Les enfreindre ne produit pas une erreur, mais un chiffre faux.
   diffusé sous un identifiant alpin : sa zone est une fiction héritée.
 - **Avant toute moyenne, exiger `risque_maxi IS NOT NULL`.** `risque_estime = false` dit ce que la
   source a refusé d'estimer ; `risque_maxi IS NULL` dit ce qui sort effectivement du calcul. Les
-  deux diffèrent sur six lignes, et confondre les deux fait diverger un tableau de la moyenne
-  qu'il explique.
+  deux diffèrent sur quatorze lignes (six sur les Pyrénées), et confondre les deux fait diverger
+  un tableau de la moyenne qu'il explique.
 - **Toute comparaison inter-saisons d'indice se fait sur la fenêtre `coeur` et sur
   `comparable = true`.** La sentinelle `RISQUE1=-1` s'arrête en juin 2021 : hors de cette fenêtre,
-  70 % de l'écart apparent entre les deux époques est un artefact d'encodage.
+  près de la moitié de l'écart apparent entre les deux époques (47 % sur 36 massifs, 70 % sur les
+  Pyrénées) est un artefact d'encodage.
 - **Les bornes de fenêtre sont définies une seule fois, dans `fenetres.py`.** Aucun SQL, aucun
   JavaScript, aucun notebook ne les recopie — une borne recopiée est une borne qui divergera.
 - **Un niveau de risque est ordinal.** Une moyenne ne se présente jamais seule : elle s'accompagne
@@ -100,9 +101,10 @@ Les enfreindre ne produit pas une erreur, mais un chiffre faux.
   DuckDB sur Parquet, et le volume — quelques dizaines de mégaoctets — ne justifie rien d'autre.
   Une base serveur ne se discutera que le jour où l'alerting mail apportera des écritures
   concurrentes, et elle cohabitera alors avec les Parquet au lieu de les remplacer.
-- Présenter une anomalie d'archive comme un bug : la saison 2019-2020 s'arrête au 26 mars
-  (confinement), le massif 71 (Andorre) disparaît en 2025-2026, certaines journées sont
-  partielles. Ces faits s'affichent, ils ne se corrigent pas.
+- Présenter une anomalie d'archive comme un bug : l'estimation 2019-2020 s'arrête fin mars
+  (confinement), le massif 22 (Haut-Var Haut-Verdon) n'apparaît qu'en novembre 2018, le massif 71
+  (Andorre) disparaît en 2025-2026, certaines journées sont partielles ou absentes pour tous les
+  massifs. Ces faits s'affichent, ils ne se corrigent pas.
 - Comparer deux saisons sur leurs bornes brutes.
 
 ## État de l'interface

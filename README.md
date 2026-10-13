@@ -61,8 +61,10 @@ C'est l'étape de transformation. Elle lit tout le XML présent dans `data/raw/`
 5. **écrit** six tables en Parquet partitionné par saison, puis crée la base DuckDB et ses vues.
 
 L'opération est **idempotente** : `warehouse/` est reconstruit intégralement à chaque appel, sans
-état résiduel. Sur les 11 saisons pyrénéennes (27 000 fichiers, 3,7 Go), elle prend environ 40 s
-et produit 6,2 Mo de Parquet — les images embarquées, qui pèsent 93 % du XML ancien, sont écartées.
+état résiduel. Sur les 36 massifs et 11 saisons (90 054 fichiers, 13,0 Go de XML), elle prend
+environ **4 minutes** et culmine à **7 Go de mémoire**, pour 19 Mo de Parquet — les images
+embarquées, qui pèsent 93 % du XML ancien, sont écartées. Sur les seules Pyrénées (27 006
+fichiers, 3,7 Go) : 40 s et 6,2 Mo.
 
 Options : `--out` pour changer le répertoire de sortie, `--db` pour le chemin de la base,
 `--no-db` pour ne produire que les Parquet.
@@ -93,12 +95,13 @@ rapide de vérifier qu'une ingestion a bien produit ce qu'on attendait.
 ```
 Bulletins par saison :
   saison            n  massifs  debut       fin          risque moy.
-  2015-2016       414       11  2016-03-09  2016-04-24          2.52
-  2016-2017      2445       11  2016-11-03  2017-06-13          2.31
+  2015-2016      1301       35  2016-03-09  2016-04-24          2.37
+  2016-2017      7773       35  2016-11-03  2017-06-14          2.26
+  2017-2018      7750       35  2017-11-02  2018-06-12          2.91
+  2018-2019      8003       36  2018-10-29  2019-06-12          2.22
+  2019-2020      5864       36  2019-10-30  2020-06-10          2.38
   ...
-  2019-2020      1563       11  2019-10-30  2020-03-25          2.16
-  ...
-  2025-2026      2205       10  2025-11-05  2026-06-07          2.19
+  2025-2026      7608       35  2025-11-03  2026-06-07          2.23
 
   La colonne « risque moy. » porte sur la saison entiere : elle n'est
   pas comparable d'une saison a l'autre. Voir `bra fenetres`.
@@ -107,11 +110,17 @@ Ecartees du tableau (1 couple(s) saison/massif) — ID et libelle se contredisen
   2015-2016  ID=3 (Mont-Blanc) porte MASSIF='MOYENNE MONTAGNE' — 1 bulletin(s)
 ```
 
-Cette sortie se lit aussi comme un diagnostic. Deux faits d'archive y sautent aux yeux, et les
-deux sont réels : une saison 2019-2020 qui s'arrête au 25 mars (confinement) et 10 massifs en
-2025-2026 (le massif Andorre n'est plus diffusé). Le troisième — un bulletin technique de 2016
-diffusé sous un identifiant alpin — est désormais écarté du tableau et listé en dessous : il
-comptait auparavant pour un douzième massif pyrénéen et faisait démarrer la saison au 4 février.
+Cette sortie se lit aussi comme un diagnostic, et chacun de ses écarts est un fait d'archive :
+
+- **35 massifs jusqu'en 2017-2018** : le massif 22 (Haut-Var Haut-Verdon) n'est diffusé qu'à
+  partir du 22 novembre 2018 ;
+- **35 massifs en 2025-2026** : le massif 71 (Andorre) n'est plus diffusé ;
+- **2019-2020 court jusqu'au 10 juin** alors que l'estimation s'arrête fin mars (confinement) :
+  Pyrénées et Corse cessent de publier (26 et 18 mars), les Alpes continuent sans indice et par
+  intermittence jusqu'au 11 juin — d'où une saison longue mais trouée ;
+- le bulletin technique de 2016 diffusé sous un identifiant alpin est écarté du tableau et listé
+  en dessous : il comptait auparavant pour un douzième massif pyrénéen et faisait démarrer la
+  saison au 4 février.
 
 ### 5. `bra fenetres` — comparer des saisons entre elles
 
@@ -132,9 +141,9 @@ comparaison légitime : nombre de bulletins, massifs actifs, non-estimés, couve
                  estime sur chacune des saisons comparables. [...]
 
   saison      bulletins  massifs  non est.  jours   couv.  risque
-  2016-2017        1341       11         0    122  99.9 %   2.386
+  2016-2017        4260       35         0    122  99.8 %   2.349
   ...
-  2025-2026        1220       10         0    122 100.0 %   2.573
+  2025-2026        4263       35         0    122  99.8 %   2.568
 ```
 
 Deux fenêtres, deux usages : `coeur` (15 déc → 15 avr) pour comparer des indices, `commune`
@@ -194,7 +203,7 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   ajoute la réédition : le même bulletin rediffusé une à deux heures plus tard avec un
   `DATEBULLETIN` déplacé, que la déduplication ne peut pas rapprocher puisque c'est la clé qui
   bouge. Les deux cas sont conservés dans `bulletins` et arbitrés dans `risque_journalier`
-  (rédaction la plus tardive) : **265 lignes** sur 23 533, dont 48 portent un indice différent de
+  (rédaction la plus tardive) : **635 lignes** sur 77 488, dont 162 portent un indice différent de
   celui retenu. `bra build` journalise chacune en `WARNING` et `bra check` en donne le total —
   l'écart entre les deux comptages n'est jamais silencieux.
 - **`massif_id` est la seule clé stable.** Le libellé change de graphie selon l'époque
@@ -202,19 +211,22 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   le libellé normalisé du référentiel, `massif_nom_source` celui du fichier.
 - **`risque_estime = false` signale un bulletin sans estimation chiffrée** (début et fin de
   saison, faute d'enneigement). La source y met `RISQUE1 = -1` ; la pipeline convertit cette
-  sentinelle en valeur nulle pour ne pas fausser les moyennes. Cela concerne **4 250 bulletins
-  sur 23 533, soit 18,1 % du corpus**, très concentrés : 4 247 d'entre eux tombent sur les cinq
-  saisons 2016-2017 à 2020-2021, où ils pèsent 37,8 % des 11 240 bulletins. Filtrer sur
+  sentinelle en valeur nulle pour ne pas fausser les moyennes. Cela concerne **14 487 bulletins
+  sur 77 488, soit 18,7 % du corpus**, très concentrés : 14 482 d'entre eux tombent sur les cinq
+  saisons 2016-2017 à 2020-2021, où ils pèsent 38,9 % des 37 225 bulletins. Filtrer sur
   `risque_estime` avant tout agrégat, ou s'appuyer sur `profil_saison` qui l'exclut déjà.
-  Six lignes font exception : `RISQUE1 = -1` y coexiste avec un `RISQUEMAXI` renseigné, si bien
+  Quatorze lignes font exception (six sur les Pyrénées) : `RISQUE1 = -1` y coexiste avec un
+  `RISQUEMAXI` renseigné, si bien
   qu'elles sont non estimées **et** comptées dans les moyennes (`bra check` les signale sous
   `non_estime_avec_maxi`).
 - **La pratique du `-1` s'arrête en juin 2021 : c'est une rupture de série.** Elle court du
-  04/11/2016 au 14/06/2021, sans aucun cas avant ni après. Ensuite, les mêmes journées marginales
+  04/11/2016 au 11/06/2021 (jours couverts), avec pour seules exceptions ensuite quatre bulletins
+  isolés (trois le 05/11/2023, un le 09/01/2025). Ensuite, les mêmes journées marginales
   reçoivent un indice réel, généralement 1, et entrent donc dans les moyennes. Conséquence : à
-  nivologie identique une saison 2016-2021 ressort plus haute qu'une saison récente, et **70 % de
-  l'écart apparent entre les deux époques est un artefact d'encodage** (0,327 point sur la saison
-  entière, 0,098 sur la fenêtre `coeur`). Contrairement à la rupture de schéma de 2024, celle-ci
+  nivologie identique une saison 2016-2021 ressort plus haute qu'une saison récente. Sur les
+  36 massifs, l'écart apparent entre les deux époques passe de **0,368 point** sur la saison entière
+  à **0,196** sur la fenêtre `coeur` : près de la moitié (47 %) est un artefact d'encodage. Sur les
+  seules Pyrénées, où la mesure a d'abord été faite, la part montait à 70 % (0,327 → 0,098). Contrairement à la rupture de schéma de 2024, celle-ci
   est invisible dans la structure du fichier : aucun `schema_version` ne la signale.
 - **Ne jamais comparer deux saisons sur leurs bornes brutes.** Utiliser la vue `saison_fenetre`,
   ou les booléens `fenetre_coeur` / `fenetre_commune` de `risque_journalier`. La fenêtre `coeur`
@@ -233,9 +245,11 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   Filtrer sur `format_famille` ou `schema_version` pour les comparaisons inter-époques.
 - **Le massif 71 (Andorre) disparaît en 2025-2026.** Une rupture de série n'est pas un bug.
 - **Trous réels dans l'archive**, à ne pas confondre avec des défauts d'ingestion :
-  la saison 2019-2020 s'arrête au **26 mars 2020** (confinement) ; certaines journées sont
-  partielles (07/02/2023 : 8 bulletins au lieu de 36) ; 2 fichiers sur 27 006 sont corrompus
-  côté serveur (réponse « 500 » servie sous un code HTTP 200).
+  l'estimation 2019-2020 s'arrête **fin mars 2020** (confinement) ; certaines journées sont
+  partielles (07/02/2023 : 8 bulletins au lieu de 36), dix-sept sont absentes pour (presque) tous
+  les massifs, les répertoires de la source étant vides ; 11 fichiers sur 90 065 annoncés sont
+  corrompus côté serveur (page d'erreur servie sous un code HTTP 200), tous en 2021-2022. Le
+  détail est dans [exploration.md, § 2 ter](docs/exploration.md).
 - **Un bulletin usurpe un identifiant** : `ID=3` (Mont-Blanc) avec `MASSIF="MOYENNE MONTAGNE"`
   en 2016 — un message technique, pas un bulletin. L'écarter avec `WHERE massif_coherent`, la
   colonne qui compare l'`ID` au libellé source. **Un filtre sur `zone` ne convient pas** : la
