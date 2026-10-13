@@ -6,7 +6,9 @@ Trois niveaux de certitude sont distingués :
 
 - **Documenté** — figure dans le *Descriptif technique des informations du bulletin avalanche*
   (Météo-France, 26/10/2023).
-- **Observé** — établi en analysant les 23 533 bulletins pyrénéens 2016-2026.
+- **Observé** — établi en analysant les bulletins 2016-2026 : d'abord les 23 533 bulletins
+  pyrénéens, puis les 77 488 bulletins des 36 massifs (octobre 2026). Un chiffre sans mention de
+  périmètre porte sur les Pyrénées.
 - **Inféré** — déduit par corrélation, sans confirmation officielle. Signalé comme tel.
 
 Les écarts entre le descriptif et les données sont détaillés dans [exploration.md](exploration.md).
@@ -84,6 +86,25 @@ Une ligne par bulletin. Clé : `(massif_id, date_bulletin)`.
 | `date_diffusion` | `@DATEDIFFUSION` | datetime | Publication effective. Sert à arbitrer les rééditions |
 | `amendement` | `@AMENDEMENT` | bool | Bulletin de rectification |
 
+**Second axe temporel** — porté par la vue `risque_journalier`, pas par la table :
+
+| Champ | Source | Type | Description |
+|---|---|---|---|
+| `jour_de_saison` | *(calculé)* | int | Rang du jour dans la saison **de ce massif** : 1 au premier `jour_validite` du couple massif × saison, puis +1 par jour calendaire |
+
+> **`jour_de_saison` se compte massif par massif, pas depuis une date commune.** La diffusion
+> n'ouvre pas le même jour partout : en 2015-2016, l'archive livre Aspe-Ossau dès le 10 mars et
+> Couserans le 31 mars seulement ; chacun démarre à 1. C'est l'axe qui empêche une saison
+> ouverte tardivement de paraître vide en décembre. L'axe calendaire reste celui par défaut.
+>
+> - Il compte des **jours calendaires**, pas des jours couverts : un trou d'archive avance le
+>   compteur sans produire de ligne. Deux lignes consécutives peuvent donc porter 12 et 14.
+> - Les jours **non estimés** (`RISQUE1=-1`) comptent : l'axe mesure la diffusion, pas
+>   l'indice. Conséquence : avant juin 2021, le jour 1 tombe souvent sur un bulletin sans indice.
+> - Il vaut `NULL` sur les lignes `massif_coherent = false`, et ces lignes ne fixent pas le
+>   jour 1 de leur massif : sans cette règle, le message technique du 05/02/2016 diffusé sous
+>   `ID="3"` avancerait de 35 jours le début de saison du Mont-Blanc.
+
 > **Pièges.** Les dates 2016 portent un suffixe `Z` (UTC) et une fraction à 7 chiffres ; elles
 > sont converties en heure locale française. `amendement` **ne permet pas de repérer les
 > rééditions** : deux publications du même bulletin le portent à `false`.
@@ -116,7 +137,8 @@ Bloc `<CARTOUCHERISQUE><RISQUE>`, le cœur analytique du bulletin.
 > moyenne est faussée.**
 >
 > **Six lignes font exception** : `RISQUE1="-1"` y coexiste avec un `RISQUEMAXI` renseigné
-> (cinq en mars 2020, une le 05/11/2023). Elles sont donc `risque_estime = false` **et** comptées
+> (cinq en mars 2020, une le 05/11/2023). Sur les 36 massifs elles sont quatorze : s'y ajoutent
+> six en décembre 2018 et deux le 05/11/2023, en Alpes du Nord. Elles sont donc `risque_estime = false` **et** comptées
 > dans les moyennes. Pour « ce que la source a refusé d'estimer », filtrer sur `risque_estime` ;
 > pour « ce qui sort effectivement du calcul », sur `risque_maxi IS NULL`. La vue
 > `saison_fenetre` publie les deux comptages séparément (`non_estimes`, `hors_moyenne`) et
@@ -124,9 +146,12 @@ Bloc `<CARTOUCHERISQUE><RISQUE>`, le cœur analytique du bulletin.
 
 > ### ⚠ Rupture de série : la fin du `-1` en juin 2021
 >
-> **La pratique du `RISQUE1="-1"` s'arrête au 14 juin 2021.** Elle court du 04/11/2016 au
-> 14/06/2021 — aucun cas avant, aucun après. Après cette date, les mêmes journées marginales
-> (début et fin de saison, manteau insuffisant) reçoivent **un indice réel, généralement 1**.
+> **La pratique du `RISQUE1="-1"` s'arrête au 11 juin 2021.** Elle court du 04/11/2016 au
+> 11/06/2021 en jours couverts (`jour_validite`) — aucun cas avant, et après seulement quatre
+> bulletins isolés : trois `-1` le 05/11/2023, et un `RISQUE1` vide le 09/01/2025 (Cerdagne-Canigou,
+> écarté de `risque_journalier` par une rédaction plus tardive du même jour). Après cette date,
+> les mêmes journées marginales (début et fin de saison, manteau insuffisant) reçoivent **un
+> indice réel, généralement 1**.
 >
 > Cette rupture n'affecte pas le parsing : les deux encodages se lisent sans ambiguïté. Elle
 > affecte **l'interprétation**, et c'est une rupture de série au même titre que la rupture de
@@ -143,10 +168,23 @@ Bloc `<CARTOUCHERISQUE><RISQUE>`, le cœur analytique du bulletin.
 > | Fenêtre `commune` | 2,339 | 2,031 | **0,308** |
 > | Fenêtre `coeur` | 2,356 | 2,258 | **0,098** |
 >
-> *(moyennes de `risque_maxi` pondérées par bulletin, saisons comparables uniquement.)*
+> *(moyennes de `risque_maxi` pondérées par bulletin, saisons comparables uniquement ; mesure
+> initiale sur les 11 massifs pyrénéens.)*
 >
-> **70 % de l'écart apparent entre les deux époques est un artefact d'encodage.** Et la fenêtre
-> `commune` n'en corrige presque rien : c'est `coeur` qui fait le travail.
+> Remesuré sur les **36 massifs** (octobre 2026, une ligne par jour-massif de
+> `risque_journalier`) :
+>
+> | Portée | Moyenne 2016-2021 | Moyenne 2021-2026 | Écart |
+> |---|---|---|---|
+> | Saison entière | 2,451 | 2,083 | **0,368** |
+> | Fenêtre `commune` | 2,451 | 2,097 | **0,354** |
+> | Fenêtre `coeur` | 2,482 | 2,286 | **0,196** |
+>
+> **Une large part de l'écart apparent entre les deux époques est un artefact d'encodage : 70 %
+> sur les Pyrénées, 47 % sur les 36 massifs.** Dans les deux cas la fenêtre `commune` n'en
+> corrige presque rien : c'est `coeur` qui fait le travail. L'écart qui subsiste sur `coeur` n'est
+> pas pour autant un signal nivologique : il mêle les saisons réelles et l'évolution des
+> pratiques de rédaction.
 >
 > **Ne pas imputer les `-1` en 1 pour « réparer » la série.** Ce serait un choix analytique — il
 > suppose que toute journée non estimée aurait porté l'indice 1 — et non une correction
@@ -367,6 +405,12 @@ sans dépendre de la complétude de l'archive.
 | `date_risque` | `@DATE` | Jour concerné |
 | `risque_maxi` | `@RISQUEMAXI` | Indice retenu ce jour-là |
 
+> **Piège.** Une valeur hors échelle y est lue comme non estimée, par la même règle que
+> `RISQUE1` (§ 2.3). L'archive en compte sept : `RISQUEMAXI="0"` pour la journée du 16/04/2022
+> dans les sept bulletins Haut-Var/Haut-Verdon rédigés du 16 au 22/04/2022 (huit fichiers, celui
+> du 22 étant diffusé deux fois), alors que le BRA couvrant ce jour dit 1. Ces lignes restent
+> dans la table, avec un `risque_maxi` nul.
+
 ### `tendances` *(2016-2023 uniquement)*
 
 Évolution attendue au-delà de l'échéance. Bloc **absent du descriptif technique** et supprimé
@@ -435,13 +479,18 @@ Les bornes se lisent sur `jour_validite` — la journée couverte, grain de tout
 
 ### Pourquoi ces bornes-là
 
-**`commune` est l'intersection des spans réels**, hors saisons écartées : l'ouverture la plus
-tardive est le 6 novembre (2025-2026), la fermeture la plus précoce le 7 juin (2023-2024).
+**`commune` est l'intersection des spans réels**, hors saisons écartées : sur les Pyrénées,
+l'ouverture la plus tardive est le 6 novembre (2025-2026), la fermeture la plus précoce le 7 juin
+(2023-2024). Remesurée sur les 36 massifs, l'intersection s'élargit à **4 novembre → 7 juin** —
+les Alpes ouvrent plus tôt en 2025-2026. La borne du 6 novembre est conservée : elle reste incluse
+dans chaque saison, et la déplacer ferait bouger toutes les couvertures publiées sans rien
+corriger.
 
 > **`commune` ne corrige pas le problème du `-1`.** Elle couvre novembre, mai et juin, où la
 > sentinelle est massive : 845 bulletins non estimés en 2016-2017 contre 0 en 2022-2023. Une
 > moyenne comparée sur cette fenêtre reproduit l'artefact presque intégralement (écart 0,327 →
-> 0,308). Elle sert à mesurer ce que l'archive contient, jamais à comparer des indices.
+> 0,308 sur les Pyrénées, 0,368 → 0,354 sur les 36 massifs). Elle sert à mesurer ce que
+> l'archive contient, jamais à comparer des indices.
 
 **`coeur` est calée sur la pratique du `-1`, mesurée saison par saison :**
 
@@ -450,9 +499,10 @@ tardive est le 6 novembre (2025-2026), la fermeture la plus précoce le 7 juin (
 | 2016-2017 | 12 décembre | 28 avril |
 | 2017-2018 | 11 décembre | 27 avril |
 | 2018-2019 | **13 décembre** | 30 avril |
-| 2019-2020 | 12 décembre | *(interrompue au 26 mars)* |
+| 2019-2020 | 12 décembre | *(estimation interrompue fin mars)* |
 | 2020-2021 | 11 décembre | 30 avril |
 
+Mesuré sur les Pyrénées, puis remesuré sur les 36 massifs : **les dates sont identiques**.
 L'intervalle exempt de toute sentinelle, toutes saisons confondues, court donc du **14 décembre
 au 26 avril**. `coeur` s'y inscrit avec une marge d'un jour à l'ouverture et de onze jours à la
 fermeture. Résultat vérifié : **0 bulletin non estimé sur chacune des saisons comparables**, pour
@@ -467,7 +517,7 @@ silence est une saison qu'on redécouvre au milieu d'une analyse. La colonne `co
 | Saison | Motif |
 |---|---|
 | 2015-2016 | saison partielle : l'archive démarre le 10 mars 2016, après l'ouverture des deux fenêtres |
-| 2019-2020 | interrompue le 26 mars 2020 (confinement) : tronquée sur les deux fenêtres |
+| 2019-2020 | estimation interrompue fin mars 2020 (confinement) : Pyrénées et Corse s'arrêtent (26 et 18 mars), les Alpes publient sans indice jusqu'au 11 juin ; tronquée sur les deux fenêtres |
 
 ### Vue `saison_fenetre`
 

@@ -321,14 +321,33 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         #   lendemain matin (constate le 31/03/2016). On retient la redaction la
         #   plus tardive, qui est l'information valide en dernier ressort.
         #
-        # Cette vue est reductrice : elle passe de 23 533 bulletins a 23 268
-        # lignes. `log_daily_collapse_discards()` journalise au build chaque
+        # Cette vue est reductrice : sur les 36 massifs elle passe de 77 488
+        # bulletins a 76 853 lignes (23 533 a 23 268 sur les Pyrenees). `log_daily_collapse_discards()` journalise au build chaque
         # ligne ainsi ecartee -- l'`ORDER BY` ci-dessous et le tri de cette
         # fonction doivent rester identiques.
+        #
+        # `jour_de_saison` est le second axe temporel : jours depuis le premier
+        # jour couvert du couple massif x saison, et non depuis une date
+        # commune, puisque la diffusion n'ouvre pas le meme jour partout. Il ne
+        # se calcule que sur les lignes `massif_coherent` : le message
+        # technique du 05/02/2016 diffuse sous `ID="3"` avancerait sinon de
+        # 35 jours le debut de saison du Mont-Blanc. Les jours non estimes
+        # comptent : l'axe mesure la diffusion, pas l'indice.
         con.execute(
             """
             CREATE OR REPLACE VIEW risque_journalier AS
-            SELECT * EXCLUDE (rang) FROM (
+            SELECT
+              * EXCLUDE (rang),
+              -- Deux gardes, deux roles : celle du `min` empeche une ligne
+              -- usurpee de fixer le jour 1 de son massif ; celle du `CASE`
+              -- exterieur lui refuse un rang, puisqu'elle n'est d'aucun massif.
+              CASE WHEN massif_coherent THEN date_diff(
+                'day',
+                min(CASE WHEN massif_coherent THEN jour_validite END)
+                  OVER (PARTITION BY massif_id, saison),
+                jour_validite
+              ) + 1 END AS jour_de_saison
+            FROM (
               SELECT
                 saison,
                 saison_debut,

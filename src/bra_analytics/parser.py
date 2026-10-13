@@ -107,7 +107,7 @@ def _int(value: str | None) -> int | None:
 
 
 def _indice(value: str | None) -> int | None:
-    """Indice de risque, `-1` valant « non estime ».
+    """Indice de risque, toute valeur sous 1 valant « non estime ».
 
     Le descriptif 2023 annonce `RISQUE1` « toujours renseigne, valeur de 1 a 5 ».
     L'archive contredit ce point : les bulletins de debut et de fin de saison
@@ -115,9 +115,22 @@ def _indice(value: str | None) -> int | None:
     sentinelle dans une colonne entiere fausserait toute moyenne, d'ou sa
     conversion en valeur nulle ; l'information est conservee par la colonne
     `risque_estime`.
+
+    `0` suit la meme regle : un seul cas dans l'archive, l'avis de fin de
+    saison du Chablais du 11/06/2018 (`RISQUE1="0"`, `RISQUEMAXI="/"`,
+    « Rendez-vous debut novembre »). Hors de l'echelle, c'est un refus
+    d'estimer, pas un indice.
+
+    La regle vaut pour tous les champs d'indice, pas pour `RISQUE1` seul. Le
+    seul autre `0` de l'archive est dans le bloc historique : la journee du
+    16/04/2022 du Haut-Var/Haut-Verdon porte `RISQUEMAXI="0"` dans les sept
+    bulletins rediges du 16 au 22/04/2022 (huit fichiers, celui du 22 etant
+    diffuse deux fois), alors que le BRA couvrant ce jour dit 1. Ces sept
+    lignes de `historique_risque` deviennent nulles, comme les autres jours
+    non renseignes de cette table.
     """
     parsed = _int(value)
-    if parsed is not None and parsed < 0:
+    if parsed is not None and parsed < 1:
         return None
     return parsed
 
@@ -402,8 +415,9 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
 
     risque = node.find("CARTOUCHERISQUE/RISQUE")
     ra = risque.attrib if risque is not None else {}
-    # `-1` marque un bulletin sans estimation chiffree (hors saison, sous-neige).
-    risque_estime = _int(ra.get("RISQUE1")) not in (None, -1)
+    # `-1` (ou, une fois, `0`) marque un bulletin sans estimation chiffree :
+    # hors saison, sous-neige, avis de fin de saison. Meme regle que `_indice`.
+    risque_estime = _indice(ra.get("RISQUE1")) is not None
     loc1_type, loc1_alt, loc1_secteur = parse_localisation(ra.get("LOC1"), ra.get("ALTITUDE"))
     loc2_type, loc2_alt, loc2_secteur = parse_localisation(ra.get("LOC2"), ra.get("ALTITUDE"))
 

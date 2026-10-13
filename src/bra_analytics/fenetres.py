@@ -10,12 +10,13 @@ fenetre.
 differentes. -> `COMMUNE`, intersection des spans reels.
 
 **Les journees marginales n'ont pas le meme encodage selon l'epoque.** Du
-04/11/2016 au 14/06/2021, un jour sans enneigement recoit `RISQUE1="-1"`, que
+04/11/2016 au 11/06/2021, un jour sans enneigement recoit `RISQUE1="-1"`, que
 la pipeline convertit en valeur nulle : ces jours sortent des moyennes. Apres
 juin 2021 la meme journee recoit un indice reel, generalement 1, et pese donc
 dans la moyenne. A nivologie identique, les saisons 2016-2021 ressortent plus
 hautes que les suivantes -- l'ecart mesure entre les deux groupes passe de
-0,32 point sur la saison entiere a 0,09 sur `COEUR`. -> `COEUR`, restreinte a
+0,37 point sur la saison entiere a 0,20 sur `COEUR` sur les 36 massifs (de
+0,33 a 0,10 sur les seules Pyrenees). -> `COEUR`, restreinte a
 la periode ou aucune saison n'utilise la sentinelle.
 
 `COMMUNE` **ne corrige pas** le second obstacle : elle couvre novembre, mai et
@@ -88,6 +89,12 @@ class Fenetre:
 # Intersection des spans reels des saisons exploitables, mesuree sur
 # `jour_validite` -- le jour couvert, qui est le grain de toute analyse.
 #
+# Mesuree d'abord sur les 11 massifs pyreneens (6 novembre -> 7 juin), puis
+# remesuree sur les 36 massifs (octobre 2026) : l'intersection devient 4 novembre
+# -> 7 juin, les Alpes ouvrant plus tot en 2025-2026. La borne du 6 novembre est
+# conservee : elle reste incluse dans le span de chaque saison, et la deplacer
+# ferait bouger toutes les couvertures deja publiees sans rien corriger.
+#
 # Attention au decalage d'un jour si l'on rapproche ces bornes de celles lues
 # sur `jour_bulletin` : un BRA est redige la veille pour le lendemain. Les
 # memes saisons donnent 5 novembre -> 6 juin en date de redaction.
@@ -98,19 +105,22 @@ COMMUNE = Fenetre(
     usage="couverture, volumetrie, duree de saison, disponibilite des champs",
     justification=(
         "Intersection des spans reels de `jour_validite`, hors 2015-2016 et "
-        "2019-2020. Ouverture la plus tardive : 6 novembre (2025-2026). "
-        "Fermeture la plus precoce : 7 juin (2023-2024)."
+        "2019-2020. Pyrenees : ouverture la plus tardive le 6 novembre "
+        "(2025-2026), fermeture la plus precoce le 7 juin (2023-2024). Sur les "
+        "36 massifs l'intersection s'elargit a 4 novembre -> 7 juin : la "
+        "fenetre reste incluse dans toutes les saisons."
     ),
     comparable_entre_saisons=False,
 )
 
-# Bornes calees sur la pratique du `-1`, mesuree saison par saison :
+# Bornes calees sur la pratique du `-1`, mesuree saison par saison -- sur les
+# Pyrenees d'abord, puis sur les 36 massifs, qui donnent les memes dates :
 #
 #   saison       dernier -1 d'automne   premier -1 de printemps
 #   2016-2017    12 decembre            28 avril
 #   2017-2018    11 decembre            27 avril
 #   2018-2019    13 decembre            30 avril
-#   2019-2020    12 decembre            (interrompue au 26 mars)
+#   2019-2020    12 decembre            (estimation interrompue fin mars)
 #   2020-2021    11 decembre            30 avril
 #
 # L'intervalle sans aucune sentinelle, toutes saisons confondues, court donc
@@ -150,8 +160,9 @@ SAISONS_NON_COMPARABLES: dict[str, str] = {
         "l'ouverture des deux fenetres"
     ),
     "2019-2020": (
-        "interrompue le 26 mars 2020 (confinement) : tronquee sur les deux "
-        "fenetres"
+        "estimation interrompue fin mars 2020 (confinement) : Pyrenees et "
+        "Corse s'arretent (26 et 18 mars), les Alpes publient sans indice "
+        "jusqu'au 11 juin ; tronquee sur les deux fenetres"
     ),
 }
 
