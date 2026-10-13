@@ -272,7 +272,7 @@ autres bulletins couvrent J à J+3. Seul `0` de l'archive, il produisait l'uniqu
 fictif du 01/11/2018 est écarté, et journalisé, par la collapse quotidienne au profit du vrai
 bulletin de 2018-2019.
 
-**`INA` n'est pas une anomalie.** `TYPEBULLETIN` vaut `BRA` (61 147), `INA` (14 482), `AMENDEMENT`
+**`INA` n'est pas une anomalie.** `TYPEBULLETIN` vaut `BRA` (61 156), `INA` (14 482), `AMENDEMENT`
 (548) ou manque (1 302, saison 2015-2016). `INA` — « Information Neige et Avalanche » — est le
 bulletin réduit des journées marginales, celui qui porte `RISQUE1="-1"`.
 

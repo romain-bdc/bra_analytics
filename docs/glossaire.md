@@ -127,9 +127,12 @@ Bloc `<CARTOUCHERISQUE><RISQUE>`, le cœur analytique du bulletin.
 
 > ### ⚠ Rupture de série : la fin du `-1` en juin 2021
 >
-> **La pratique du `RISQUE1="-1"` s'arrête au 14 juin 2021.** Elle court du 04/11/2016 au
-> 14/06/2021 — aucun cas avant, aucun après. Après cette date, les mêmes journées marginales
-> (début et fin de saison, manteau insuffisant) reçoivent **un indice réel, généralement 1**.
+> **La pratique du `RISQUE1="-1"` s'arrête au 11 juin 2021.** Elle court du 04/11/2016 au
+> 11/06/2021 en jours couverts (`jour_validite`) — aucun cas avant, et après seulement quatre
+> bulletins isolés : trois `-1` le 05/11/2023, et un `RISQUE1` vide le 09/01/2025 (Cerdagne-Canigou,
+> écarté de `risque_journalier` par une rédaction plus tardive du même jour). Après cette date,
+> les mêmes journées marginales (début et fin de saison, manteau insuffisant) reçoivent **un
+> indice réel, généralement 1**.
 >
 > Cette rupture n'affecte pas le parsing : les deux encodages se lisent sans ambiguïté. Elle
 > affecte **l'interprétation**, et c'est une rupture de série au même titre que la rupture de
@@ -345,6 +348,11 @@ sans dépendre de la complétude de l'archive.
 |---|---|---|
 | `date_risque` | `@DATE` | Jour concerné |
 | `risque_maxi` | `@RISQUEMAXI` | Indice retenu ce jour-là |
+
+> **Piège.** Une valeur hors échelle y est lue comme non estimée, par la même règle que
+> `RISQUE1` (§ 2.3). L'archive en compte huit : `RISQUEMAXI="0"` pour la journée du 16/04/2022
+> dans les huit bulletins Haut-Var/Haut-Verdon rédigés du 16 au 22/04/2022, alors que le BRA
+> couvrant ce jour dit 1. Ces lignes restent dans la table, avec un `risque_maxi` nul.
 
 ### `tendances` *(2016-2023 uniquement)*
 

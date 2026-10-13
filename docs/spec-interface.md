@@ -86,7 +86,7 @@ du périmètre réel de la vue experte.
 
 « Moyenne du risque sur dix saisons, une valeur par massif » est la bonne intention, mais la
 moyenne brute sur dix saisons est **méthodologiquement fausse** sur ce corpus, et le repo l'a
-déjà établi chiffres en main : la sentinelle `RISQUE1=-1` s'arrête au 14 juin 2021, si bien qu'une
+déjà établi chiffres en main : la sentinelle `RISQUE1=-1` s'arrête au 11 juin 2021, si bien qu'une
 moyenne qui couvre les deux époques mélange deux conventions d'encodage. L'écart mesuré est de
 0,327 point sur la saison entière contre 0,098 sur la fenêtre `coeur` sur les Pyrénées — 70 % de
 l'écart serait un artefact —, et 0,368 contre 0,196 sur les 36 massifs, soit 47 %.

@@ -442,7 +442,7 @@ def test_risque1_zero_vaut_non_estime() -> None:
     """Chablais, 11/06/2018 : avis de fin de saison (`TYPEBULLETIN="INA"`,
     « Rendez-vous debut novembre »), `RISQUE1="0"` et `RISQUEMAXI="/"`.
 
-    Seul `0` des 77 479 bulletins de l'archive 2016-2026 : hors de l'echelle
+    Seul `RISQUE1="0"` des 77 488 bulletins de l'archive 2016-2026 : hors de l'echelle
     1-5, c'est un refus d'estimer, comme `-1`, pas un indice. Lu tel quel, il
     produisait l'unique erreur `risque1_hors_echelle` de `bra check`.
     """
@@ -450,3 +450,20 @@ def test_risque1_zero_vaut_non_estime() -> None:
     assert b.bulletin["risque1"] is None
     assert b.bulletin["risque_maxi"] is None
     assert b.bulletin["risque_estime"] is False
+
+
+def test_risquemaxi_zero_dans_l_historique_vaut_non_estime() -> None:
+    """Haut-Var/Haut-Verdon, bulletin du 16/04/2022 : le bloc historique donne
+    `RISQUEMAXI="0"` pour la journee du 16/04, alors que le BRA couvrant ce
+    jour dit 1.
+
+    Seuls `RISQUEMAXI="0"` de l'archive (huit lignes, la meme journee rappelee
+    par les huit bulletins du 16 au 22/04/2022). Hors de l'echelle 1-5 : la
+    ligne est conservee dans `historique_risque`, son indice est nul.
+    """
+    (b,) = parse_file(fixture("anomalie_2022_haut_var_historique_zero.xml"))
+    par_jour = {r["date_risque"].date(): r["risque_maxi"] for r in b.historique_risque}
+    assert len(par_jour) == 7
+    assert par_jour[date(2022, 4, 15)] == 1
+    assert par_jour[date(2022, 4, 16)] is None
+    assert b.bulletin["risque_maxi"] == 1

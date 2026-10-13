@@ -10,7 +10,7 @@ fenetre.
 differentes. -> `COMMUNE`, intersection des spans reels.
 
 **Les journees marginales n'ont pas le meme encodage selon l'epoque.** Du
-04/11/2016 au 14/06/2021, un jour sans enneigement recoit `RISQUE1="-1"`, que
+04/11/2016 au 11/06/2021, un jour sans enneigement recoit `RISQUE1="-1"`, que
 la pipeline convertit en valeur nulle : ces jours sortent des moyennes. Apres
 juin 2021 la meme journee recoit un indice reel, generalement 1, et pese donc
 dans la moyenne. A nivologie identique, les saisons 2016-2021 ressortent plus
