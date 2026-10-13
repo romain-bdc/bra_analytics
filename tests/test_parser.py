@@ -457,8 +457,8 @@ def test_risquemaxi_zero_dans_l_historique_vaut_non_estime() -> None:
     `RISQUEMAXI="0"` pour la journee du 16/04, alors que le BRA couvrant ce
     jour dit 1.
 
-    Seuls `RISQUEMAXI="0"` de l'archive (huit lignes, la meme journee rappelee
-    par les huit bulletins du 16 au 22/04/2022). Hors de l'echelle 1-5 : la
+    Seuls `RISQUEMAXI="0"` de l'archive (sept lignes, la meme journee rappelee
+    par les sept bulletins du 16 au 22/04/2022). Hors de l'echelle 1-5 : la
     ligne est conservee dans `historique_risque`, son indice est nul.
     """
     (b,) = parse_file(fixture("anomalie_2022_haut_var_historique_zero.xml"))

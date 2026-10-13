@@ -123,10 +123,11 @@ def _indice(value: str | None) -> int | None:
 
     La regle vaut pour tous les champs d'indice, pas pour `RISQUE1` seul. Le
     seul autre `0` de l'archive est dans le bloc historique : la journee du
-    16/04/2022 du Haut-Var/Haut-Verdon porte `RISQUEMAXI="0"` dans les huit
-    bulletins rediges du 16 au 22/04/2022, alors que le BRA couvrant ce jour
-    dit 1. Ces huit lignes de `historique_risque` deviennent nulles, comme les
-    autres jours non renseignes de cette table.
+    16/04/2022 du Haut-Var/Haut-Verdon porte `RISQUEMAXI="0"` dans les sept
+    bulletins rediges du 16 au 22/04/2022 (huit fichiers, celui du 22 etant
+    diffuse deux fois), alors que le BRA couvrant ce jour dit 1. Ces sept
+    lignes de `historique_risque` deviennent nulles, comme les autres jours
+    non renseignes de cette table.
     """
     parsed = _int(value)
     if parsed is not None and parsed < 1:
