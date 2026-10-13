@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="3" MASSIF="MONT-BLANC" PRODUCTEUR="CDM741" DATEBULLETIN="2016-03-10T16:00:00" DATEECHEANCE="2016-03-11T18:00:00" DATEDIFFUSION="2016-03-10T14:30:58.9228696Z" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="2" COMMENTAIRE="Risque limité." />
+    <PENTE NE="true" E="true" SE="false" S="false" SW="false" W="false" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>neige soufflée</ACCIDENTEL>
+    <NATUREL>plein soleil</NATUREL>
+    <AVIS />
+    <VIGILANCE />
+    <ImageCartoucheRisque Format="png" Width="340" Height="132">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageCartoucheRisque>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Quelques départs spontanés d'avalanches se produiront dans les pentes raides au soleil, ces avalanches seront souvent petites, pouvant être moyennes dans le cas d'un grand couloir ou d'une plaque de fond épaisse (déjà fissurée ou pas ).
+Le risque de déclencher une avalanche concerne surtout les pentes raides peu ou pas ensoleillées, en neige soufflée/accumulée par les derniers vents , donc surtout entre Nord et Est près des crêtes. Très localement un risque de grosse cassure est présent en nord raide vers 2000 m (départ sur une couche fragile surmontant une croûte avec sable)</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>L'enneigement est très bon en altitude, mais il reste un peu faible dans le fond des vallées vers 1000/1200 m, même si on peut chausser les skis ou les raquettes.
+
+Vendredi , les conditions seront bien différentes en versants nord et sud :
+- Nord : Surtout de la neige poudreuse et légère, par endroit un peu soufflée sur les crêtes.
+- Sud : Neige croûtée puis s'humidifiant au soleil.
+En haute montagne, neige poudreuse ou travaillée par les vents.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2016-03-10T00:00:00" LimiteSud="700" LimiteNord="600">
+    <NIVEAU ALTI="1500" N="155" S="85" />
+    <NIVEAU ALTI="2000" N="230" S="190" />
+    <NIVEAU ALTI="2500" N="330" S="260" />
+    <ImageEnneigement Format="png" Width="340" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageEnneigement>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2016-03-06T00:00:00" SS241="2" SS242="-1" />
+    <NEIGE24H DATE="2016-03-07T00:00:00" SS241="10" SS242="-1" />
+    <NEIGE24H DATE="2016-03-08T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-03-09T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-03-10T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2016-03-11T00:00:00" SS241="0" SS242="-1" />
+    <ImageNeigeFraiche Format="png" Width="400" Height="260">
+      <Content>[base64 retire pour la fixture]</Content>
+    </ImageNeigeFraiche>
+  </NEIGEFRAICHE>
+  <METEO ALTITUDEVENT1="2000" ALTITUDEVENT2="4000">
+    <COMMENTAIRE>petite bise</COMMENTAIRE>
+    <ECHEANCE DATE="2016-03-11T00:00:00" TEMPSSENSIBLE="1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="1700" DD1="E" FF1="10" DD2="E" FF2="20" />
+    <ECHEANCE DATE="2016-03-11T06:00:00" TEMPSSENSIBLE="1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="1700" DD1="NE" FF1="30" DD2="NE" FF2="20" />
+    <ECHEANCE DATE="2016-03-11T12:00:00" TEMPSSENSIBLE="1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="1700" DD1="NE" FF1="20" DD2="E" FF2="10" />
+  </METEO>
+  <TENDANCES>
+    <TENDANCE DATE="2016-03-12T00:00:00" VALEUR="0" />
+    <TENDANCE DATE="2016-03-13T00:00:00" VALEUR="1" />
+  </TENDANCES>
+</BULLETINS_NEIGE_AVALANCHE>

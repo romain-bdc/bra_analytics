@@ -84,6 +84,25 @@ Une ligne par bulletin. Clé : `(massif_id, date_bulletin)`.
 | `date_diffusion` | `@DATEDIFFUSION` | datetime | Publication effective. Sert à arbitrer les rééditions |
 | `amendement` | `@AMENDEMENT` | bool | Bulletin de rectification |
 
+**Second axe temporel** — porté par la vue `risque_journalier`, pas par la table :
+
+| Champ | Source | Type | Description |
+|---|---|---|---|
+| `jour_de_saison` | *(calculé)* | int | Rang du jour dans la saison **de ce massif** : 1 au premier `jour_validite` du couple massif × saison, puis +1 par jour calendaire |
+
+> **`jour_de_saison` se compte massif par massif, pas depuis une date commune.** La diffusion
+> n'ouvre pas le même jour partout : en 2015-2016, l'archive livre Aspe-Ossau dès le 10 mars et
+> Couserans le 31 mars seulement ; chacun démarre à 1. C'est l'axe qui empêche une saison
+> ouverte tardivement de paraître vide en décembre. L'axe calendaire reste celui par défaut.
+>
+> - Il compte des **jours calendaires**, pas des jours couverts : un trou d'archive avance le
+>   compteur sans produire de ligne. Deux lignes consécutives peuvent donc porter 12 et 14.
+> - Les jours **non estimés** (`RISQUE1=-1`) comptent : l'axe mesure la diffusion, pas
+>   l'indice. Conséquence : avant juin 2021, le jour 1 tombe souvent sur un bulletin sans indice.
+> - Il vaut `NULL` sur les lignes `massif_coherent = false`, et ces lignes ne fixent pas le
+>   jour 1 de leur massif : sans cette règle, le message technique du 05/02/2016 diffusé sous
+>   `ID="3"` avancerait de 35 jours le début de saison du Mont-Blanc.
+
 > **Pièges.** Les dates 2016 portent un suffixe `Z` (UTC) et une fraction à 7 chiffres ; elles
 > sont converties en heure locale française. `amendement` **ne permet pas de repérer les
 > rééditions** : deux publications du même bulletin le portent à `false`.
