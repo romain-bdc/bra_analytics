@@ -1,0 +1,9 @@
+{"type": "FeatureCollection",
+ "features": [
+  {"type": "Feature", "properties": {"code": 64, "title": "Pays Basque"},
+   "geometry": {"type": "MultiPolygon", "coordinates": [[[[-1.0, 43.0], [-0.95, 43.001], [-0.9, 43.0], [-0.9, 43.1], [-1.0, 43.1], [-1.0, 43.0]]]]}},
+  {"type": "Feature", "properties": {"code": 65, "title": "Aspe Ossau"},
+   "geometry": {"type": "MultiPolygon", "coordinates": [[[[-0.8, 42.8], [-0.7, 42.8], [-0.7, 42.9], [-0.8, 42.9], [-0.8, 42.8]]]]}},
+  {"type": "Feature", "properties": {"code": 99, "title": "Region hors referentiel"},
+   "geometry": {"type": "MultiPolygon", "coordinates": [[[[0.0, 42.0], [0.1, 42.0], [0.1, 42.1], [0.0, 42.0]]]]}}
+ ]}
