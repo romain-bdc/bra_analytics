@@ -52,7 +52,13 @@ def test_statut_des_metriques_decoule_de_la_disponibilite(con) -> None:
     """Le statut n'est pas ecrit a la main : il se lit dans la mesure."""
     statuts = audit.statuts(audit.disponibilite(con))
 
-    assert _statut(statuts, "Risque du jour")["statut"] == "calculable"
+    # `jour_validite` et non l'indice : dans les fixtures, la saison 2017-2018
+    # n'est portee que par l'avis de fin de saison du Chablais (`RISQUE1="0"`),
+    # donc sans aucun `risque_maxi`.
+    assert _statut(statuts, "Durée de saison BRA")["statut"] == "calculable"
+    risque = _statut(statuts, "Risque du jour")
+    assert risque["statut"] == "sous-ensemble"
+    assert "2017-2018" not in risque["saisons"]
 
     sat = _statut(statuts, "Situations typiques")
     assert sat["statut"] == "sous-ensemble"
@@ -115,6 +121,21 @@ def test_ecarts_entre_prevision_et_historique_meteo() -> None:
     )
     ecarts = audit.ecarts_meteo(c)
     assert ecarts.select("saison", "champ").rows() == [("2023-2024", "mer_nuages_m")]
+
+
+def test_quantiles_ecartent_la_sentinelle(con) -> None:
+    """Un `-1` n'est pas une vitesse de vent : il ne compte ni dans `n` ni dans
+    les quantiles. Les fixtures en portent un en prevision (vent haut, bulletin
+    de 2016), ce qui suffit a distinguer les deux lectures."""
+    total, sentinelles = con.execute(
+        "SELECT count(vent_haut_vitesse_kmh), "
+        "count(*) FILTER (vent_haut_vitesse_kmh = -1) "
+        f"FROM ({audit._source('meteo')}) WHERE origine = 'prevision'"
+    ).fetchone()
+    assert sentinelles >= 1
+
+    (ligne,) = [q for q in audit._quantiles(con) if "vent_haut_vitesse_kmh" in q[0]]
+    assert ligne[3] == total - sentinelles
 
 
 def test_rapport_reproductible(con) -> None:

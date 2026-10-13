@@ -368,6 +368,11 @@ def _quantiles(con: duckdb.DuckDBPyConnection) -> list[tuple]:
 
     `quantile_disc` plutot que `quantile_cont` : les valeurs sont entieres, et
     un quantile interpole (37,5 km/h) n'a jamais ete ecrit dans un bulletin.
+
+    La sentinelle `-1` est ecartee comme dans `_compte_exploitable` : sur les
+    36 massifs elle occupe 40 053 des 255 535 vitesses de vent haut en
+    prevision (15,7 %). Les quantiles publies n'en bougent pas (30/50/70 km/h
+    avec ou sans), mais `n` annoncait un echantillon qu'il n'avait pas.
     """
     # `cumul_max_cm` n'a pas le meme sens selon la famille de format
     # (`SEMANTIQUE_DIVERGENTE`) : sa distribution ne se lit que hors de la
@@ -384,7 +389,8 @@ def _quantiles(con: duckdb.DuckDBPyConnection) -> list[tuple]:
     for champ, table, libelle, filtre, unite in series:
         n, q = con.execute(
             f"SELECT count({champ}), quantile_disc({champ}, [0.5, 0.75, 0.9, 0.95, 0.99, 1.0]) "
-            f"FROM ({_source(table)}) WHERE {filtre} AND {champ} IS NOT NULL"
+            f"FROM ({_source(table)}) WHERE {filtre} AND {champ} IS NOT NULL "
+            f"AND {champ} <> -1"
         ).fetchone()
         lignes.append((f"`{table}.{champ}`", libelle, unite, n,
                        *(q or [None] * 6)))
@@ -626,7 +632,8 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
     s.append(
         "Base des valeurs par défaut de vent fort, d'épisode de chute et de redoux "
         "(spec § 3.3). Quantiles **discrets** : chaque valeur a été écrite dans un "
-        "bulletin. Prévision météo à toutes échéances confondues ; neige fraîche sur "
+        "bulletin. La sentinelle `-1` est écartée (§ 9) : `n` compte les valeurs "
+        "exploitables. Prévision météo à toutes échéances confondues ; neige fraîche sur "
         "l'historique, non dédupliquée (un même jour figure dans plusieurs bulletins), "
         "et sur la seule famille `moderne` : avant 2024 la colonne n'est pas un "
         "maximum (§ 9).\n"

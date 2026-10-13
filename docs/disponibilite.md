@@ -558,13 +558,13 @@ Répartition des codes, toutes saisons (libellés inférés : glossaire § 2.7) 
 
 ## 7. Distributions pour les seuils encore ouverts
 
-Base des valeurs par défaut de vent fort, d'épisode de chute et de redoux (spec § 3.3). Quantiles **discrets** : chaque valeur a été écrite dans un bulletin. Prévision météo à toutes échéances confondues ; neige fraîche sur l'historique, non dédupliquée (un même jour figure dans plusieurs bulletins), et sur la seule famille `moderne` : avant 2024 la colonne n'est pas un maximum (§ 9).
+Base des valeurs par défaut de vent fort, d'épisode de chute et de redoux (spec § 3.3). Quantiles **discrets** : chaque valeur a été écrite dans un bulletin. La sentinelle `-1` est écartée (§ 9) : `n` compte les valeurs exploitables. Prévision météo à toutes échéances confondues ; neige fraîche sur l'historique, non dédupliquée (un même jour figure dans plusieurs bulletins), et sur la seule famille `moderne` : avant 2024 la colonne n'est pas un maximum (§ 9).
 
 | champ | lignes retenues | unité | n | p50 | p75 | p90 | p95 | p99 | max |
 |---|---|---|---|---|---|---|---|---|---|
-| `meteo.vent_haut_vitesse_kmh` | prevision | km/h | 255535 | 30 | 50 | 70 | 80 | 100 | 170 |
-| `meteo.vent_bas_vitesse_kmh` | prevision | km/h | 255538 | 15 | 30 | 45 | 60 | 80 | 400 |
-| `meteo.iso_0_m` | prevision | m | 255556 | 2400 | 3000 | 3400 | 3700 | 4100 | 5100 |
+| `meteo.vent_haut_vitesse_kmh` | prevision | km/h | 215482 | 30 | 50 | 70 | 80 | 100 | 170 |
+| `meteo.vent_bas_vitesse_kmh` | prevision | km/h | 255294 | 15 | 30 | 45 | 60 | 80 | 400 |
+| `meteo.iso_0_m` | prevision | m | 255312 | 2400 | 3000 | 3400 | 3700 | 4100 | 5100 |
 | `neige_fraiche.cumul_max_cm` | historique, hors legacy | cm | 138956 | 0 | 3 | 10 | 20 | 40 | 120 |
 
 ## 8. Bloc météo selon `origine` (spec § 4.3)
