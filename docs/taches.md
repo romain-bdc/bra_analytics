@@ -119,6 +119,9 @@ Vue dérivée rattachant chaque palier d'enneigement, de vent et de neige fraîc
 tranches fixes (< 1800 m, 1800–2400 m, > 2400 m), par appartenance directe de l'altitude du
 palier. Une tranche sans palier reste nulle — **ne pas interpoler**.
 
+**Bornes arrêtées** (6 octobre 2026, au vu de T2) : fermées à gauche, la tranche haute est
+**≥ 2400 m** et non « > 2400 m » — voir spec § 4.2.
+
 **Fait quand** : la vue existe ; un test couvre un massif dont les paliers tombent tous dans une
 seule tranche ; la part de couples massif × saison dans ce cas est publiée, parce qu'elle borne la
 validité des comparaisons entre massifs.

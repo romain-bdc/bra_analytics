@@ -142,6 +142,11 @@ trois tranches fixes. La règle d'affectation est explicite : **chaque palier es
 tranche qui contient son altitude**, et une tranche sans palier pour un massif donné reste nulle
 plutôt que d'être interpolée.
 
+**Bornes arrêtées le 6 octobre 2026, au vu de l'audit** : fermées à gauche, < 1800 m,
+1800–2400 m, **≥ 2400 m**. Les paliers d'enneigement tombent pile sur 1800 et 2400 m avant 2021
+(1500/1800/2400) ; fermer la tranche haute à droite (« > 2400 m ») la laissait vide jusqu'au
+passage aux paliers 1500/2000/2500. Définies une fois dans `tranches.py`, vue `palier_tranche`.
+
 C'est une approximation, et elle doit être mesurée avant d'être exploitée : si les altitudes de
 référence d'un massif tombent presque toutes dans une seule tranche, la comparaison entre massifs
 sur cette tranche n'a pas de sens, et seule la comparaison d'un massif à lui-même dans le temps

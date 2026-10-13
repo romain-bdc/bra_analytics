@@ -150,6 +150,19 @@ Deux fenêtres, deux usages : `coeur` (15 déc → 15 avr) pour comparer des ind
 (6 nov → 7 juin) pour comparer des couvertures. Les bornes sont mesurées, pas choisies — le
 détail du calcul est dans [le glossaire, § 8](docs/glossaire.md#8-fenêtres-de-comparaison-inter-saisons).
 
+### 6. `bra audit` — mesurer ce que les champs permettent
+
+```bash
+uv run bra audit
+```
+
+Écrit [`docs/disponibilite.md`](docs/disponibilite.md) : part de valeurs non nulles par champ et
+par saison, distribution de `loc_type`, altitudes de référence par massif, couverture de
+l'enneigement, `sat1`/`sat2`, distributions des champs à seuil, bloc météo selon `origine`, et
+sentinelles `-1` restées dans l'entrepôt. Chaque métrique de la spec y reçoit un statut
+(calculable, sur un sous-ensemble de saisons, non calculable) **dérivé** de ces mesures. Le
+document est déterministe : le relancer après chaque `bra build` et versionner le diff.
+
 Deux commandes auxiliaires : `bra massifs` affiche le référentiel des 36 massifs ;
 `bra contours` vérifie que les contours versionnés (Météo-France, Licence Ouverte 2.0) se
 raccordent aux 36 identifiants et régénère leur version web — voir
@@ -168,7 +181,7 @@ warehouse/
   bra.duckdb                                   vues sur l'ensemble
 ```
 
-La base DuckDB expose chaque table, plus trois vues de travail :
+La base DuckDB expose chaque table, plus des vues de travail :
 
 | Vue | Grain | Usage |
 |---|---|---|
@@ -176,6 +189,7 @@ La base DuckDB expose chaque table, plus trois vues de travail :
 | `couverture` | 1 ligne / massif / saison | repérer les trous d'archive |
 | `profil_saison` | 1 ligne / massif / saison | profil d'une saison, massif par massif |
 | `saison_fenetre` | 1 ligne / saison / fenêtre | **comparaisons inter-saisons** |
+| `palier_tranche` | 1 ligne / valeur mesurée à une altitude | enneigement, neige fraîche et vent par tranche normée (< 1800, 1800–2400, ≥ 2400 m) |
 
 Partitionnement par saison nivologique (`2025-2026` = septembre 2025 → août 2026), dérivé de
 `DATEBULLETIN` et non du chemin source — les deux divergent en 2016.

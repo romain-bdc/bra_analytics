@@ -354,6 +354,43 @@ Six échéances par bulletin : 4 analyses passées + 2 prévisions.
 > Les attributs ont été renommés en 2024 (`SS241`/`SS242` → `SS24Min`/`SS24Max`). Le parser
 > accepte les deux.
 
+> **Avant 2024, `SS241` / `SS242` ne sont pas une fourchette.** Le bloc legacy porte
+> `SECTEURSS1` / `SECTEURSS2` (`massif` / vide, `Ouest` / `Est`…) : les deux attributs sont les
+> cumuls de **deux secteurs**, et `SS242="-1"` signifie « pas de second secteur ». La pipeline
+> les range pourtant dans `cumul_min_cm` / `cumul_max_cm` : avant 2024, `cumul_max_cm` vaut
+> `-1` sur 155 668 lignes pyrénéennes sur 190 116. *Inféré* de la structure du fichier ; la
+> règle de parsing est à arrêter en T7 avant toute métrique de neige fraîche. Mesure :
+> [`disponibilite.md`](disponibilite.md) § 9.
+
+### Tranches d'altitude normées — vue `palier_tranche`
+
+Les altitudes de référence varient d'un massif et d'une époque à l'autre. La vue
+`palier_tranche` rattache chaque palier d'enneigement, de neige fraîche et de vent à l'une des
+trois tranches définies une fois dans `src/bra_analytics/tranches.py` :
+
+| Tranche | Bornes |
+|---|---|
+| `basse` | < 1800 m |
+| `moyenne` | 1800 m ≤ altitude < 2400 m |
+| `haute` | ≥ 2400 m |
+
+Une ligne par valeur mesurée à une altitude, toutes sources confondues (`source` :
+`enneigement`, `neige_fraiche`, `vent_bas`, `vent_haut`). `jour` est la date que décrit la
+valeur — relevé, cumul ou échéance —, pas `jour_validite`.
+
+> **Bornes fermées à gauche, et pas « > 2400 m ».** Les paliers d'enneigement tombent pile sur
+> les bornes : 1500/1800/2400 m (ou 1500/1800/2100) jusqu'en 2020-2021, 1500/2000/2500 m ensuite.
+> Fermées à gauche, les deux époques ont chacune un palier par tranche.
+
+> **Pièges.**
+> - Une tranche sans palier **n'a pas de ligne** : rien n'est interpolé. Avant 2021, seuls 6
+>   massifs pyrénéens sur 11 ont un palier en tranche `haute`.
+> - Neige fraîche et vent ont **une** altitude de référence par bulletin : une seule tranche
+>   par construction. La neige fraîche est mesurée à 1800 m, donc en tranche `moyenne` ; la
+>   tranche `basse` n'a jamais de neige fraîche.
+> - Une altitude `-1` (sentinelle des paliers 2016-2023) garde sa ligne avec `tranche` nulle.
+> - L'enneigement reste **indicatif** : la tranche ne transforme pas un palier en mesure.
+
 ---
 
 ## 6. Tables `historique_risque` et `tendances`
