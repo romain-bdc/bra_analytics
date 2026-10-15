@@ -470,6 +470,11 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         # Couverture : ce qui manque compte autant que ce qui est present.
         # L'archive comporte des journees partielles (07/02/2023 : 8 bulletins
         # sur 36) et le massif 71 disparait en 2025-2026.
+        #
+        # Restreinte a `massif_coherent` : sans ce filtre, le message technique
+        # du 05/02/2016 diffuse sous `ID="3"` ouvrait la saison 2015-2016 du
+        # Mont-Blanc un mois trop tot, avec 45 jours manquants fictifs. La ligne
+        # reste dans `risque_journalier`, et `bra info` la liste.
         con.execute(
             """
             CREATE OR REPLACE VIEW couverture AS
@@ -486,6 +491,7 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
                 date_diff('day', min(jour_validite), max(jour_validite)) + 1 - count(*)
                                                        AS jours_manquants
             FROM risque_journalier
+            WHERE massif_coherent
             GROUP BY saison, massif_id
             """
         )
