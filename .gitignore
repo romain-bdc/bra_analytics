@@ -22,3 +22,5 @@ __pycache__/
 # tableau de bord genere par `bra dashboard` (le gabarit du meme nom,
 # sous src/, doit rester versionne : ancrer le motif a la racine)
 /dashboard.html
+# carte d accueil generee par `bra carte` (meme raison : ancrer a la racine)
+/carte.html

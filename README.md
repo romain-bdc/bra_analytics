@@ -170,6 +170,34 @@ Deux commandes auxiliaires : `bra massifs` affiche le référentiel des 36 massi
 raccordent aux 36 identifiants et régénère leur version web — voir
 [docs/contours.md](docs/contours.md).
 
+### 7. `bra carte` — carte d'accueil des 36 massifs
+
+```bash
+uv run bra carte                      # écrit carte.html à la racine (non versionné)
+uv run bra carte --out /tmp/carte.html
+```
+
+Page HTML autonome, à ouvrir directement dans un navigateur : aucun serveur, aucune bibliothèque
+cartographique. Les contours versionnés (`geo/massifs.web.geojson`) sont embarqués et dessinés en
+SVG. Chaque massif porte **une valeur**, sans sélecteur de saison :
+
+- par défaut, l'**indice moyen sur la fenêtre `coeur`, saisons comparables seulement** — la
+  métrique d'accueil de la spec § 3.2, lue telle quelle dans `moyenne_pluriannuelle()`. Le libellé
+  dit « neuf saisons comparables sur onze », compté depuis l'entrepôt et `fenetres.py` ;
+- le survol donne toujours les jours couverts (et la durée nominale de la fenêtre sur les saisons
+  diffusées) et les jours de risque 4 ou 5 : une moyenne d'indices ordinaux n'est jamais affichée
+  seule ;
+- un sélecteur bascule sur les **jours à risque 3 ou plus** et le **maximum atteint** (repris de
+  `risque_saison`) ; la métrique vit dans l'URL (`carte.html#risque_max`). La durée
+  d'enneigement est annoncée mais pas calculée : elle dépend de T7 ;
+- un massif diffusé une partie de la période est **hachuré par-dessus sa couleur** — Haut-Var
+  Haut-Verdon (22) n'a que 7 saisons comparables sur 9, Andorre (71) 8 — et le survol nomme les
+  saisons manquantes ; un massif sans aucun jour sur la période serait hachuré sur fond neutre,
+  hors de la rampe, pour ne jamais se lire comme un zéro.
+
+L'attribution des données (avec la date d'archive) et celle des contours (version du 15/02/2024)
+figurent sous la carte. `--fragment` omet doctype et `<html>`, comme pour `bra dashboard`.
+
 ## Sortie
 
 ```
