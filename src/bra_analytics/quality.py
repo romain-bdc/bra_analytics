@@ -18,6 +18,12 @@ from .massifs import BY_ID
 # Echelle europeenne du risque d'avalanche : 1 (faible) a 5 (tres fort).
 RISQUE_MIN, RISQUE_MAX = 1, 5
 
+# Vitesse de vent au-dela de laquelle une valeur est une erreur de saisie. Sur
+# les 36 massifs, les plus fortes valeurs plausibles sont 180-190 km/h (36
+# echeances) ; viennent ensuite 400 et 530 km/h, isolees. Les metriques
+# excluent ce qui sort de [0, VENT_MAX_KMH] sans le corriger.
+VENT_MAX_KMH = 300
+
 
 @dataclass
 class Anomalie:
@@ -140,10 +146,77 @@ def check_bulletins(df: pl.DataFrame) -> list[Anomalie]:
     )
     add("amendement", "signal", pl.col("amendement"), "bulletins amendes")
     add(
+        "vent_unique", "signal",
+        pl.col("vent_altitude_basse_m").is_not_null() & pl.col("vent_altitude_haute_m").is_null(),
+        "un seul vent (ALTITUDEVENT2=9999 avant 2024, Alpes du Sud) : pas de second vent",
+    )
+    add(
         "texte_stabilite_absent", "signal",
         pl.col("stabilite_texte").is_null(),
         "bloc stabilite vide",
     )
+    return anomalies
+
+
+def check_filles(frames: dict[str, pl.DataFrame]) -> list[Anomalie]:
+    """Controles des tables filles : chaque sentinelle convertie au parsing
+    reste comptee ici, et une valeur hors plage est une erreur.
+
+    Le parser rend nulles les valeurs « non renseignees » (`-1`, `-2`) sans
+    perdre la ligne ; ces comptes disent combien, pour qu'une serie trouee se
+    lise comme telle et non comme une serie complete.
+    """
+    anomalies: list[Anomalie] = []
+
+    def add(nom: str, gravite: str, n: int, detail: str) -> None:
+        if n:
+            anomalies.append(Anomalie(nom, gravite, n, detail))
+
+    meteo = frames.get("meteo")
+    if meteo is not None and meteo.height:
+        valeurs = ["vent_bas_vitesse_kmh", "vent_haut_vitesse_kmh", "iso_0_m", "temps_sensible"]
+        add("echeance_meteo_vide", "signal",
+            meteo.filter(pl.all_horizontal(pl.col(c).is_null() for c in valeurs)).height,
+            "echeances meteo sans aucune valeur (-1 avant 2024, attributs vides ensuite)")
+        hors = pl.lit(False)
+        for c in ("vent_bas_vitesse_kmh", "vent_haut_vitesse_kmh"):
+            hors = hors | ~pl.col(c).is_between(0, VENT_MAX_KMH).fill_null(True)
+        add("vent_hors_plage", "erreur", meteo.filter(hors).height,
+            f"vitesse de vent hors [0, {VENT_MAX_KMH}] km/h : exclue des metriques")
+
+    enn = frames.get("enneigement")
+    if enn is not None and enn.height:
+        releve = ["massif_id", "date_bulletin", "origine", "date_enneigement"]
+        par_releve = enn.group_by(releve).agg(
+            vide=pl.col("altitude_m").is_null().all(),
+            sans=(pl.col("sans_enneigement_continu_nord").fill_null(False)
+                  | pl.col("sans_enneigement_continu_sud").fill_null(False)).any(),
+        )
+        add("releve_enneigement_vide", "signal", par_releve.filter(pl.col("vide")).height,
+            "releves d'enneigement non faits (paliers a -1)")
+        add("sans_enneigement_continu", "signal", par_releve.filter(pl.col("sans")).height,
+            "releves sans enneigement continu sur un versant (limite -1)")
+
+    # Le journal du parser : chaque valeur sentinelle rendue nulle, y compris
+    # sur une echeance ou un releve par ailleurs renseigne.
+    conv = frames.get("conversions")
+    if conv is not None and conv.height:
+        par_champ = (
+            conv.group_by("table_cible", "champ", "valeur_source")
+            .agg(pl.col("valeurs").sum())
+            .sort("table_cible", "champ", "valeur_source")
+        )
+        for t, c, v, n in par_champ.iter_rows():
+            add(f"sentinelle {t}.{c}={v}", "signal", n, "valeur rendue nulle au parsing")
+
+    nf = frames.get("neige_fraiche")
+    if nf is not None and nf.height:
+        add("neige_fraiche_non_observee", "signal",
+            nf.filter(
+                (pl.col("secteur1_libelle").is_not_null() & pl.col("secteur1_cumul_cm").is_null())
+                | (pl.col("secteur2_libelle").is_not_null() & pl.col("secteur2_cumul_cm").is_null())
+            ).height,
+            "cumuls de secteur non observes (-2 ou -1 avant 2024)")
     return anomalies
 
 
@@ -171,8 +244,8 @@ def coverage_gaps(df: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def report(df: pl.DataFrame) -> str:
-    anomalies = check_bulletins(df)
+def report(df: pl.DataFrame, filles: dict[str, pl.DataFrame] | None = None) -> str:
+    anomalies = check_bulletins(df) + (check_filles(filles) if filles else [])
     erreurs = [a for a in anomalies if a.gravite == "erreur"]
     signaux = [a for a in anomalies if a.gravite == "signal"]
 

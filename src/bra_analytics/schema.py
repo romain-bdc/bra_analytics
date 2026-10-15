@@ -69,6 +69,9 @@ BULLETINS: dict[str, pl.DataType] = {
     # enneigement du jour
     "enneigement_limite_nord_m": pl.Int32,
     "enneigement_limite_sud_m": pl.Int32,
+    # `-1` d'un releve fait : pas d'enneigement continu (nul si non releve).
+    "sans_enneigement_continu_nord": pl.Boolean,
+    "sans_enneigement_continu_sud": pl.Boolean,
     "vent_altitude_basse_m": pl.Int32,
     "vent_altitude_haute_m": pl.Int32,
     # provenance
@@ -106,6 +109,8 @@ ENNEIGEMENT: dict[str, pl.DataType] = {
     "date_enneigement": pl.Datetime("us"),
     "limite_nord_m": pl.Int32,
     "limite_sud_m": pl.Int32,
+    "sans_enneigement_continu_nord": pl.Boolean,
+    "sans_enneigement_continu_sud": pl.Boolean,
     "altitude_m": pl.Int32,
     "epaisseur_nord_cm": pl.Int32,
     "epaisseur_sud_cm": pl.Int32,
@@ -116,6 +121,11 @@ NEIGE_FRAICHE: dict[str, pl.DataType] = {
     "origine": pl.Utf8,
     "date_cumul": pl.Datetime("us"),
     "altitude_mesure_m": pl.Int32,
+    # Format ancien (<= 2023) uniquement : les secteurs nommes et leur cumul.
+    "secteur1_libelle": pl.Utf8,
+    "secteur1_cumul_cm": pl.Int16,
+    "secteur2_libelle": pl.Utf8,
+    "secteur2_cumul_cm": pl.Int16,
     "cumul_min_cm": pl.Int16,
     "cumul_max_cm": pl.Int16,
 }
@@ -132,6 +142,16 @@ TENDANCES: dict[str, pl.DataType] = {
     "valeur": pl.Utf8,
 }
 
+# Journal des sentinelles converties en nul au parsing : une ligne par
+# bulletin retenu, table, champ et valeur source. Relu par `bra check`.
+CONVERSIONS: dict[str, pl.DataType] = {
+    **_KEY,
+    "table_cible": pl.Utf8,
+    "champ": pl.Utf8,
+    "valeur_source": pl.Utf8,
+    "valeurs": pl.Int32,
+}
+
 TABLES: dict[str, dict[str, pl.DataType]] = {
     "bulletins": BULLETINS,
     "meteo": METEO,
@@ -139,4 +159,5 @@ TABLES: dict[str, dict[str, pl.DataType]] = {
     "neige_fraiche": NEIGE_FRAICHE,
     "historique_risque": HISTORIQUE_RISQUE,
     "tendances": TENDANCES,
+    "conversions": CONVERSIONS,
 }

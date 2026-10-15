@@ -155,12 +155,18 @@ reste solide. L'audit produit la distribution des altitudes de référence par m
 ### 4.3 Convention d'extraction météo
 
 Le bloc météo contient une prévision à plusieurs échéances (`origine = 'prevision'`) et un rappel
-des sept jours écoulés (`origine = 'historique'`). Convention retenue : pour une journée donnée,
-retenir la ligne dont l'échéance tombe sur `jour_validite`, en **préférant `historique` à
-`prevision`** quand les deux existent, puisque le bloc historique est une analyse et non une
-prévision — et en journalisant le choix. L'audit doit confirmer que le bloc historique porte bien
-les mêmes champs que la prévision ; si ce n'est pas le cas, la convention retombe sur la prévision
-seule, qui est la seule série homogène.
+des sept jours écoulés (`origine = 'historique'`).
+
+**Arrêtée le 15 octobre 2026, au vu de l'audit : prévision seule, valeur du jour calculée sur
+les échéances de 06 h et 12 h.** La convention envisagée d'abord — préférer l'historique quand il
+existe — mêlait deux horizons : l'historique manque toute la saison 2015-2016 et 1 à 2 % des jours
+jusqu'en 2023, ne porte plus `mer_nuages_m` depuis 2024, et ne diffère presque pas de la
+prévision (isotherme 0 °C : 32 à 37 m d'écart moyen). Les heures d'échéance changent en 2024
+(00/06/12 h de J, puis 06/12/18 h de J et 00 h de J+1) : seules 06 h et 12 h sont communes aux
+deux époques. Mesures et justification : [`glossaire.md`](glossaire.md) § 3.
+
+Le vent se lit par altitude ou par tranche, jamais par rôle bas / haut : jusqu'en 2023 les
+Alpes du Sud n'ont qu'un vent, à 3000 m, porté par la colonne « basse » (glossaire § 2.9).
 
 ## 5. Couche métriques
 

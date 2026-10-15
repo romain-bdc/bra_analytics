@@ -467,3 +467,153 @@ def test_risquemaxi_zero_dans_l_historique_vaut_non_estime() -> None:
     assert par_jour[date(2022, 4, 15)] == 1
     assert par_jour[date(2022, 4, 16)] is None
     assert b.bulletin["risque_maxi"] == 1
+
+
+# --------------------------------------------------------------------------
+# Neige fraiche avant 2024 : deux secteurs nommes, pas un min et un max
+# --------------------------------------------------------------------------
+
+def _neige(name: str, origine: str) -> dict[date, dict]:
+    (b,) = parse_file(fixture(name))
+    return {
+        r["date_cumul"].date(): r for r in b.neige_fraiche if r["origine"] == origine
+    }
+
+
+def test_neige_fraiche_deux_secteurs_conserves_et_bornes_derivees() -> None:
+    """Haute-Bigorre, 23/03/2022 : `SECTEURSS1="Nord" SECTEURSS2="Sud"`.
+
+    Le 19/03, `SS241="0" SS242="5"` : 0 cm au nord, 5 cm au sud. Lu comme
+    min/max, l'ancien parsing donnait le bon ordre par hasard ; l'inverse
+    (`SS241 > SS242`) y produisait un maximum inferieur au minimum.
+    """
+    r = _neige("anomalie_2022_haute_bigorre_secteurs.xml", "prevision")[date(2022, 3, 19)]
+    assert (r["secteur1_libelle"], r["secteur1_cumul_cm"]) == ("Nord", 0)
+    assert (r["secteur2_libelle"], r["secteur2_cumul_cm"]) == ("Sud", 5)
+    assert (r["cumul_min_cm"], r["cumul_max_cm"]) == (0, 5)
+
+
+def test_neige_fraiche_valeur_non_observee_devient_nulle() -> None:
+    """Meme bulletin, bloc historique : le 17/03/2022 porte `SS241="-2"
+    SS242="-2"`. Les secteurs restent nommes, aucun cumul n'est invente."""
+    r = _neige("anomalie_2022_haute_bigorre_secteurs.xml", "historique")[date(2022, 3, 17)]
+    assert (r["secteur1_libelle"], r["secteur2_libelle"]) == ("Nord", "Sud")
+    assert r["secteur1_cumul_cm"] is None and r["secteur2_cumul_cm"] is None
+    assert r["cumul_min_cm"] is None and r["cumul_max_cm"] is None
+
+
+def test_neige_fraiche_un_seul_secteur() -> None:
+    """Aspe-Ossau 2023 : `SECTEURSS1="massif"`, `SS242="-1"` (pas de second
+    secteur). La fourchette se reduit au secteur unique."""
+    (b,) = parse_file(fixture("v3_2023_aspe_ossau.xml"))
+    for r in b.neige_fraiche:
+        assert r["secteur1_libelle"] == "massif"
+        assert r["secteur2_libelle"] is None and r["secteur2_cumul_cm"] is None
+        assert r["cumul_min_cm"] == r["cumul_max_cm"] == r["secteur1_cumul_cm"]
+
+
+def test_neige_fraiche_moderne_sans_secteur() -> None:
+    """Depuis 2024, `SS24Min` / `SS24Max` : une fourchette, aucun secteur."""
+    (b,) = parse_file(fixture("v4_2024_aspe_ossau.xml"))
+    assert b.neige_fraiche
+    for r in b.neige_fraiche:
+        assert r["secteur1_libelle"] is None and r["secteur1_cumul_cm"] is None
+        assert r["cumul_min_cm"] is not None and r["cumul_min_cm"] <= r["cumul_max_cm"]
+
+
+# --------------------------------------------------------------------------
+# Enneigement : releve vide et absence d'enneigement continu
+# --------------------------------------------------------------------------
+
+def test_releve_d_enneigement_vide_devient_nul() -> None:
+    """Andorre, 05/03/2023 : les trois paliers valent `ALTI="-1" N="-1" S="-1"`
+    et les limites `-1`. Le releve n'a pas ete fait : rien n'est mesure, et
+    l'absence d'enneigement continu n'est pas affirmee pour autant."""
+    (b,) = parse_file(fixture("anomalie_2023_andorre_releves_vides.xml"))
+    assert len(b.enneigement) == 3
+    for r in b.enneigement:
+        assert r["altitude_m"] is None
+        assert r["epaisseur_nord_cm"] is None and r["epaisseur_sud_cm"] is None
+        assert r["limite_nord_m"] is None and r["limite_sud_m"] is None
+        assert r["sans_enneigement_continu_nord"] is None
+        assert r["sans_enneigement_continu_sud"] is None
+    assert b.bulletin["enneigement_limite_sud_m"] is None
+    assert b.bulletin["sans_enneigement_continu_sud"] is None
+
+
+def test_limite_absente_sur_releve_sans_neige() -> None:
+    """Couserans, 05/11/2025 : `LimiteSud="-1" LimiteNord="-1"`, epaisseur 0 a
+    1500, 2000 et 2500 m. Le `-1` dit qu'il n'y a pas d'enneigement continu :
+    c'est une information, conservee par l'indicateur, pas une lacune."""
+    (b,) = parse_file(fixture("anomalie_2025_couserans_sans_enneigement.xml"))
+    assert [r["altitude_m"] for r in b.enneigement] == [1500, 2000, 2500]
+    for r in b.enneigement:
+        assert r["limite_nord_m"] is None and r["limite_sud_m"] is None
+        assert r["sans_enneigement_continu_nord"] is True
+        assert r["sans_enneigement_continu_sud"] is True
+    assert b.bulletin["enneigement_limite_nord_m"] is None
+    assert b.bulletin["sans_enneigement_continu_nord"] is True
+
+
+def test_limite_renseignee_n_est_pas_absente() -> None:
+    (b,) = parse_file(fixture("v4_2024_aspe_ossau.xml"))
+    r = b.enneigement[0]
+    assert r["limite_sud_m"] is not None and r["limite_sud_m"] > 0
+    assert r["sans_enneigement_continu_sud"] is False
+    assert b.bulletin["sans_enneigement_continu_sud"] is False
+
+
+# --------------------------------------------------------------------------
+# Meteo : echeance vide et second vent absent
+# --------------------------------------------------------------------------
+
+def test_echeance_meteo_vide_devient_nulle() -> None:
+    """Andorre, 05/03/2023, echeance de 00 h : toutes les valeurs a `-1`.
+    L'echeance n'a pas ete renseignee ; la ligne reste, sans valeur."""
+    (b,) = parse_file(fixture("anomalie_2023_andorre_releves_vides.xml"))
+    vide, pleine = b.meteo[0], b.meteo[1]
+    assert vide["echeance"] == datetime(2023, 3, 5, 0, 0)
+    for champ in ("vent_bas_vitesse_kmh", "vent_haut_vitesse_kmh", "iso_0_m",
+                  "iso_moins10_m", "temps_sensible", "temps_sensible_libelle"):
+        assert vide[champ] is None, champ
+    assert pleine["iso_0_m"] == 2000 and pleine["vent_bas_vitesse_kmh"] == 0
+
+
+def test_altitude_9999_signifie_pas_de_second_vent() -> None:
+    """Queyras, 14/01/2023 : `ALTITUDEVENT1="3000" ALTITUDEVENT2="9999"`,
+    `FF2="-1"`. Jusqu'en 2023 les neuf massifs des Alpes du Sud n'ont qu'un
+    vent, a 3000 m, porte par `FF1`. Ni altitude ni vitesse de second vent."""
+    (b,) = parse_file(fixture("anomalie_2023_queyras_vent_unique.xml"))
+    assert b.bulletin["vent_altitude_basse_m"] == 3000
+    assert b.bulletin["vent_altitude_haute_m"] is None
+    for r in b.meteo:
+        assert r["vent_haut_vitesse_kmh"] is None and r["vent_haut_direction"] is None
+        assert r["vent_bas_vitesse_kmh"] is not None and r["vent_bas_vitesse_kmh"] >= 0
+
+
+# --------------------------------------------------------------------------
+# Journal des conversions : aucune valeur ne devient nulle sans etre comptee
+# --------------------------------------------------------------------------
+
+def test_chaque_conversion_est_journalisee() -> None:
+    """Queyras, 14/01/2023 : `ALTITUDEVENT2="9999"` une fois, `FF2="-1"` sur
+    les trois echeances de prevision -- echeances par ailleurs renseignees,
+    donc invisibles pour un compte d'echeances entierement vides."""
+    (b,) = parse_file(fixture("anomalie_2023_queyras_vent_unique.xml"))
+    assert b.conversions[("bulletins", "vent_altitude_haute_m", "9999")] == 1
+    assert b.conversions[("meteo", "vent_haut_vitesse_kmh", "-1")] == 3
+    assert all(r["iso_0_m"] is not None for r in b.meteo)
+
+
+def test_conversions_de_neige_fraiche_journalisees() -> None:
+    """Haute-Bigorre, 23/03/2022 : `SS241="-2" SS242="-2"` le 17/03 (bloc
+    historique) ; aucun autre negatif dans le bulletin."""
+    (b,) = parse_file(fixture("anomalie_2022_haute_bigorre_secteurs.xml"))
+    assert b.conversions[("neige_fraiche", "secteur1_cumul_cm", "-2")] == 1
+    assert b.conversions[("neige_fraiche", "secteur2_cumul_cm", "-2")] == 1
+    assert sum(n for (t, _, _), n in b.conversions.items() if t == "neige_fraiche") == 2
+
+
+def test_bulletin_sans_sentinelle_sans_conversion() -> None:
+    (b,) = parse_file(fixture("v6_2026_aspe_ossau.xml"))
+    assert not b.conversions

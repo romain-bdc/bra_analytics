@@ -55,8 +55,8 @@ Le statut est **dérivé** de la disponibilité mesurée plus bas, pas écrit à
 | enneigement | Date d'enneigement continu | **calculable** |  | — |
 | enneigement | Durée d'enneigement | **calculable** |  | — |
 | enneigement | Maximum saisonnier d'épaisseur | **calculable** |  | — |
-| enneigement | Neige fraîche cumulée | **sous-ensemble** | 2023-2024 → 2025-2026 | absent sur une partie des saisons : neige_fraiche.cumul_max_cm (avant 2024, SS242 est le cumul d'un second secteur, pas un maximum) |
-| enneigement | Épisodes de chute | **sous-ensemble** | 2023-2024 → 2025-2026 | absent sur une partie des saisons : neige_fraiche.cumul_max_cm (avant 2024, SS242 est le cumul d'un second secteur, pas un maximum) |
+| enneigement | Neige fraîche cumulée | **calculable** |  | rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif |
+| enneigement | Épisodes de chute | **calculable** |  | rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif |
 | enneigement | Anomalie d'enneigement | **calculable** |  | — |
 | meteo | Isotherme 0 °C | **calculable** |  | — |
 | meteo | ISO 0 min / max / moyen | **calculable** |  | — |
@@ -66,7 +66,7 @@ Le statut est **dérivé** de la disponibilité mesurée plus bas, pas écrit à
 | meteo | Jours de vent fort | **calculable** |  | — |
 | meteo | Limite pluie / neige | **calculable** |  | — |
 | meteo | Temps sensible | **calculable** |  | — |
-| meteo | Indice de transport par le vent | **sous-ensemble** | 2023-2024 → 2025-2026 | absent sur une partie des saisons : neige_fraiche.cumul_max_cm (avant 2024, SS242 est le cumul d'un second secteur, pas un maximum) |
+| meteo | Indice de transport par le vent | **calculable** |  | rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif |
 | meteo | Épisodes de redoux | **calculable** |  | — |
 | rose | Fréquence d'exposition | **calculable** |  | — |
 | rose | Fréquence pondérée | **calculable** |  | — |
@@ -78,11 +78,6 @@ Le statut est **dérivé** de la disponibilité mesurée plus bas, pas écrit à
 | score | Score composite | **calculable** |  | — |
 
 ## 2. Part de valeurs exploitables, champ × saison (%)
-
-Champs comptés à 0 sur une famille de format parce qu'ils y portent autre chose que ce que leur nom annonce :
-
-- `neige_fraiche.cumul_min_cm` (famille `legacy`) : avant 2024, SS241 est le cumul du premier secteur, pas un minimum.
-- `neige_fraiche.cumul_max_cm` (famille `legacy`) : avant 2024, SS242 est le cumul d'un second secteur, pas un maximum.
 
 ### `bulletins`
 
@@ -137,8 +132,10 @@ Champs comptés à 0 sur une famille de format parce qu'ils y portent autre chos
 | `sat2` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 59,4 | 59,8 | 61,7 |
 | `enneigement_limite_nord_m` | 99,5 | 98,4 | 98,5 | 99,1 | 98,3 | 97,2 | 96,3 | 97,4 | 98,9 | 97,2 | 99,0 |
 | `enneigement_limite_sud_m` | 97,9 | 94,4 | 97,5 | 97,9 | 97,0 | 95,4 | 93,3 | 94,7 | 96,4 | 94,6 | 97,4 |
+| `sans_enneigement_continu_nord` | 99,5 | 99,7 | 99,6 | 99,6 | 99,9 | 99,5 | 99,2 | 99,5 | 99,8 | 99,9 | 99,8 |
+| `sans_enneigement_continu_sud` | 99,5 | 99,7 | 99,6 | 99,6 | 99,9 | 99,5 | 99,2 | 99,5 | 99,8 | 99,9 | 99,8 |
 | `vent_altitude_basse_m` | 100 | 100 | 99,9 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
-| `vent_altitude_haute_m` | 100 | 100 | 99,9 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
+| `vent_altitude_haute_m` | 77,2 | 77,1 | 77,0 | 75,3 | 73,3 | 75,0 | 75,2 | 74,9 | 100 | 100 | 100 |
 | `schema_version` | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
 | `format_famille` | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
 
@@ -168,6 +165,8 @@ Champs comptés à 0 sur une famille de format parce qu'ils y portent autre chos
 | `date_enneigement` | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
 | `limite_nord_m` | 99,5 | 98,5 | 98,1 | 98,9 | 97,9 | 97,5 | 96,5 | 97,4 | 99,2 | 98,3 | 98,8 |
 | `limite_sud_m` | 97,9 | 94,9 | 96,9 | 97,8 | 96,6 | 95,8 | 93,6 | 94,6 | 98,8 | 98,0 | 98,6 |
+| `sans_enneigement_continu_nord` | 99,5 | 99,6 | 99,6 | 99,5 | 99,5 | 99,7 | 99,4 | 99,6 | 99,3 | 98,7 | 98,9 |
+| `sans_enneigement_continu_sud` | 99,5 | 99,6 | 99,6 | 99,5 | 99,5 | 99,7 | 99,4 | 99,6 | 99,3 | 98,7 | 98,9 |
 | `altitude_m` | 99,5 | 99,6 | 99,6 | 99,5 | 99,5 | 99,7 | 99,4 | 99,6 | 100 | 100 | 100 |
 | `epaisseur_nord_cm` | 99,5 | 99,6 | 99,6 | 99,5 | 99,5 | 99,7 | 99,4 | 99,6 | 99,3 | 98,7 | 98,9 |
 | `epaisseur_sud_cm` | 99,5 | 99,6 | 99,6 | 99,5 | 99,5 | 99,7 | 99,4 | 99,6 | 99,3 | 98,7 | 98,9 |
@@ -179,8 +178,12 @@ Champs comptés à 0 sur une famille de format parce qu'ils y portent autre chos
 | `origine` | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
 | `date_cumul` | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
 | `altitude_mesure_m` | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 |
-| `cumul_min_cm` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 99,8 | 99,8 | 99,6 |
-| `cumul_max_cm` | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 99,8 | 99,8 | 99,6 |
+| `secteur1_libelle` | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 100 | 0 | 0 | 0 |
+| `secteur1_cumul_cm` | 78,7 | 88,4 | 80,8 | 86,6 | 85,4 | 85,5 | 87,1 | 80,0 | 0 | 0 | 0 |
+| `secteur2_libelle` | 17,1 | 17,2 | 17,1 | 16,9 | 16,8 | 16,6 | 16,7 | 16,7 | 0 | 0 | 0 |
+| `secteur2_cumul_cm` | 12,8 | 15,2 | 14,0 | 14,6 | 14,5 | 14,4 | 14,8 | 14,0 | 0 | 0 | 0 |
+| `cumul_min_cm` | 79,1 | 88,5 | 80,9 | 86,8 | 85,6 | 85,7 | 87,4 | 80,2 | 99,8 | 99,8 | 99,6 |
+| `cumul_max_cm` | 79,1 | 88,5 | 80,9 | 86,8 | 85,6 | 85,7 | 87,4 | 80,2 | 99,7 | 99,8 | 99,6 |
 
 ### `historique_risque`
 
@@ -251,40 +254,33 @@ Elles fondent les tranches normées (< 1800 m, 1800–2400 m, ≥ 2400 m, spec �
 
 | massif | nom | source | altitudes (m) | saisons |
 |---|---|---|---|---|
-| 1 | Chablais | enneigement | -1/1000/1500/2000 | 2015-2016 → 2022-2023 |
-| 1 | Chablais | enneigement | 1000/1500/2000 | 2023-2024 → 2025-2026 |
+| 1 | Chablais | enneigement | 1000/1500/2000 | 2015-2016 → 2025-2026 |
 | 1 | Chablais | neige_fraiche | 1800 | 2015-2016 → 2025-2026 |
 | 1 | Chablais | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 1 | Chablais | vent_haut | 2500 | 2015-2016 → 2025-2026 |
-| 2 | Aravis | enneigement | -1/1000/1500/2000 | 2015-2016 → 2022-2023 |
-| 2 | Aravis | enneigement | 1000/1500/2000 | 2023-2024 → 2025-2026 |
+| 2 | Aravis | enneigement | 1000/1500/2000 | 2015-2016 → 2025-2026 |
 | 2 | Aravis | neige_fraiche | 1800 | 2015-2016 → 2025-2026 |
 | 2 | Aravis | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 2 | Aravis | vent_haut | 2500 | 2015-2016 → 2025-2026 |
-| 3 | Mont-Blanc | enneigement | -1/1500/2000/2500 | 2015-2016 → 2022-2023 |
-| 3 | Mont-Blanc | enneigement | 1500/2000/2500 | 2023-2024 → 2025-2026 |
+| 3 | Mont-Blanc | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 3 | Mont-Blanc | neige_fraiche | 1800 | 2015-2016 → 2025-2026 |
 | 3 | Mont-Blanc | vent_bas | 2000 | 2015-2016 → 2023-2024, 2025-2026 |
 | 3 | Mont-Blanc | vent_bas | 2000/3000 | 2024-2025 |
 | 3 | Mont-Blanc | vent_haut | 3000 | 2016-2017 → 2023-2024 |
 | 3 | Mont-Blanc | vent_haut | 3000/4000 | 2024-2025 |
 | 3 | Mont-Blanc | vent_haut | 4000 | 2015-2016, 2025-2026 |
-| 4 | Bauges | enneigement | -1/1000/1500/2000 | 2021-2022 → 2022-2023 |
-| 4 | Bauges | enneigement | -1/1500/1800/2100 | 2016-2017 → 2020-2021 |
-| 4 | Bauges | enneigement | 1000/1500/2000 | 2023-2024 → 2025-2026 |
-| 4 | Bauges | enneigement | 1500/1800/2100 | 2015-2016 |
+| 4 | Bauges | enneigement | 1000/1500/2000 | 2021-2022 → 2025-2026 |
+| 4 | Bauges | enneigement | 1500/1800/2100 | 2015-2016 → 2020-2021 |
 | 4 | Bauges | neige_fraiche | 1800 | 2015-2016, 2017-2018 → 2025-2026 |
 | 4 | Bauges | neige_fraiche | 1800/2500 | 2016-2017 |
 | 4 | Bauges | vent_bas | 1500 | 2015-2016 → 2025-2026 |
 | 4 | Bauges | vent_haut | 2000 | 2015-2016 → 2025-2026 |
-| 5 | Beaufortain | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 5 | Beaufortain | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 5 | Beaufortain | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 5 | Beaufortain | neige_fraiche | 1800 | 2015-2016, 2017-2018 → 2025-2026 |
 | 5 | Beaufortain | neige_fraiche | 1800/2500 | 2016-2017 |
 | 5 | Beaufortain | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 5 | Beaufortain | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 6 | Haute-Tarentaise | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 6 | Haute-Tarentaise | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 6 | Haute-Tarentaise | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 6 | Haute-Tarentaise | neige_fraiche | 1800 | 2015-2016, 2017-2018 → 2025-2026 |
 | 6 | Haute-Tarentaise | neige_fraiche | 1800/2500 | 2016-2017 |
 | 6 | Haute-Tarentaise | vent_bas | 2500 | 2025-2026 |
@@ -293,26 +289,22 @@ Elles fondent les tranches normées (< 1800 m, 1800–2400 m, ≥ 2400 m, spec �
 | 6 | Haute-Tarentaise | vent_haut | 3500 | 2025-2026 |
 | 6 | Haute-Tarentaise | vent_haut | 3500/4000 | 2024-2025 |
 | 6 | Haute-Tarentaise | vent_haut | 4000 | 2015-2016 → 2023-2024 |
-| 7 | Chartreuse | enneigement | -1/1000/1500/2000 | 2016-2017 → 2022-2023 |
-| 7 | Chartreuse | enneigement | 1000/1500/2000 | 2015-2016, 2023-2024 → 2025-2026 |
+| 7 | Chartreuse | enneigement | 1000/1500/2000 | 2015-2016 → 2025-2026 |
 | 7 | Chartreuse | neige_fraiche | 1800 | 2015-2016 → 2025-2026 |
 | 7 | Chartreuse | vent_bas | 1500 | 2015-2016 → 2025-2026 |
 | 7 | Chartreuse | vent_haut | 2000 | 2015-2016 → 2025-2026 |
-| 8 | Belledonne | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 8 | Belledonne | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 8 | Belledonne | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 8 | Belledonne | neige_fraiche | 1800 | 2017-2018 → 2025-2026 |
 | 8 | Belledonne | neige_fraiche | 1800/2500 | 2015-2016 |
 | 8 | Belledonne | neige_fraiche | 1800/3000 | 2016-2017 |
 | 8 | Belledonne | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 8 | Belledonne | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 9 | Maurienne | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 9 | Maurienne | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 9 | Maurienne | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 9 | Maurienne | neige_fraiche | 1800 | 2015-2016, 2017-2018 → 2025-2026 |
 | 9 | Maurienne | neige_fraiche | 1800/2500 | 2016-2017 |
 | 9 | Maurienne | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 9 | Maurienne | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 10 | Vanoise | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 10 | Vanoise | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 10 | Vanoise | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 10 | Vanoise | neige_fraiche | 1800 | 2015-2016, 2017-2018 → 2025-2026 |
 | 10 | Vanoise | neige_fraiche | 1800/2500 | 2016-2017 |
 | 10 | Vanoise | vent_bas | 2500 | 2025-2026 |
@@ -321,8 +313,7 @@ Elles fondent les tranches normées (< 1800 m, 1800–2400 m, ≥ 2400 m, spec �
 | 10 | Vanoise | vent_haut | 3500 | 2025-2026 |
 | 10 | Vanoise | vent_haut | 3500/4000 | 2024-2025 |
 | 10 | Vanoise | vent_haut | 4000 | 2015-2016 → 2023-2024 |
-| 11 | Haute-Maurienne | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 11 | Haute-Maurienne | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 11 | Haute-Maurienne | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 11 | Haute-Maurienne | neige_fraiche | 1800 | 2015-2016, 2017-2018 → 2025-2026 |
 | 11 | Haute-Maurienne | neige_fraiche | 1800/2500 | 2016-2017 |
 | 11 | Haute-Maurienne | vent_bas | 2500 | 2025-2026 |
@@ -331,28 +322,23 @@ Elles fondent les tranches normées (< 1800 m, 1800–2400 m, ≥ 2400 m, spec �
 | 11 | Haute-Maurienne | vent_haut | 3500 | 2025-2026 |
 | 11 | Haute-Maurienne | vent_haut | 3500/4000 | 2024-2025 |
 | 11 | Haute-Maurienne | vent_haut | 4000 | 2015-2016 → 2023-2024 |
-| 12 | Grandes-Rousses | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 12 | Grandes-Rousses | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 12 | Grandes-Rousses | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 12 | Grandes-Rousses | neige_fraiche | 1800 | 2017-2018 → 2025-2026 |
 | 12 | Grandes-Rousses | neige_fraiche | 1800/2500 | 2015-2016 |
 | 12 | Grandes-Rousses | neige_fraiche | 1800/3000 | 2016-2017 |
 | 12 | Grandes-Rousses | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 12 | Grandes-Rousses | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 13 | Thabor | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 13 | Thabor | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 13 | Thabor | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 13 | Thabor | neige_fraiche | 1800 | 2015-2016 → 2019-2020 |
 | 13 | Thabor | neige_fraiche | 1800/2500 | 2020-2021 → 2025-2026 |
 | 13 | Thabor | vent_bas | 2000 | 2023-2024 → 2025-2026 |
 | 13 | Thabor | vent_bas | 3000 | 2015-2016 → 2022-2023 |
 | 13 | Thabor | vent_haut | 3000 | 2023-2024 → 2025-2026 |
-| 13 | Thabor | vent_haut | 9999 | 2015-2016 → 2022-2023 |
-| 14 | Vercors | enneigement | -1/1000/1500/2000 | 2016-2017 → 2022-2023 |
-| 14 | Vercors | enneigement | 1000/1500/2000 | 2015-2016, 2023-2024 → 2025-2026 |
+| 14 | Vercors | enneigement | 1000/1500/2000 | 2015-2016 → 2025-2026 |
 | 14 | Vercors | neige_fraiche | 1800 | 2015-2016 → 2025-2026 |
 | 14 | Vercors | vent_bas | 1500 | 2015-2016 → 2025-2026 |
 | 14 | Vercors | vent_haut | 2000 | 2015-2016 → 2025-2026 |
-| 15 | Oisans | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 15 | Oisans | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 15 | Oisans | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 15 | Oisans | neige_fraiche | 1800 | 2017-2018 → 2025-2026 |
 | 15 | Oisans | neige_fraiche | 1800/2500 | 2015-2016 |
 | 15 | Oisans | neige_fraiche | 1800/2500/3000 | 2016-2017 |
@@ -360,160 +346,127 @@ Elles fondent les tranches normées (< 1800 m, 1800–2400 m, ≥ 2400 m, spec �
 | 15 | Oisans | vent_bas | 2500 | 2015-2016 → 2018-2019, 2020-2021 → 2025-2026 |
 | 15 | Oisans | vent_haut | 3000/3500 | 2019-2020 |
 | 15 | Oisans | vent_haut | 3500 | 2015-2016 → 2018-2019, 2020-2021 → 2025-2026 |
-| 16 | Pelvoux | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 16 | Pelvoux | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 16 | Pelvoux | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 16 | Pelvoux | neige_fraiche | 1800 | 2015-2016 → 2019-2020 |
 | 16 | Pelvoux | neige_fraiche | 1800/2500 | 2020-2021 → 2025-2026 |
 | 16 | Pelvoux | vent_bas | 2000 | 2023-2024 → 2025-2026 |
 | 16 | Pelvoux | vent_bas | 3000 | 2015-2016 → 2022-2023 |
 | 16 | Pelvoux | vent_haut | 3000 | 2023-2024 → 2025-2026 |
-| 16 | Pelvoux | vent_haut | 9999 | 2015-2016 → 2022-2023 |
-| 17 | Queyras | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 17 | Queyras | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 17 | Queyras | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 17 | Queyras | neige_fraiche | 1800 | 2015-2016 → 2019-2020 |
 | 17 | Queyras | neige_fraiche | 1800/2500 | 2020-2021 → 2025-2026 |
 | 17 | Queyras | vent_bas | 2000 | 2023-2024 → 2025-2026 |
 | 17 | Queyras | vent_bas | 3000 | 2015-2016 → 2022-2023 |
 | 17 | Queyras | vent_haut | 3000 | 2023-2024 → 2025-2026 |
-| 17 | Queyras | vent_haut | 9999 | 2015-2016 → 2022-2023 |
-| 18 | Devoluy | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 18 | Devoluy | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 18 | Devoluy | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 18 | Devoluy | neige_fraiche | 1800 | 2015-2016 → 2019-2020 |
 | 18 | Devoluy | neige_fraiche | 1800/2500 | 2020-2021 → 2025-2026 |
 | 18 | Devoluy | vent_bas | 2000 | 2023-2024 → 2025-2026 |
 | 18 | Devoluy | vent_bas | 3000 | 2015-2016 → 2022-2023 |
 | 18 | Devoluy | vent_haut | 3000 | 2023-2024 → 2025-2026 |
-| 18 | Devoluy | vent_haut | 9999 | 2015-2016 → 2022-2023 |
-| 19 | Champsaur | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 19 | Champsaur | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 19 | Champsaur | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 19 | Champsaur | neige_fraiche | 1800 | 2015-2016 → 2019-2020 |
 | 19 | Champsaur | neige_fraiche | 1800/2500 | 2020-2021 → 2025-2026 |
 | 19 | Champsaur | vent_bas | 2000 | 2023-2024 → 2025-2026 |
 | 19 | Champsaur | vent_bas | 3000 | 2015-2016 → 2022-2023 |
 | 19 | Champsaur | vent_haut | 3000 | 2023-2024 → 2025-2026 |
-| 19 | Champsaur | vent_haut | 9999 | 2015-2016 → 2022-2023 |
-| 20 | Embrunais Parpaillon | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 20 | Embrunais Parpaillon | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 20 | Embrunais Parpaillon | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 20 | Embrunais Parpaillon | neige_fraiche | 1800 | 2015-2016 → 2019-2020 |
 | 20 | Embrunais Parpaillon | neige_fraiche | 1800/2500 | 2020-2021 → 2025-2026 |
 | 20 | Embrunais Parpaillon | vent_bas | 2000 | 2023-2024 → 2025-2026 |
 | 20 | Embrunais Parpaillon | vent_bas | 3000 | 2015-2016 → 2022-2023 |
 | 20 | Embrunais Parpaillon | vent_haut | 3000 | 2023-2024 → 2025-2026 |
-| 20 | Embrunais Parpaillon | vent_haut | 9999 | 2015-2016 → 2022-2023 |
-| 21 | Ubaye | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 21 | Ubaye | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 21 | Ubaye | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 21 | Ubaye | neige_fraiche | 1800 | 2015-2016 → 2019-2020 |
 | 21 | Ubaye | neige_fraiche | 1800/2500 | 2020-2021 → 2025-2026 |
 | 21 | Ubaye | vent_bas | 2000 | 2023-2024 → 2025-2026 |
 | 21 | Ubaye | vent_bas | 3000 | 2015-2016 → 2022-2023 |
 | 21 | Ubaye | vent_haut | 3000 | 2023-2024 → 2025-2026 |
-| 21 | Ubaye | vent_haut | 9999 | 2015-2016 → 2022-2023 |
-| 22 | Haut-Var Haut-Verdon | enneigement | -1/1500/2000/2500 | 2018-2019 → 2022-2023 |
-| 22 | Haut-Var Haut-Verdon | enneigement | 1500/2000/2500 | 2023-2024 → 2025-2026 |
+| 22 | Haut-Var Haut-Verdon | enneigement | 1500/2000/2500 | 2018-2019 → 2025-2026 |
 | 22 | Haut-Var Haut-Verdon | neige_fraiche | 1800 | 2018-2019 → 2019-2020 |
 | 22 | Haut-Var Haut-Verdon | neige_fraiche | 1800/2500 | 2020-2021 → 2025-2026 |
 | 22 | Haut-Var Haut-Verdon | vent_bas | 2000 | 2023-2024 → 2025-2026 |
 | 22 | Haut-Var Haut-Verdon | vent_bas | 3000 | 2018-2019 → 2022-2023 |
 | 22 | Haut-Var Haut-Verdon | vent_haut | 3000 | 2023-2024 → 2025-2026 |
-| 22 | Haut-Var Haut-Verdon | vent_haut | 9999 | 2018-2019 → 2022-2023 |
-| 23 | Mercantour | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 23 | Mercantour | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 23 | Mercantour | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 23 | Mercantour | neige_fraiche | 1800 | 2015-2016 → 2019-2020 |
 | 23 | Mercantour | neige_fraiche | 1800/2500 | 2020-2021 → 2025-2026 |
 | 23 | Mercantour | vent_bas | 2000 | 2023-2024 → 2025-2026 |
 | 23 | Mercantour | vent_bas | 3000 | 2015-2016 → 2022-2023 |
 | 23 | Mercantour | vent_haut | 3000 | 2023-2024 → 2025-2026 |
-| 23 | Mercantour | vent_haut | 9999 | 2015-2016 → 2022-2023 |
-| 40 | Cinto Rotondo | enneigement | -1/1000/1500/2000 | 2016-2017 → 2022-2023 |
-| 40 | Cinto Rotondo | enneigement | 1000/1500/2000 | 2015-2016, 2023-2024 → 2025-2026 |
+| 40 | Cinto Rotondo | enneigement | 1000/1500/2000 | 2015-2016 → 2025-2026 |
 | 40 | Cinto Rotondo | neige_fraiche | 1800 | 2015-2016 → 2025-2026 |
 | 40 | Cinto Rotondo | vent_bas | 1500 | 2015-2016 → 2025-2026 |
 | 40 | Cinto Rotondo | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 41 | Renoso Incudine | enneigement | -1/1000/1500/2000 | 2016-2017 → 2022-2023 |
-| 41 | Renoso Incudine | enneigement | 1000/1500/2000 | 2015-2016, 2023-2024 → 2025-2026 |
+| 41 | Renoso Incudine | enneigement | 1000/1500/2000 | 2015-2016 → 2025-2026 |
 | 41 | Renoso Incudine | neige_fraiche | 1800 | 2015-2016 → 2025-2026 |
 | 41 | Renoso Incudine | vent_bas | 1500 | 2015-2016 → 2025-2026 |
 | 41 | Renoso Incudine | vent_haut | 2000 | 2015-2016 → 2025-2026 |
-| 64 | Pays-Basque | enneigement | -1/1000/1500/2000 | 2021-2022 → 2022-2023 |
-| 64 | Pays-Basque | enneigement | -1/1200/1500/1800 | 2016-2017 → 2019-2020 |
-| 64 | Pays-Basque | enneigement | 1000/1500/2000 | 2023-2024 → 2025-2026 |
-| 64 | Pays-Basque | enneigement | 1200/1500/1800 | 2015-2016, 2020-2021 |
+| 64 | Pays-Basque | enneigement | 1000/1500/2000 | 2021-2022 → 2025-2026 |
+| 64 | Pays-Basque | enneigement | 1200/1500/1800 | 2015-2016 → 2020-2021 |
 | 64 | Pays-Basque | neige_fraiche | 1800 | 2015-2016 → 2021-2022, 2023-2024 → 2025-2026 |
 | 64 | Pays-Basque | neige_fraiche | 1800/2400 | 2022-2023 |
 | 64 | Pays-Basque | vent_bas | 1000 | 2015-2016 → 2025-2026 |
 | 64 | Pays-Basque | vent_haut | 2000 | 2015-2016 → 2025-2026 |
-| 65 | Aspe Ossau | enneigement | -1/1500/1800/2400 | 2016-2017 → 2019-2020 |
-| 65 | Aspe Ossau | enneigement | -1/1500/2000/2500 | 2021-2022 → 2022-2023 |
-| 65 | Aspe Ossau | enneigement | 1500/1800/2400 | 2015-2016, 2020-2021 |
-| 65 | Aspe Ossau | enneigement | 1500/2000/2500 | 2023-2024 → 2025-2026 |
+| 65 | Aspe Ossau | enneigement | 1500/1800/2400 | 2015-2016 → 2020-2021 |
+| 65 | Aspe Ossau | enneigement | 1500/2000/2500 | 2021-2022 → 2025-2026 |
 | 65 | Aspe Ossau | neige_fraiche | 1800 | 2015-2016, 2017-2018 → 2021-2022, 2023-2024 → 2025-2026 |
 | 65 | Aspe Ossau | neige_fraiche | 1800/2400 | 2022-2023 |
 | 65 | Aspe Ossau | neige_fraiche | 1800/2500 | 2016-2017 |
 | 65 | Aspe Ossau | vent_bas | 1500 | 2015-2016 → 2025-2026 |
 | 65 | Aspe Ossau | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 66 | Haute-Bigorre | enneigement | -1/1500/1800/2400 | 2016-2017 → 2020-2021 |
-| 66 | Haute-Bigorre | enneigement | -1/1500/2000/2500 | 2021-2022 → 2022-2023 |
-| 66 | Haute-Bigorre | enneigement | 1500/1800/2400 | 2015-2016 |
-| 66 | Haute-Bigorre | enneigement | 1500/2000/2500 | 2023-2024 → 2025-2026 |
+| 66 | Haute-Bigorre | enneigement | 1500/1800/2400 | 2015-2016 → 2020-2021 |
+| 66 | Haute-Bigorre | enneigement | 1500/2000/2500 | 2021-2022 → 2025-2026 |
 | 66 | Haute-Bigorre | neige_fraiche | 1800 | 2015-2016, 2017-2018 → 2021-2022, 2023-2024 → 2025-2026 |
 | 66 | Haute-Bigorre | neige_fraiche | 1800/2400 | 2022-2023 |
 | 66 | Haute-Bigorre | neige_fraiche | 1800/2500 | 2016-2017 |
 | 66 | Haute-Bigorre | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 66 | Haute-Bigorre | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 67 | Aure Louron | enneigement | -1/1500/1800/2400 | 2016-2017 → 2020-2021 |
-| 67 | Aure Louron | enneigement | -1/1500/2000/2500 | 2021-2022 → 2022-2023 |
-| 67 | Aure Louron | enneigement | 1500/1800/2400 | 2015-2016 |
-| 67 | Aure Louron | enneigement | 1500/2000/2500 | 2023-2024 → 2025-2026 |
+| 67 | Aure Louron | enneigement | 1500/1800/2400 | 2015-2016 → 2020-2021 |
+| 67 | Aure Louron | enneigement | 1500/2000/2500 | 2021-2022 → 2025-2026 |
 | 67 | Aure Louron | neige_fraiche | 1800 | 2015-2016, 2017-2018 → 2021-2022, 2023-2024 → 2025-2026 |
 | 67 | Aure Louron | neige_fraiche | 1800/2400 | 2022-2023 |
 | 67 | Aure Louron | neige_fraiche | 1800/2500 | 2016-2017 |
 | 67 | Aure Louron | vent_bas | 1500 | 2015-2016 → 2025-2026 |
 | 67 | Aure Louron | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 68 | Luchonnais | enneigement | -1/1500/1800/2100 | 2015-2016 → 2020-2021 |
-| 68 | Luchonnais | enneigement | -1/1500/2000/2500 | 2021-2022 → 2022-2023 |
-| 68 | Luchonnais | enneigement | 1500/2000/2500 | 2023-2024 → 2025-2026 |
+| 68 | Luchonnais | enneigement | 1500/1800/2100 | 2015-2016 → 2020-2021 |
+| 68 | Luchonnais | enneigement | 1500/2000/2500 | 2021-2022 → 2025-2026 |
 | 68 | Luchonnais | neige_fraiche | 1800 | 2016-2017 → 2021-2022, 2023-2024 → 2025-2026 |
 | 68 | Luchonnais | neige_fraiche | 1800/2400 | 2015-2016, 2022-2023 |
 | 68 | Luchonnais | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 68 | Luchonnais | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 69 | Couserans | enneigement | -1/1500/1800/2100 | 2015-2016 → 2020-2021 |
-| 69 | Couserans | enneigement | -1/1500/2000/2500 | 2021-2022 → 2022-2023 |
-| 69 | Couserans | enneigement | 1500/2000/2500 | 2023-2024 → 2025-2026 |
+| 69 | Couserans | enneigement | 1500/1800/2100 | 2015-2016 → 2020-2021 |
+| 69 | Couserans | enneigement | 1500/2000/2500 | 2021-2022 → 2025-2026 |
 | 69 | Couserans | neige_fraiche | 1800 | 2016-2017 → 2021-2022, 2023-2024 → 2025-2026 |
 | 69 | Couserans | neige_fraiche | 1800/2400 | 2015-2016 |
 | 69 | Couserans | neige_fraiche | 1800/2400/2500 | 2022-2023 |
 | 69 | Couserans | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 69 | Couserans | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 70 | Haute-Ariege | enneigement | -1/1500/1800/2100 | 2015-2016 → 2020-2021 |
-| 70 | Haute-Ariege | enneigement | -1/1500/2000/2500 | 2021-2022 → 2022-2023 |
-| 70 | Haute-Ariege | enneigement | 1500/2000/2500 | 2023-2024 → 2025-2026 |
+| 70 | Haute-Ariege | enneigement | 1500/1800/2100 | 2015-2016 → 2020-2021 |
+| 70 | Haute-Ariege | enneigement | 1500/2000/2500 | 2021-2022 → 2025-2026 |
 | 70 | Haute-Ariege | neige_fraiche | 1800 | 2016-2017 → 2021-2022, 2023-2024 → 2025-2026 |
 | 70 | Haute-Ariege | neige_fraiche | 1800/2400 | 2015-2016 |
 | 70 | Haute-Ariege | neige_fraiche | 1800/2400/2500 | 2022-2023 |
 | 70 | Haute-Ariege | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 70 | Haute-Ariege | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 71 | Andorre | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 71 | Andorre | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2024-2025 |
+| 71 | Andorre | enneigement | 1500/2000/2500 | 2015-2016 → 2024-2025 |
 | 71 | Andorre | neige_fraiche | 1800 | 2015-2016 → 2021-2022, 2023-2024 → 2024-2025 |
 | 71 | Andorre | neige_fraiche | 1800/2400/2500 | 2022-2023 |
 | 71 | Andorre | vent_bas | 2000 | 2015-2016 → 2024-2025 |
 | 71 | Andorre | vent_haut | 3000 | 2015-2016 → 2024-2025 |
-| 72 | Orlu St-Barthelemy | enneigement | -1/1500/1800/2100 | 2015-2016 → 2020-2021 |
-| 72 | Orlu St-Barthelemy | enneigement | -1/1500/2000/2500 | 2021-2022 → 2022-2023 |
-| 72 | Orlu St-Barthelemy | enneigement | 1500/2000/2500 | 2023-2024 → 2025-2026 |
+| 72 | Orlu St-Barthelemy | enneigement | 1500/1800/2100 | 2015-2016 → 2020-2021 |
+| 72 | Orlu St-Barthelemy | enneigement | 1500/2000/2500 | 2021-2022 → 2025-2026 |
 | 72 | Orlu St-Barthelemy | neige_fraiche | 1800 | 2016-2017 → 2021-2022, 2023-2024 → 2025-2026 |
 | 72 | Orlu St-Barthelemy | neige_fraiche | 1800/2400 | 2015-2016 |
 | 72 | Orlu St-Barthelemy | neige_fraiche | 1800/2400/2500 | 2022-2023 |
 | 72 | Orlu St-Barthelemy | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 72 | Orlu St-Barthelemy | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 73 | Capcir Puymorens | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 73 | Capcir Puymorens | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 73 | Capcir Puymorens | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 73 | Capcir Puymorens | neige_fraiche | 1800 | 2015-2016 → 2021-2022, 2023-2024 → 2025-2026 |
 | 73 | Capcir Puymorens | neige_fraiche | 1800/2400/2500 | 2022-2023 |
 | 73 | Capcir Puymorens | vent_bas | 2000 | 2015-2016 → 2025-2026 |
 | 73 | Capcir Puymorens | vent_haut | 3000 | 2015-2016 → 2025-2026 |
-| 74 | Cerdagne Canigou | enneigement | -1/1500/2000/2500 | 2016-2017 → 2022-2023 |
-| 74 | Cerdagne Canigou | enneigement | 1500/2000/2500 | 2015-2016, 2023-2024 → 2025-2026 |
+| 74 | Cerdagne Canigou | enneigement | 1500/2000/2500 | 2015-2016 → 2025-2026 |
 | 74 | Cerdagne Canigou | neige_fraiche | 1800 | 2015-2016 → 2021-2022, 2023-2024 → 2025-2026 |
 | 74 | Cerdagne Canigou | neige_fraiche | 1800/2400/2500 | 2022-2023 |
 | 74 | Cerdagne Canigou | vent_bas | 2000 | 2015-2016 → 2025-2026 |
@@ -558,14 +511,14 @@ Répartition des codes, toutes saisons (libellés inférés : glossaire § 2.7) 
 
 ## 7. Distributions pour les seuils encore ouverts
 
-Base des valeurs par défaut de vent fort, d'épisode de chute et de redoux (spec § 3.3). Quantiles **discrets** : chaque valeur a été écrite dans un bulletin. La sentinelle `-1` est écartée (§ 9) : `n` compte les valeurs exploitables. Prévision météo à toutes échéances confondues ; neige fraîche sur l'historique, non dédupliquée (un même jour figure dans plusieurs bulletins), et sur la seule famille `moderne` : avant 2024 la colonne n'est pas un maximum (§ 9).
+Base des valeurs par défaut de vent fort, d'épisode de chute et de redoux (spec § 3.3). Quantiles **discrets** : chaque valeur a été écrite dans un bulletin. La sentinelle `-1` est écartée (§ 9) : `n` compte les valeurs exploitables. Prévision météo à toutes échéances confondues ; neige fraîche sur l'historique, non dédupliquée (un même jour figure dans plusieurs bulletins), et sur la seule famille `moderne` : avant 2024 la colonne est le plus fort de un ou deux secteurs, pas la borne d'une fourchette (rupture de série, § 9).
 
 | champ | lignes retenues | unité | n | p50 | p75 | p90 | p95 | p99 | max |
 |---|---|---|---|---|---|---|---|---|---|
 | `meteo.vent_haut_vitesse_kmh` | prevision | km/h | 215482 | 30 | 50 | 70 | 80 | 100 | 170 |
-| `meteo.vent_bas_vitesse_kmh` | prevision | km/h | 255294 | 15 | 30 | 45 | 60 | 80 | 400 |
+| `meteo.vent_bas_vitesse_kmh` | prevision | km/h | 255292 | 15 | 30 | 45 | 60 | 80 | 150 |
 | `meteo.iso_0_m` | prevision | m | 255312 | 2400 | 3000 | 3400 | 3700 | 4100 | 5100 |
-| `neige_fraiche.cumul_max_cm` | historique, hors legacy | cm | 138956 | 0 | 3 | 10 | 20 | 40 | 120 |
+| `neige_fraiche.cumul_max_cm` | historique, famille moderne | cm | 138917 | 0 | 3 | 10 | 20 | 40 | 120 |
 
 ## 8. Bloc météo selon `origine` (spec § 4.3)
 
@@ -616,35 +569,18 @@ Champs que l'historique porte moins de 50,0 % aussi souvent que la prévision �
 
 ## 9. Sentinelles `-1` restées dans l'entrepôt
 
-La pipeline ne convertit en nul que le `-1` de `RISQUE1`, `PLUIENEIGE` et `MERNUAGES`. Ailleurs il reste une valeur, et une somme ou une moyenne le compte. Nombre de `-1` par champ et par saison (lignes `massif_coherent`) :
+Le parser convertit en nul le `-1` des indices, des paliers et limites d'enneigement, de la météo et de la neige fraîche (glossaire § 3 à 5 ; `bra check` compte chaque conversion). Là où il subsiste, il reste une valeur, et une somme ou une moyenne le compte. Nombre de `-1` par champ et par saison (lignes `massif_coherent`) :
 
-| champ | 2015-2016 | 2016-2017 | 2017-2018 | 2018-2019 | 2019-2020 | 2020-2021 | 2021-2022 | 2022-2023 | 2023-2024 | 2024-2025 | 2025-2026 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| `bulletins.enneigement_limite_nord_m` | 7 | 122 | 116 | 75 | 101 | 218 | 292 | 204 | 68 | 204 | 57 |
-| `bulletins.enneigement_limite_sud_m` | 28 | 434 | 195 | 166 | 174 | 360 | 532 | 409 | 263 | 405 | 180 |
-| `enneigement.altitude_m` | 21 | 768 | 648 | 957 | 711 | 567 | 1215 | 747 | 0 | 0 | 0 |
-| `enneigement.epaisseur_nord_cm` | 21 | 768 | 648 | 957 | 711 | 567 | 1215 | 747 | 0 | 0 | 0 |
-| `enneigement.epaisseur_sud_cm` | 21 | 777 | 651 | 957 | 711 | 567 | 1215 | 747 | 0 | 0 | 0 |
-| `enneigement.limite_nord_m` | 21 | 2523 | 3363 | 2067 | 2889 | 4503 | 6696 | 4722 | 204 | 612 | 171 |
-| `enneigement.limite_sud_m` | 84 | 8733 | 5505 | 4173 | 4623 | 7677 | 12198 | 9981 | 789 | 1215 | 540 |
-| `meteo.iso_0_m` | 7 | 1350 | 2895 | 2786 | 4539 | 1547 | 2847 | 4001 | 0 | 0 | 0 |
-| `meteo.iso_moins10_m` | 0 | 1728 | 3728 | 3730 | 5064 | 2587 | 3774 | 6026 | 0 | 0 | 0 |
-| `meteo.temps_sensible` | 7 | 1332 | 2883 | 2798 | 4548 | 1619 | 2811 | 3968 | 0 | 0 | 0 |
-| `meteo.vent_bas_vitesse_kmh` | 7 | 1386 | 2883 | 2874 | 5127 | 1571 | 3114 | 4610 | 0 | 0 | 0 |
-| `meteo.vent_haut_vitesse_kmh` | 895 | 41010 | 41068 | 49028 | 39731 | 46756 | 49536 | 49295 | 0 | 0 | 0 |
-| `neige_fraiche.cumul_max_cm` | 6468 | 73974 | 74746 | 78529 | 57500 | 77321 | 79269 | 77089 | 0 | 0 | 1 |
-| `neige_fraiche.cumul_min_cm` | 42 | 415 | 331 | 425 | 250 | 347 | 616 | 434 | 0 | 0 | 1 |
+Aucun `-1` résiduel.
 
-### `neige_fraiche` : `SS241` / `SS242` ne sont pas un minimum et un maximum
+### `neige_fraiche` : deux lectures, une rupture de série à l'hiver 2023-2024
 
-Le glossaire (§ 5) et le parser tiennent `SS241`/`SS242` (≤ 2023) pour les ancêtres de `SS24Min`/`SS24Max` (≥ 2024). Les données le contredisent :
+Jusqu'en 2023, `NEIGEFRAICHE` nomme un ou deux secteurs (`SECTEURSS1` / `SECTEURSS2` : `massif` seul, ou `Nord` / `Sud`, `Ouest` / `Est`…) et `SS241` / `SS242` sont le cumul de chacun. Le parser conserve les secteurs (`secteur1_*`, `secteur2_*`) et en dérive `cumul_min_cm` / `cumul_max_cm` ; depuis 2024, `SS24Min` / `SS24Max` sont une fourchette sur le massif. Une valeur négative n'est pas un cumul : `-1` signale l'absence de second secteur, `-2` une valeur non observée (*inféré* : aucun descriptif de l'ancien format). Les deux deviennent nulles.
 
-| famille | lignes | `cumul_max_cm = -1` | `cumul_max_cm < cumul_min_cm` |
-|---|---|---|---|
-| legacy | 630648 | 524896 | 455021 |
-| moderne | 278844 | 1 | 194 |
-
-Le XML legacy porte sur `NEIGEFRAICHE` deux attributs `SECTEURSS1` / `SECTEURSS2` (`massif` / vide, `Ouest` / `Est`, `Nord` / `Sud`…) : `SS241` et `SS242` y sont **les cumuls de deux secteurs**, et `SS242=-1` signifie « pas de second secteur ». *Inféré* de la structure du fichier ; aucun descriptif ne documente l'ancien format. Conséquence : avant 2024, `cumul_max_cm` n'est pas un maximum, et toute métrique de neige fraîche (spec § 5.2) doit attendre qu'une règle de parsing soit arrêtée.
+| famille | lignes | un secteur | deux secteurs | secteur non observé | `cumul_max_cm` nul |
+|---|---|---|---|---|---|
+| legacy | 630648 | 524424 | 106224 | 97207 | 94941 |
+| moderne | 278844 | 0 | 0 | 0 | 840 |
 
 ## 10. Tranches d'altitude normées (vue `palier_tranche`)
 
@@ -659,7 +595,7 @@ Pour ces couples, la comparaison entre massifs n'a de sens que sur la tranche oc
 | enneigement | 0/35 | 0/35 | 0/35 | 0/36 | 0/36 | 0/36 | 0/36 | 0/36 | 0/36 | 0/36 | 0/35 | 0 % |
 | neige_fraiche | 28/35 | 23/35 | 35/35 | 36/36 | 36/36 | 27/36 | 27/36 | 16/36 | 27/36 | 27/36 | 26/35 | 78,6 % |
 | vent_bas | 35/35 | 35/35 | 35/35 | 36/36 | 35/36 | 36/36 | 36/36 | 36/36 | 36/36 | 35/36 | 35/35 | 99,5 % |
-| vent_haut | 35/35 | 35/35 | 35/35 | 36/36 | 36/36 | 36/36 | 36/36 | 36/36 | 36/36 | 36/36 | 35/35 | 100 % |
+| vent_haut | 27/27 | 27/27 | 27/27 | 27/27 | 27/27 | 27/27 | 27/27 | 27/27 | 36/36 | 36/36 | 35/35 | 100 % |
 
 ### Massifs disposant d'au moins un palier, par tranche
 
@@ -678,4 +614,4 @@ Une case vide est une tranche sans aucune donnée pour cette source et cette sai
 | vent_bas | haute | 12 | 12 | 12 | 13 | 13 | 13 | 13 | 13 | 4 | 5 | 4 |
 | vent_haut | basse | — | — | — | — | — | — | — | — | — | — | — |
 | vent_haut | moyenne | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 | 5 |
-| vent_haut | haute | 30 | 30 | 30 | 31 | 31 | 31 | 31 | 31 | 31 | 31 | 30 |
+| vent_haut | haute | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 22 | 31 | 31 | 30 |

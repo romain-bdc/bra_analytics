@@ -53,8 +53,10 @@ C'est l'étape de transformation. Elle lit tout le XML présent dans `data/raw/`
 
 1. **parse** chaque fichier, en ramenant les six formats historiques à un schéma unique ;
 2. **normalise** les valeurs — directions de vent harmonisées, `LOC1`/`LOC2` décomposés en
-   champs typés, sentinelle `RISQUE1="-1"` convertie en valeur nulle, dates ramenées à l'heure
-   locale ;
+   champs typés, sentinelles converties en valeur nulle (`RISQUE1="-1"`, relevés d'enneigement
+   et échéances météo vides, cumuls de neige fraîche non observés, `ALTITUDEVENT2="9999"` — le
+   détail et l'indicateur `sans_enneigement_continu_*` sont au glossaire), secteurs de neige
+   fraîche d'avant 2024 conservés, dates ramenées à l'heure locale ;
 3. **déduplique** sur `(massif_id, date_bulletin)` en retenant la diffusion la plus tardive —
    un même bulletin est souvent republié dans la journée ;
 4. **enrichit** avec le référentiel des massifs et la saison nivologique ;
@@ -178,6 +180,7 @@ warehouse/
   neige_fraiche/…                              cumuls 24 h
   historique_risque/…                          risque max des 7 jours précédents
   tendances/…                                  tendances J+2 et J+3 (2016-2023 uniquement)
+  conversions/…                                journal des sentinelles rendues nulles au parsing
   bra.duckdb                                   vues sur l'ensemble
 ```
 
@@ -267,6 +270,11 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   `risque_j2_libelle`, `stabilite_titre`. Et après 2023 : `producteur`, `tendances`.
   Filtrer sur `format_famille` ou `schema_version` pour les comparaisons inter-époques.
 - **Le massif 71 (Andorre) disparaît en 2025-2026.** Une rupture de série n'est pas un bug.
+- **Neige fraîche : rupture de série à l'hiver 2023-2024.** Avant, un cumul par secteur nommé
+  (`secteur1_*`, `secteur2_*`, bornes dérivées) ; ensuite une fourchette sur le massif. Les deux
+  se lisent, mais une comparaison qui enjambe l'hiver 2023-2024 doit l'annoncer.
+- **Le vent se lit par altitude, pas par rôle bas / haut.** Jusqu'en 2023 les Alpes du Sud n'ont
+  qu'un vent, à 3000 m, dans la colonne « basse » ; depuis 2024, 2000 et 3000 m.
 - **Trous réels dans l'archive**, à ne pas confondre avec des défauts d'ingestion :
   l'estimation 2019-2020 s'arrête **fin mars 2020** (confinement) ; certaines journées sont
   partielles (07/02/2023 : 8 bulletins au lieu de 36), dix-sept sont absentes pour (presque) tous

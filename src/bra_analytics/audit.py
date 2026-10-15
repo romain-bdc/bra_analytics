@@ -20,6 +20,7 @@ import duckdb
 import polars as pl
 
 from . import schema
+from .quality import VENT_MAX_KMH
 
 # Colonnes de cle ou de provenance : leur presence est garantie par
 # construction, la mesurer n'apprendrait rien.
@@ -52,22 +53,33 @@ def _frame(con: duckdb.DuckDBPyConnection, sql: str, params: list | None = None)
 
 
 def _tables(con: duckdb.DuckDBPyConnection) -> list[str]:
+    """Tables de donnees presentes ; le journal `conversions` n'en est pas une."""
     presentes = {r[0] for r in con.execute("SELECT view_name FROM duckdb_views()").fetchall()}
-    return [t for t in schema.TABLES if t in presentes]
+    return [t for t in schema.TABLES if t in presentes and t != "conversions"]
 
 
 # Champs dont la valeur existe mais ne veut pas dire ce que son nom annonce,
-# selon la famille de format. Avant 2024, `NEIGEFRAICHE` porte `SECTEURSS1` /
-# `SECTEURSS2` : `SS241` / `SS242` sont les cumuls de deux secteurs, et
-# `SS242="-1"` signifie « pas de second secteur ». Ranges dans `cumul_min_cm` /
-# `cumul_max_cm`, ils n'en sont ni le minimum ni le maximum. *Infere* de la
-# structure du fichier (aucun descriptif de l'ancien format) ; la regle de
-# parsing est a arreter en T7. Ces lignes ne comptent pas comme disponibles.
-SEMANTIQUE_DIVERGENTE: dict[tuple[str, str], tuple[str, str]] = {
+# selon la famille de format : ces lignes ne comptent pas comme disponibles.
+# Le seul cas mesure -- `SS241` / `SS242`, cumuls de deux secteurs ranges
+# avant 2024 dans `cumul_min_cm` / `cumul_max_cm` -- est regle au parsing
+# depuis octobre 2026 : les secteurs sont conserves et les bornes en sont
+# derivees (`parser._extract_neige_fraiche`). Le mecanisme reste pour le
+# prochain champ trompeur.
+SEMANTIQUE_DIVERGENTE: dict[tuple[str, str], tuple[str, str]] = {}
+
+# Avant 2024 `cumul_max_cm` est le plus fort de un ou deux secteurs nommes ;
+# depuis, la borne haute d'une fourchette sur le massif. Les deux se lisent,
+# mais ne mesurent pas la meme chose : rupture de serie a l'hiver 2023-2024.
+FAMILLE_NEIGE_FRAICHE_HOMOGENE = "moderne"
+
+# Champs calculables sur toute l'archive mais dont le sens change en cours de
+# route : le statut d'une metrique qui les lit l'annonce, pour qu'aucune
+# comparaison n'enjambe la rupture sans le savoir.
+RUPTURES: dict[tuple[str, str], str] = {
     ("neige_fraiche", "cumul_min_cm"): (
-        "legacy", "avant 2024, SS241 est le cumul du premier secteur, pas un minimum"),
+        "rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif"),
     ("neige_fraiche", "cumul_max_cm"): (
-        "legacy", "avant 2024, SS242 est le cumul d'un second secteur, pas un maximum"),
+        "rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif"),
 }
 
 _ENTIERS = (pl.Int8, pl.Int16, pl.Int32, pl.Int64)
@@ -77,9 +89,10 @@ def _compte_exploitable(table: str, champ: str) -> str:
     """Agregat SQL comptant les valeurs exploitables d'un champ.
 
     Exploitable = non nul, et pour un entier different de `-1` : la source
-    emploie `-1` comme sentinelle (paliers, epaisseurs, meteo legacy) et la
-    pipeline ne le convertit en nul que pour `RISQUE1`, `PLUIENEIGE` et
-    `MERNUAGES`. Une colonne pleine de `-1` n'est pas une colonne disponible.
+    emploie `-1` comme sentinelle. Le parser la convertit en nul partout ou
+    son sens est etabli (indices, paliers et limites d'enneigement, meteo,
+    neige fraiche) ; le filtre reste pour toute colonne ou elle subsisterait.
+    Une colonne pleine de `-1` n'est pas une colonne disponible.
     """
     conds = [f'"{champ}" IS NOT NULL']
     if schema.TABLES[table][champ] in _ENTIERS:
@@ -271,6 +284,12 @@ def statuts(dispo: pl.DataFrame, metriques: tuple[Metrique, ...] = METRIQUES) ->
                     motif += " (" + " ; ".join(raisons) + ")"
             else:
                 statut, motif = NON_CALCULABLE, "aucune saison ne réunit ses champs"
+            ruptures = sorted({
+                RUPTURES[tuple(r.split("."))] for r in m.champs
+                if tuple(r.split(".")) in RUPTURES
+            })
+            if ruptures and statut != NON_CALCULABLE:
+                motif = " ; ".join(([motif] if motif else []) + ruptures)
         lignes.append({
             "bloc": m.bloc, "metrique": m.nom, "statut": statut,
             "saisons": ", ".join(saisons), "champs": ", ".join(m.champs), "motif": motif,
@@ -374,16 +393,19 @@ def _quantiles(con: duckdb.DuckDBPyConnection) -> list[tuple]:
     prevision (15,7 %). Les quantiles publies n'en bougent pas (30/50/70 km/h
     avec ou sans), mais `n` annoncait un echantillon qu'il n'avait pas.
     """
-    # `cumul_max_cm` n'a pas le meme sens selon la famille de format
-    # (`SEMANTIQUE_DIVERGENTE`) : sa distribution ne se lit que hors de la
-    # famille ou il porte autre chose qu'un maximum.
-    famille_exclue, _ = SEMANTIQUE_DIVERGENTE[("neige_fraiche", "cumul_max_cm")]
+    # Un seuil se cale sur une serie homogene : `cumul_max_cm` change de sens
+    # a l'hiver 2023-2024 (`FAMILLE_NEIGE_FRAICHE_HOMOGENE`).
+    famille = FAMILLE_NEIGE_FRAICHE_HOMOGENE
     series = (
-        ("vent_haut_vitesse_kmh", "meteo", "prevision", "origine = 'prevision'", "km/h"),
-        ("vent_bas_vitesse_kmh", "meteo", "prevision", "origine = 'prevision'", "km/h"),
+        # Un vent hors plage est une erreur de saisie (`bra check`,
+        # `vent_hors_plage`) : exclu ici comme des metriques.
+        ("vent_haut_vitesse_kmh", "meteo", "prevision",
+         f"origine = 'prevision' AND vent_haut_vitesse_kmh BETWEEN 0 AND {VENT_MAX_KMH}", "km/h"),
+        ("vent_bas_vitesse_kmh", "meteo", "prevision",
+         f"origine = 'prevision' AND vent_bas_vitesse_kmh BETWEEN 0 AND {VENT_MAX_KMH}", "km/h"),
         ("iso_0_m", "meteo", "prevision", "origine = 'prevision'", "m"),
-        ("cumul_max_cm", "neige_fraiche", f"historique, hors {famille_exclue}",
-         f"origine = 'historique' AND format_famille <> '{famille_exclue}'", "cm"),
+        ("cumul_max_cm", "neige_fraiche", f"historique, famille {famille}",
+         f"origine = 'historique' AND format_famille = '{famille}'", "cm"),
     )
     lignes = []
     for champ, table, libelle, filtre, unite in series:
@@ -520,15 +542,16 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
     s.append(_md(["bloc", "métrique", "statut", "saisons", "motif"], lignes_st) + "\n")
 
     s.append("## 2. Part de valeurs exploitables, champ × saison (%)\n")
-    s.append(
-        "Champs comptés à 0 sur une famille de format parce qu'ils y portent autre "
-        "chose que ce que leur nom annonce :\n\n"
-        + "\n".join(
-            f"- `{t}.{c}` (famille `{fam}`) : {raison}."
-            for (t, c), (fam, raison) in SEMANTIQUE_DIVERGENTE.items()
+    if SEMANTIQUE_DIVERGENTE:
+        s.append(
+            "Champs comptés à 0 sur une famille de format parce qu'ils y portent autre "
+            "chose que ce que leur nom annonce :\n\n"
+            + "\n".join(
+                f"- `{t}.{c}` (famille `{fam}`) : {raison}."
+                for (t, c), (fam, raison) in SEMANTIQUE_DIVERGENTE.items()
+            )
+            + "\n"
         )
-        + "\n"
-    )
     for table in _tables(con):
         s.append(f"### `{table}`\n")
         s.append(_matrice(dispo, table, saisons) + "\n")
@@ -635,8 +658,9 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
         "bulletin. La sentinelle `-1` est écartée (§ 9) : `n` compte les valeurs "
         "exploitables. Prévision météo à toutes échéances confondues ; neige fraîche sur "
         "l'historique, non dédupliquée (un même jour figure dans plusieurs bulletins), "
-        "et sur la seule famille `moderne` : avant 2024 la colonne n'est pas un "
-        "maximum (§ 9).\n"
+        "et sur la seule famille `moderne` : avant 2024 la colonne est le plus fort "
+        "de un ou deux secteurs, pas la borne d'une fourchette (rupture de série, "
+        "§ 9).\n"
     )
     s.append(_md(
         ["champ", "lignes retenues", "unité", "n", "p50", "p75", "p90", "p95", "p99", "max"],
@@ -685,9 +709,11 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
 
     s.append("## 9. Sentinelles `-1` restées dans l'entrepôt\n")
     s.append(
-        "La pipeline ne convertit en nul que le `-1` de `RISQUE1`, `PLUIENEIGE` et "
-        "`MERNUAGES`. Ailleurs il reste une valeur, et une somme ou une moyenne le "
-        "compte. Nombre de `-1` par champ et par saison (lignes `massif_coherent`) :\n"
+        "Le parser convertit en nul le `-1` des indices, des paliers et limites "
+        "d'enneigement, de la météo et de la neige fraîche (glossaire § 3 à 5 ; "
+        "`bra check` compte chaque conversion). Là où il subsiste, il reste une "
+        "valeur, et une somme ou une moyenne le compte. Nombre de `-1` par champ et "
+        "par saison (lignes `massif_coherent`) :\n"
     )
     sent = sentinelles(con)
     if sent.height:
@@ -703,28 +729,30 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
     nf = con.execute(
         f"""
         SELECT format_famille, count(*),
-               count(*) FILTER (cumul_max_cm = -1),
-               count(*) FILTER (cumul_max_cm < cumul_min_cm)
+               count(*) FILTER (secteur1_libelle IS NOT NULL AND secteur2_libelle IS NULL),
+               count(*) FILTER (secteur2_libelle IS NOT NULL),
+               count(*) FILTER (
+                 (secteur1_libelle IS NOT NULL AND secteur1_cumul_cm IS NULL)
+                 OR (secteur2_libelle IS NOT NULL AND secteur2_cumul_cm IS NULL)),
+               count(*) FILTER (cumul_max_cm IS NULL)
         FROM ({_source('neige_fraiche')}) GROUP BY 1 ORDER BY 1
         """
     ).fetchall()
     s.append(
-        "### `neige_fraiche` : `SS241` / `SS242` ne sont pas un minimum et un maximum\n\n"
-        "Le glossaire (§ 5) et le parser tiennent `SS241`/`SS242` (≤ 2023) pour les "
-        "ancêtres de `SS24Min`/`SS24Max` (≥ 2024). Les données le contredisent :\n"
+        "### `neige_fraiche` : deux lectures, une rupture de série à l'hiver 2023-2024\n\n"
+        "Jusqu'en 2023, `NEIGEFRAICHE` nomme un ou deux secteurs (`SECTEURSS1` / "
+        "`SECTEURSS2` : `massif` seul, ou `Nord` / `Sud`, `Ouest` / `Est`…) et `SS241` / "
+        "`SS242` sont le cumul de chacun. Le parser conserve les secteurs "
+        "(`secteur1_*`, `secteur2_*`) et en dérive `cumul_min_cm` / `cumul_max_cm` ; "
+        "depuis 2024, `SS24Min` / `SS24Max` sont une fourchette sur le massif. Une "
+        "valeur négative n'est pas un cumul : `-1` signale l'absence de second "
+        "secteur, `-2` une valeur non observée (*inféré* : aucun descriptif de "
+        "l'ancien format). Les deux deviennent nulles.\n"
     )
     s.append(_md(
-        ["famille", "lignes", "`cumul_max_cm = -1`", "`cumul_max_cm < cumul_min_cm`"], nf
+        ["famille", "lignes", "un secteur", "deux secteurs",
+         "secteur non observé", "`cumul_max_cm` nul"], nf
     ) + "\n")
-    s.append(
-        "Le XML legacy porte sur `NEIGEFRAICHE` deux attributs `SECTEURSS1` / "
-        "`SECTEURSS2` (`massif` / vide, `Ouest` / `Est`, `Nord` / `Sud`…) : `SS241` et "
-        "`SS242` y sont **les cumuls de deux secteurs**, et `SS242=-1` signifie « pas de "
-        "second secteur ». *Inféré* de la structure du fichier ; aucun descriptif ne "
-        "documente l'ancien format. Conséquence : avant 2024, `cumul_max_cm` n'est pas "
-        "un maximum, et toute métrique de neige fraîche (spec § 5.2) doit attendre "
-        "qu'une règle de parsing soit arrêtée.\n"
-    )
 
     if "palier_tranche" in {r[0] for r in con.execute("SELECT view_name FROM duckdb_views()").fetchall()}:
         s.append(_section_tranches(con, saisons))
@@ -797,9 +825,9 @@ def _section_tranches(con: duckdb.DuckDBPyConnection, saisons: list[str]) -> str
 def sentinelles(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
     """Valeurs `-1` restees dans les colonnes numeriques, par table et saison.
 
-    La pipeline convertit en nul le `-1` de `RISQUE1`, `PLUIENEIGE` et
-    `MERNUAGES`. Ailleurs il passe tel quel, et une somme ou une moyenne le
-    compte comme une valeur. Seules les lignes non nulles sont rendues.
+    Garde-fou : le parser convertit les sentinelles dont le sens est etabli ;
+    un `-1` qui reapparait ici est une regle a ecrire. Seules les lignes non
+    nulles sont rendues.
     Colonnes : `table`, `champ`, `saison`, `lignes`, `sentinelles`.
     """
     morceaux = []

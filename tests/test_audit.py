@@ -123,19 +123,18 @@ def test_ecarts_entre_prevision_et_historique_meteo() -> None:
     assert ecarts.select("saison", "champ").rows() == [("2023-2024", "mer_nuages_m")]
 
 
-def test_quantiles_ecartent_la_sentinelle(con) -> None:
-    """Un `-1` n'est pas une vitesse de vent : il ne compte ni dans `n` ni dans
-    les quantiles. Les fixtures en portent un en prevision (vent haut, bulletin
-    de 2016), ce qui suffit a distinguer les deux lectures."""
-    total, sentinelles = con.execute(
-        "SELECT count(vent_haut_vitesse_kmh), "
-        "count(*) FILTER (vent_haut_vitesse_kmh = -1) "
+def test_quantiles_ne_comptent_que_des_vitesses(con) -> None:
+    """Couserans, amendement du 31/03/2016 : l'echeance de 00 h arrive vide
+    (`FF2="-1"` et le reste a `-1`). Le parser la rend nulle, et `n` ne compte
+    que les vitesses reellement ecrites."""
+    total, renseignees = con.execute(
+        "SELECT count(*), count(vent_haut_vitesse_kmh) "
         f"FROM ({audit._source('meteo')}) WHERE origine = 'prevision'"
     ).fetchone()
-    assert sentinelles >= 1
+    assert renseignees < total
 
     (ligne,) = [q for q in audit._quantiles(con) if "vent_haut_vitesse_kmh" in q[0]]
-    assert ligne[3] == total - sentinelles
+    assert ligne[3] == renseignees
 
 
 def test_rapport_reproductible(con) -> None:
@@ -170,37 +169,42 @@ def test_un_qualificatif_texte_n_empeche_pas_un_indice(con) -> None:
     assert "texte" not in (ligne["motif"] or "")
 
 
-def test_sentinelles_non_converties(con) -> None:
-    """Un `-1` reste dans certaines colonnes numeriques, ou il fausse toute
-    somme. Lu dans le XML d'Aspe-Ossau 2023 : `SS242="-1"` sur chaque jour du
-    bloc neige fraiche ; aucun `-1` dans le bloc 2026."""
+def test_neige_fraiche_ne_porte_plus_de_sentinelle(con) -> None:
+    """Aspe-Ossau 2023 porte `SS242="-1"` sur chaque jour : un seul secteur,
+    pas un cumul de -1 cm. Depuis que le parser lit les secteurs, aucun `-1`
+    ne reste dans les bornes de neige fraiche."""
     s = audit.sentinelles(con)
-    nf = s.filter((s["table"] == "neige_fraiche") & (s["champ"] == "cumul_max_cm"))
-    par_saison = dict(zip(nf["saison"], nf["sentinelles"]))
-    assert par_saison.get("2022-2023", 0) > 0
-    assert par_saison.get("2025-2026", 0) == 0
+    assert s.filter(s["table"] == "neige_fraiche").height == 0
 
 
-def test_une_sentinelle_ne_rend_pas_un_champ_disponible(con) -> None:
-    """`-1` n'est pas une valeur. Aspe-Ossau 2023 porte `SS242="-1"` sur chaque
-    jour : la colonne est remplie, mais rien n'y est exploitable."""
+def test_un_secteur_unique_rend_les_bornes_disponibles(con) -> None:
+    """Avec un seul secteur (`massif`), la fourchette est ce secteur :
+    `cumul_max_cm` est exploitable sur toute la saison 2022-2023."""
     dispo = audit.disponibilite(con)
     ligne = dispo.filter(
         (dispo["table"] == "neige_fraiche") & (dispo["champ"] == "cumul_max_cm")
         & (dispo["saison"] == "2022-2023")
     ).row(0, named=True)
-    assert ligne["part"] < 1.0
+    assert ligne["part"] == 1.0
 
 
-def test_neige_fraiche_legacy_hors_calcul(con) -> None:
-    """Avant 2024, `cumul_max_cm` porte le cumul d'un second secteur, pas un
-    maximum (`SECTEURSS2` dans le XML legacy). Les metriques de neige fraiche
-    ne sont calculables que sur la famille moderne."""
+def test_neige_fraiche_legacy_dans_le_calcul(con) -> None:
+    """La neige fraiche d'avant 2024 n'est plus ecartee : ses bornes derivent
+    des secteurs. Les episodes de chute se calculent donc aussi en 2022-2023
+    (la rupture de serie est documentee, pas cachee)."""
     statuts = audit.statuts(audit.disponibilite(con))
     ligne = _statut(statuts, "Épisodes de chute")
-    assert ligne["statut"] == "sous-ensemble"
-    assert ligne["saisons"] == "2023-2024, 2024-2025, 2025-2026"
-    assert "secteur" in ligne["motif"]
+    assert "2022-2023" in ligne["saisons"] or ligne["statut"] == "calculable"
+
+
+def test_rupture_de_serie_annoncee_dans_le_statut(con) -> None:
+    """Calculable ne veut pas dire homogene : une metrique de neige fraiche
+    enjambe le passage des secteurs a la fourchette (hiver 2023-2024), et le
+    statut le dit au lieu de le laisser au § 9."""
+    statuts = audit.statuts(audit.disponibilite(con))
+    for nom in ("Épisodes de chute", "Neige fraîche cumulée"):
+        assert "rupture de série" in (_statut(statuts, nom)["motif"] or ""), nom
+    assert "rupture" not in (_statut(statuts, "Risque moyen")["motif"] or "")
 
 
 def test_un_champ_rare_dans_l_historique_est_un_ecart() -> None:

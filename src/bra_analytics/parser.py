@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import re
 from calendar import monthrange
+from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -67,6 +69,8 @@ class ParsedBulletin:
     neige_fraiche: list[dict[str, Any]] = field(default_factory=list)
     historique_risque: list[dict[str, Any]] = field(default_factory=list)
     tendances: list[dict[str, Any]] = field(default_factory=list)
+    # Sentinelles converties en nul, par (table, champ, valeur source).
+    conversions: Counter[tuple[str, str, str]] = field(default_factory=Counter)
 
 
 # --------------------------------------------------------------------------
@@ -319,20 +323,58 @@ def _attr_fallback(el: ET.Element | None, *names: str) -> str | None:
     return None
 
 
-def _extract_meteo(node: ET.Element, path: str, origine: str) -> list[dict[str, Any]]:
+# Ce qu'une valeur sentinelle peut etre, champ par champ. Chaque regle cite
+# le fait d'archive qui l'impose dans le commentaire de son appel.
+_NEGATIF: Callable[[int], bool] = lambda v: v < 0
+_MOINS_UN: Callable[[int], bool] = lambda v: v == -1
+_ALTITUDE_FICTIVE: Callable[[int], bool] = lambda v: v < 0 or v >= 9999
+
+
+@dataclass
+class _Journal:
+    """Convertit une sentinelle en nul et la compte.
+
+    La ligne reste toujours ; seule la valeur devient nulle. Le compte part
+    dans la table `conversions` de l'entrepot, que `bra check` relit : une
+    valeur rendue nulle sans trace serait une ligne ecartee en silence.
+    """
+
+    compte: Counter[tuple[str, str, str]] = field(default_factory=Counter)
+
+    def nul_si(
+        self, value: str | None, table: str, champ: str, sentinelle: Callable[[int], bool]
+    ) -> int | None:
+        parsed = _int(value)
+        if parsed is not None and sentinelle(parsed):
+            self.compte[(table, champ, str(parsed))] += 1
+            return None
+        return parsed
+
+
+def _extract_meteo(
+    node: ET.Element, path: str, origine: str, journal: _Journal
+) -> list[dict[str, Any]]:
+    # Avant 2024, des echeances entieres arrivent a `-1` (19 822 sur les 36
+    # massifs, dont 244 en prevision), et `FF2="-1"` accompagne l'absence de
+    # second vent (`ALTITUDEVENT2="9999"`). Seul `-1` est converti : une autre
+    # valeur negative (un vent a -5 km/h, 01/03/2025) est une erreur de saisie
+    # que `bra check` signale au lieu de la faire disparaitre.
+    def lire(attr: str, champ: str) -> int | None:
+        return journal.nul_si(ech.get(attr), "meteo", champ, _MOINS_UN)
+
     rows = []
     for idx, ech in enumerate(node.findall(path)):
-        code = _int(ech.get("TEMPSSENSIBLE"))
+        code = lire("TEMPSSENSIBLE", "temps_sensible")
         rows.append({
             "origine": origine,
             "rang": idx,
             "echeance": parse_datetime(ech.get("DATE")),
-            "vent_bas_vitesse_kmh": _int(ech.get("FF1")),
+            "vent_bas_vitesse_kmh": lire("FF1", "vent_bas_vitesse_kmh"),
             "vent_bas_direction": normalize_direction(ech.get("DD1")),
-            "vent_haut_vitesse_kmh": _int(ech.get("FF2")),
+            "vent_haut_vitesse_kmh": lire("FF2", "vent_haut_vitesse_kmh"),
             "vent_haut_direction": normalize_direction(ech.get("DD2")),
-            "iso_0_m": _int(ech.get("ISO0")),
-            "iso_moins10_m": _int(ech.get("ISO-10")),
+            "iso_0_m": lire("ISO0", "iso_0_m"),
+            "iso_moins10_m": lire("ISO-10", "iso_moins10_m"),
             "limite_pluie_neige_m": _mesure(ech.get("PLUIENEIGE")),
             "temps_sensible": code,
             "temps_sensible_libelle": TEMPS_SENSIBLE.get(code) if code is not None else None,
@@ -341,39 +383,109 @@ def _extract_meteo(node: ET.Element, path: str, origine: str) -> list[dict[str, 
     return rows
 
 
-def _extract_enneigement(node: ET.Element, path: str, origine: str) -> list[dict[str, Any]]:
+def _limites_enneigement(
+    enn: ET.Element, journal: _Journal, table: str, prefixe: str = ""
+) -> dict[str, Any]:
+    """Limites d'enneigement continu et indicateur d'absence, par versant.
+
+    `LimiteNord` / `LimiteSud` valent `-1` dans deux cas que seul le releve
+    distingue. Releve vide (les trois paliers a `ALTI="-1"`, 1 878 releves
+    avant 2024) : rien n'a ete observe. Releve fait : sur les 36 massifs,
+    chaque `-1` (2 903 releves du jour cote sud) accompagne une epaisseur nulle
+    a tous les paliers -- il n'y a pas d'enneigement continu. La limite devient
+    nulle dans les deux cas ; l'indicateur `sans_enneigement_continu_*` garde
+    la difference (vrai, ou nul si rien n'a ete releve). Un versant dont
+    toutes les epaisseurs valent `-1` n'a pas ete releve non plus : indicateur
+    nul (cas du Pays basque le 21/05/2017).
+    """
+    niveaux = enn.findall("NIVEAU")
+    releve_vide = bool(niveaux) and all(_int(n.get("ALTI")) == -1 for n in niveaux)
+    out: dict[str, Any] = {}
+    for cote, attr, ep in (("nord", "LimiteNord", "N"), ("sud", "LimiteSud", "S")):
+        brute = _int(enn.get(attr))
+        limite = journal.nul_si(enn.get(attr), table, f"{prefixe}limite_{cote}_m", _NEGATIF)
+        if brute is None or releve_vide:
+            sans = None
+        elif brute < 0:
+            epaisseurs = [_int(n.get(ep)) for n in niveaux]
+            # Une limite absente avec de la neige quelque part sur le versant
+            # serait contradictoire : on ne l'affirme pas (jamais vu a ce jour).
+            sans = True if epaisseurs and all(e == 0 for e in epaisseurs) else None
+        else:
+            sans = False
+        out[f"limite_{cote}_m"] = limite
+        out[f"sans_enneigement_continu_{cote}"] = sans
+    return out
+
+
+def _extract_enneigement(
+    node: ET.Element, path: str, origine: str, journal: _Journal
+) -> list[dict[str, Any]]:
+    # `-1` sur un palier : non releve (les trois paliers a la fois sur 1 878
+    # releves avant 2024).
+    def lire(niveau: ET.Element, attr: str, champ: str) -> int | None:
+        return journal.nul_si(niveau.get(attr), "enneigement", champ, _NEGATIF)
+
     rows = []
     for enn in node.findall(path):
         moment = parse_datetime(enn.get("DATE"))
-        limite_n = _int(enn.get("LimiteNord"))
-        limite_s = _int(enn.get("LimiteSud"))
+        limites = _limites_enneigement(enn, journal, "enneigement")
         for niveau in enn.findall("NIVEAU"):
             rows.append({
                 "origine": origine,
                 "date_enneigement": moment,
-                "limite_nord_m": limite_n,
-                "limite_sud_m": limite_s,
-                "altitude_m": _int(niveau.get("ALTI")),
-                "epaisseur_nord_cm": _int(niveau.get("N")),
-                "epaisseur_sud_cm": _int(niveau.get("S")),
+                **limites,
+                "altitude_m": lire(niveau, "ALTI", "altitude_m"),
+                "epaisseur_nord_cm": lire(niveau, "N", "epaisseur_nord_cm"),
+                "epaisseur_sud_cm": lire(niveau, "S", "epaisseur_sud_cm"),
             })
     return rows
 
 
-def _extract_neige_fraiche(node: ET.Element, path: str, origine: str) -> list[dict[str, Any]]:
+def _extract_neige_fraiche(
+    node: ET.Element, path: str, origine: str, journal: _Journal
+) -> list[dict[str, Any]]:
     parent = node.find(path)
     if parent is None:
         return []
     altitude = _int(parent.get("ALTITUDESS"))
+    # Jusqu'en 2023, `NEIGEFRAICHE` nomme un ou deux secteurs (`SECTEURSS1` /
+    # `SECTEURSS2` : « massif » seul, ou Nord/Sud, Ouest/Est...) et `SS241` /
+    # `SS242` sont le cumul de chacun -- pas un minimum et un maximum, comme
+    # le laissait croire leur renommage en `SS24Min` / `SS24Max` en 2024. Les
+    # secteurs sont conserves tels quels ; les bornes en sont derivees.
+    libelle1 = (parent.get("SECTEURSS1") or "").strip() or None
+    libelle2 = (parent.get("SECTEURSS2") or "").strip() or None
+
+    # Une valeur negative n'est pas un cumul : `-1` signale l'absence de second
+    # secteur, `-2` une valeur non observee -- *infere* de sa repartition (15 a
+    # 21 % des lignes 2016-2023 dans chaque massif, a toutes les positions du
+    # bloc, disparu en 2024), aucun descriptif de l'ancien format.
+    def lire(neige: ET.Element, attr: str, champ: str) -> int | None:
+        return journal.nul_si(neige.get(attr), "neige_fraiche", champ, _NEGATIF)
+
     rows = []
     for neige in parent.findall("NEIGE24H"):
+        if neige.get("SS241") is not None:
+            s1 = lire(neige, "SS241", "secteur1_cumul_cm")
+            s2 = lire(neige, "SS242", "secteur2_cumul_cm")
+            valeurs = [v for v in (s1, s2) if v is not None]
+            cumul_min = min(valeurs) if valeurs else None
+            cumul_max = max(valeurs) if valeurs else None
+        else:
+            s1 = s2 = None
+            cumul_min = lire(neige, "SS24Min", "cumul_min_cm")
+            cumul_max = lire(neige, "SS24Max", "cumul_max_cm")
         rows.append({
             "origine": origine,
             "date_cumul": parse_datetime(neige.get("DATE")),
             "altitude_mesure_m": altitude,
-            # Renomme en 2024 : SS241/SS242 -> SS24Min/SS24Max.
-            "cumul_min_cm": _int(_attr_fallback(neige, "SS24Min", "SS241")),
-            "cumul_max_cm": _int(_attr_fallback(neige, "SS24Max", "SS242")),
+            "secteur1_libelle": libelle1 if neige.get("SS241") is not None else None,
+            "secteur1_cumul_cm": s1,
+            "secteur2_libelle": libelle2 if neige.get("SS241") is not None else None,
+            "secteur2_cumul_cm": s2,
+            "cumul_min_cm": cumul_min,
+            "cumul_max_cm": cumul_max,
         })
     return rows
 
@@ -432,6 +544,13 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
     stabilite_texte = _bloc_texte(node, "STABILITE/TEXTESANSTITRE") or _bloc_texte(node, "STABILITE/TEXTE")
 
     enneigement_jour = node.find("ENNEIGEMENT")
+    journal = _Journal()
+    limites_jour = (
+        _limites_enneigement(enneigement_jour, journal, "bulletins", "enneigement_")
+        if enneigement_jour is not None
+        else dict.fromkeys(("limite_nord_m", "limite_sud_m", "sans_enneigement_continu_nord",
+                            "sans_enneigement_continu_sud"))
+    )
 
     bulletin = {
         # --- cle et partitionnement ---
@@ -485,10 +604,20 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
         "sat1": _indice(sat.get("SAT1")) if sat is not None else None,
         "sat2": _indice(sat.get("SAT2")) if sat is not None else None,
         # --- enneigement du jour ---
-        "enneigement_limite_nord_m": _int(enneigement_jour.get("LimiteNord")) if enneigement_jour is not None else None,
-        "enneigement_limite_sud_m": _int(enneigement_jour.get("LimiteSud")) if enneigement_jour is not None else None,
-        "vent_altitude_basse_m": _int(_attr_fallback(node.find("METEO"), "ALTITUDEVENT1")),
-        "vent_altitude_haute_m": _int(_attr_fallback(node.find("METEO"), "ALTITUDEVENT2")),
+        "enneigement_limite_nord_m": limites_jour["limite_nord_m"],
+        "enneigement_limite_sud_m": limites_jour["limite_sud_m"],
+        "sans_enneigement_continu_nord": limites_jour["sans_enneigement_continu_nord"],
+        "sans_enneigement_continu_sud": limites_jour["sans_enneigement_continu_sud"],
+        # `ALTITUDEVENT2="9999"` : pas de second vent. Jusqu'en 2023 les neuf
+        # massifs des Alpes du Sud (13, 16 a 23) n'ont qu'un vent, a 3000 m,
+        # porte par `FF1` ; une altitude fictive rangerait `FF2="-1"` en
+        # tranche haute.
+        "vent_altitude_basse_m": journal.nul_si(
+            _attr_fallback(node.find("METEO"), "ALTITUDEVENT1"),
+            "bulletins", "vent_altitude_basse_m", _ALTITUDE_FICTIVE),
+        "vent_altitude_haute_m": journal.nul_si(
+            _attr_fallback(node.find("METEO"), "ALTITUDEVENT2"),
+            "bulletins", "vent_altitude_haute_m", _ALTITUDE_FICTIVE),
         # --- provenance ---
         "schema_version": version,
         "format_famille": "moderne" if version >= 4 else "legacy",
@@ -496,12 +625,12 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
     }
 
     parsed = ParsedBulletin(bulletin=bulletin)
-    parsed.meteo = _extract_meteo(node, "METEO/ECHEANCE", "prevision")
-    parsed.meteo += _extract_meteo(node, "BSH/METEO/ECHEANCE", "historique")
-    parsed.enneigement = _extract_enneigement(node, "ENNEIGEMENT", "jour")
-    parsed.enneigement += _extract_enneigement(node, "BSH/ENNEIGEMENTS/ENNEIGEMENT", "historique")
-    parsed.neige_fraiche = _extract_neige_fraiche(node, "NEIGEFRAICHE", "prevision")
-    parsed.neige_fraiche += _extract_neige_fraiche(node, "BSH/NEIGEFRAICHE", "historique")
+    parsed.meteo = _extract_meteo(node, "METEO/ECHEANCE", "prevision", journal)
+    parsed.meteo += _extract_meteo(node, "BSH/METEO/ECHEANCE", "historique", journal)
+    parsed.enneigement = _extract_enneigement(node, "ENNEIGEMENT", "jour", journal)
+    parsed.enneigement += _extract_enneigement(node, "BSH/ENNEIGEMENTS/ENNEIGEMENT", "historique", journal)
+    parsed.neige_fraiche = _extract_neige_fraiche(node, "NEIGEFRAICHE", "prevision", journal)
+    parsed.neige_fraiche += _extract_neige_fraiche(node, "BSH/NEIGEFRAICHE", "historique", journal)
 
     for r in node.findall("BSH/RISQUES/RISQUE"):
         parsed.historique_risque.append({
@@ -516,6 +645,7 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
             "valeur": _txt(t.get("VALEUR")),
         })
 
+    parsed.conversions = journal.compte
     return parsed
 
 

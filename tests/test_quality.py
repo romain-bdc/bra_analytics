@@ -4,7 +4,7 @@ import polars as pl
 
 from bra_analytics.build import to_frames
 from bra_analytics.parser import parse_file
-from bra_analytics.quality import check_bulletins, coverage_gaps, report
+from bra_analytics.quality import Anomalie, check_bulletins, check_filles, coverage_gaps, report
 
 from .conftest import bulletins_valides, fixture
 
@@ -79,3 +79,66 @@ def test_libelle_incoherent_avec_le_referentiel() -> None:
     df = to_frames(parsed)["bulletins"]
     erreurs = {a.controle for a in check_bulletins(df) if a.gravite == "erreur"}
     assert "libelle_massif_incoherent" in erreurs
+
+
+# --------------------------------------------------------------------------
+# Tables filles : chaque conversion de sentinelle reste comptee
+# --------------------------------------------------------------------------
+
+def _filles(*noms: str) -> dict[str, pl.DataFrame]:
+    return to_frames([p for n in noms for p in parse_file(fixture(n))])
+
+
+def _controles(frames: dict[str, pl.DataFrame]) -> dict[str, Anomalie]:
+    return {a.controle: a for a in check_filles(frames)}
+
+
+def test_vent_aberrant_est_une_erreur() -> None:
+    """Champsaur, prevision du 23/12/2024 a 18 h : `FF1="400"`. Signale, pas
+    corrige ; les metriques l'excluent."""
+    c = _controles(_filles("anomalie_2024_champsaur_vent_aberrant.xml"))
+    assert c["vent_hors_plage"].gravite == "erreur"
+    assert c["vent_hors_plage"].lignes == 1
+
+
+def test_conversions_comptees() -> None:
+    c = _controles(_filles(
+        "anomalie_2023_andorre_releves_vides.xml",
+        "anomalie_2022_haute_bigorre_secteurs.xml",
+        "anomalie_2025_couserans_sans_enneigement.xml",
+    ))
+    assert c["echeance_meteo_vide"].lignes == 1
+    assert c["releve_enneigement_vide"].lignes == 1
+    assert c["neige_fraiche_non_observee"].lignes == 1
+    assert c["sans_enneigement_continu"].lignes == 1
+    assert all(a.gravite == "signal" for k, a in c.items() if k != "vent_hors_plage")
+
+
+def test_aucune_erreur_dans_les_tables_filles_des_fixtures() -> None:
+    frames = to_frames([p for f in bulletins_valides() for p in parse_file(f)])
+    erreurs = [a for a in check_filles(frames) if a.gravite == "erreur"]
+    assert erreurs == [], [str(a) for a in erreurs]
+
+
+def test_vent_unique_signale() -> None:
+    """Queyras 2023 : un seul vent, `ALTITUDEVENT2="9999"` lu comme absent."""
+    df = _filles("anomalie_2023_queyras_vent_unique.xml")["bulletins"]
+    signaux = {a.controle: a for a in check_bulletins(df) if a.gravite == "signal"}
+    assert signaux["vent_unique"].lignes == 1
+
+
+def test_rapport_inclut_les_tables_filles() -> None:
+    frames = _filles("anomalie_2024_champsaur_vent_aberrant.xml")
+    texte = report(frames["bulletins"], frames)
+    assert "vent_hors_plage" in texte
+
+
+def test_conversions_partielles_comptees() -> None:
+    """Queyras 2023 : `FF2="-1"` sur des echeances par ailleurs renseignees.
+    Aucune echeance n'est vide, mais les trois conversions sont comptees."""
+    frames = _filles("anomalie_2023_queyras_vent_unique.xml")
+    assert frames["conversions"].height
+    c = _controles(frames)
+    assert "echeance_meteo_vide" not in c
+    assert c["sentinelle meteo.vent_haut_vitesse_kmh=-1"].lignes == 3
+    assert c["sentinelle bulletins.vent_altitude_haute_m=9999"].lignes == 1

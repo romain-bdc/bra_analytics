@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<BULLETINS_NEIGE_AVALANCHE TYPEBULLETIN="AMENDEMENT" ID="71" MASSIF="ANDORRE" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2023-03-05T06:00:00" DATEECHEANCE="2023-03-05T18:00:00" DATEVALIDITE="2023-03-05T18:00:00" DATEDIFFUSION="2023-03-05T06:37:02" AMENDEMENT="true">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="2" COMMENTAIRE="Risque limité." />
+    <PENTE NE="true" E="true" SE="false" S="false" SW="false" W="false" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>plaques peu épaisses, secteur nord</ACCIDENTEL>
+    <NATUREL>coulées au soleil, localement avalanche moyenne.</NATUREL>
+    <RESUME>Départs spontanés : coulées au soleil, localement avalanche moyenne.
+Déclenchements skieurs : plaques peu épaisses, secteur nord</RESUME>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+  <ENNEIGEMENT DATE="2023-03-05T00:00:00" LimiteSud="-1" LimiteNord="-1">
+    <NIVEAU ALTI="-1" N="-1" S="-1" />
+    <NIVEAU ALTI="-1" N="-1" S="-1" />
+    <NIVEAU ALTI="-1" N="-1" S="-1" />
+  </ENNEIGEMENT>
+  <METEO ALTITUDEVENT1="2000" ALTITUDEVENT2="3000">
+    <COMMENTAIRE>Belle journée</COMMENTAIRE>
+    <ECHEANCE DATE="2023-03-05T00:00:00" TEMPSSENSIBLE="-1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="-1" ISO-10="-1" DD1="" FF1="-1" DD2="" FF2="-1" />
+    <ECHEANCE DATE="2023-03-05T06:00:00" TEMPSSENSIBLE="1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="2000" ISO-10="3800" DD1="_" FF1="0" DD2="SW" FF2="10" />
+    <ECHEANCE DATE="2023-03-05T12:00:00" TEMPSSENSIBLE="1" MERNUAGES="-1" PLUIENEIGE="-1" ISO0="2200" ISO-10="3900" DD1="_" FF1="0" DD2="W" FF2="20" />
+  </METEO>
+</BULLETINS_NEIGE_AVALANCHE>
+
+

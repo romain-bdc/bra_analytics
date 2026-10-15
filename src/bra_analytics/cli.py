@@ -243,7 +243,14 @@ def cmd_check(args: argparse.Namespace) -> int:
     except Exception as exc:  # entrepot absent ou vide
         raise SystemExit(f"entrepot illisible ({exc}) - lancer `bra build`")
 
-    print(report(df))
+    filles = {}
+    for table in ("meteo", "enneigement", "neige_fraiche", "conversions"):
+        chemin = Path(args.out) / table / "**" / "*.parquet"
+        try:
+            filles[table] = pl.read_parquet(chemin)
+        except Exception as exc:  # table absente d'un entrepot partiel
+            print(f"table {table} non controlee : {exc}")
+    print(report(df, filles))
     gaps = coverage_gaps(df).filter(pl.col("jours_manquants") > 0)
     if gaps.height:
         print(f"\nSeries a trous ({gaps.height} couples massif/saison) :")

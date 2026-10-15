@@ -65,11 +65,12 @@ def test_tranche_absente_reste_vide(con) -> None:
     assert sorted({alt for alt, _ in soir}) == [1500, 1800, 2100]
 
 
-def test_sentinelle_sans_tranche_mais_visible(con) -> None:
-    """Couserans, amendement du matin : `ALTI="-1"`. La ligne reste dans la vue,
-    sans tranche ; un `CASE` naif l'aurait rangee en tranche basse."""
+def test_releve_vide_sans_tranche_mais_visible(con) -> None:
+    """Couserans, amendement du matin : `ALTI="-1"` sur les trois paliers,
+    releve non fait. Le parser rend l'altitude nulle ; la ligne reste dans la
+    vue, sans tranche -- un `CASE` naif sur `-1` l'aurait rangee en basse."""
     matin = _par_bulletin(con, 69, date(2016, 3, 31))[6]
-    assert matin and all(alt == -1 and tr is None for alt, tr in matin)
+    assert matin and all(alt is None and tr is None for alt, tr in matin)
 
 
 def test_massif_dont_les_paliers_tombent_dans_une_seule_tranche(con) -> None:
@@ -93,3 +94,32 @@ def test_massif_dont_les_paliers_tombent_dans_une_seule_tranche(con) -> None:
     assert (nf["altitudes"], nf["tranches"], nf["n_tranches"]) == ("1800", "moyenne", 1)
     enn = ligne("enneigement")
     assert (enn["tranches"], enn["n_tranches"]) == ("basse, moyenne, haute", 3)
+
+
+def _vents(con, massif: int, jour: date) -> list[tuple]:
+    return con.execute(
+        "SELECT DISTINCT source, altitude_m, tranche FROM palier_tranche "
+        "WHERE source LIKE 'vent_%' AND massif_id = ? AND jour = ? ORDER BY altitude_m",
+        [massif, jour],
+    ).fetchall()
+
+
+def test_vent_a_3000_m_en_tranche_haute_aux_deux_epoques(con) -> None:
+    """Queyras : jusqu'en 2023 un seul vent, a 3000 m, porte par `FF1`
+    (`ALTITUDEVENT2="9999"`) ; depuis 2024, 2000 et 3000 m. Le vent a 3000 m
+    change de colonne mais pas de tranche : la serie haute est continue, et
+    aucune altitude fictive n'apparait."""
+    assert _vents(con, 17, date(2023, 1, 15)) == [("vent_bas", 3000, "haute")]
+    assert _vents(con, 17, date(2024, 1, 15)) == [
+        ("vent_bas", 2000, "moyenne"), ("vent_haut", 3000, "haute"),
+    ]
+
+
+def test_vent_haut_garde_ses_lignes_hors_cas_vent_unique(con) -> None:
+    """Seuls les bulletins a vent unique perdent leur palier `vent_haut` : un
+    bulletin a deux vents garde le sien a chaque echeance."""
+    n = con.execute(
+        "SELECT count(*) FROM palier_tranche WHERE source = 'vent_haut' "
+        "AND massif_id = 17 AND jour = DATE '2024-01-15'"
+    ).fetchone()[0]
+    assert n > 0
