@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='utf-8'?>
+<BULLETINS_NEIGE_AVALANCHE TYPEBULLETIN="BRA" ID="19" MASSIF="Champsaur" DATEBULLETIN="2024-12-22T16:00:00" DATEECHEANCE="2024-12-23T18:00:00" DATEVALIDITE="2024-12-23T18:00:00" DATEDIFFUSION="2024-12-22T16:13:00" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="4" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="4" COMMENTAIRE="Indice de risque fort." RISQUEMAXIJ2="4" DATE_RISQUE_J2="2024-12-24T00:00:00" />
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>forte instabilité dans la neige fraiche</ACCIDENTEL>
+    <NATUREL>avalanches de neige fraiche</NATUREL>
+    <RESUME>Départs spontanés : avalanches de neige fraiche
+Déclenchements skieurs : forte instabilité dans la neige fraiche</RESUME>
+    <RisqueJ2>Indice de risque fort</RisqueJ2>
+    <CommentaireRisqueJ2>Risque stable ou en baisse. 
+Temps froid, sec, redevenant ensoleillé en altitude (mer de nuages). Manteau neigeux faiblement stabilisé + transport de neige avec le maintien d'un fort vent de nord à nord-est.</CommentaireRisqueJ2>
+    <AVIS>FORT RISQUE D'AVALANCHE</AVIS>
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <SitAvalTyp SAT1="1" SAT2="2" />
+    <TITRE>CHUTES DE NEIGE CONSÉQUENTES FORTEMENT VENTÉES</TITRE>
+    <TEXTESANSTITRE>Déclenchements provoqués : nombreuses plaques (en place ou en formation), conséquence des chutes de neige et du fort vent. Présentes en toute orientation et notamment en versants est à sud, même loin des crêtes et ruptures de pentes. Plaques souvent dures vers les crêtes les plus ventées, mais d’aspect poudreux en contrebas et dans les secteurs moins ventés, facilement déclenchables par un skieur ou randonneur. Les cassures sont épaisses et de gros volumes peuvent être mobilisables, notamment en large nord de haute altitude si une avalanche entraîne la cassure d’une accumulation plus ancienne et enfouie.  
+
+Départs spontanés : avalanches de  neige fraîche dans les pentes raides, de plus en plus volumineuses au fil des chutes qui perdurent, en particulier vers l'Isère. Avalanches ponctuelles ou linéaires de taille moyenne à grande, très grande non exclue au coeur du massif / vers l'Oisans ou dans une zone de forte accumulation par le vent. Un départ peut également être occasionné par une surcharge liée au transport de neige par le fort vent. </TEXTESANSTITRE>
+    <TEXTE>CHUTES DE NEIGE CONSÉQUENTES FORTEMENT VENTÉES
+
+Déclenchements provoqués : nombreuses plaques (en place ou en formation), conséquence des chutes de neige et du fort vent. Présentes en toute orientation et notamment en versants est à sud, même loin des crêtes et ruptures de pentes. Plaques souvent dures vers les crêtes les plus ventées, mais d’aspect poudreux en contrebas et dans les secteurs moins ventés, facilement déclenchables par un skieur ou randonneur. Les cassures sont épaisses et de gros volumes peuvent être mobilisables, notamment en large nord de haute altitude si une avalanche entraîne la cassure d’une accumulation plus ancienne et enfouie.  
+
+Départs spontanés : avalanches de  neige fraîche dans les pentes raides, de plus en plus volumineuses au fil des chutes qui perdurent, en particulier vers l'Isère. Avalanches ponctuelles ou linéaires de taille moyenne à grande, très grande non exclue au coeur du massif / vers l'Oisans ou dans une zone de forte accumulation par le vent. Un départ peut également être occasionné par une surcharge liée au transport de neige par le fort vent. </TEXTE>
+  </STABILITE>
+  <METEO ALTITUDEVENT1="2000" ALTITUDEVENT2="3000">
+    <COMMENTAIRE>Froid et fortement venté. Restant bouché vers l'Isère avec des chutes de neige, en allant vers le sud neige plus intermittente. </COMMENTAIRE>
+    <ECHEANCE DATE="2024-12-23T06:00:00" FF1="45" DD1="NO" FF2="100" DD2="N" ISO0="900" PLUIENEIGE="500" TEMPSSENSIBLE="61" MERNUAGES="-1" />
+    <ECHEANCE DATE="2024-12-23T12:00:00" FF1="40" DD1="NO" FF2="80" DD2="N" ISO0="900" PLUIENEIGE="500" TEMPSSENSIBLE="61" MERNUAGES="-1" />
+    <ECHEANCE DATE="2024-12-23T18:00:00" FF1="400" DD1="NO" FF2="80" DD2="N" ISO0="1000" PLUIENEIGE="500" TEMPSSENSIBLE="61" MERNUAGES="-1" />
+    <ECHEANCE DATE="2024-12-24T00:00:00" FF1="20" DD1="N" FF2="25" DD2="N" ISO0="1000" PLUIENEIGE="500" TEMPSSENSIBLE="61" MERNUAGES="-1" />
+  </METEO>
+</BULLETINS_NEIGE_AVALANCHE>

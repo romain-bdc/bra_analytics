@@ -467,3 +467,55 @@ def test_risquemaxi_zero_dans_l_historique_vaut_non_estime() -> None:
     assert par_jour[date(2022, 4, 15)] == 1
     assert par_jour[date(2022, 4, 16)] is None
     assert b.bulletin["risque_maxi"] == 1
+
+
+# --------------------------------------------------------------------------
+# Neige fraiche avant 2024 : deux secteurs nommes, pas un min et un max
+# --------------------------------------------------------------------------
+
+def _neige(name: str, origine: str) -> dict[date, dict]:
+    (b,) = parse_file(fixture(name))
+    return {
+        r["date_cumul"].date(): r for r in b.neige_fraiche if r["origine"] == origine
+    }
+
+
+def test_neige_fraiche_deux_secteurs_conserves_et_bornes_derivees() -> None:
+    """Haute-Bigorre, 23/03/2022 : `SECTEURSS1="Nord" SECTEURSS2="Sud"`.
+
+    Le 19/03, `SS241="0" SS242="5"` : 0 cm au nord, 5 cm au sud. Lu comme
+    min/max, l'ancien parsing donnait le bon ordre par hasard ; l'inverse
+    (`SS241 > SS242`) y produisait un maximum inferieur au minimum.
+    """
+    r = _neige("anomalie_2022_haute_bigorre_secteurs.xml", "prevision")[date(2022, 3, 19)]
+    assert (r["secteur1_libelle"], r["secteur1_cumul_cm"]) == ("Nord", 0)
+    assert (r["secteur2_libelle"], r["secteur2_cumul_cm"]) == ("Sud", 5)
+    assert (r["cumul_min_cm"], r["cumul_max_cm"]) == (0, 5)
+
+
+def test_neige_fraiche_valeur_non_observee_devient_nulle() -> None:
+    """Meme bulletin, bloc historique : le 17/03/2022 porte `SS241="-2"
+    SS242="-2"`. Les secteurs restent nommes, aucun cumul n'est invente."""
+    r = _neige("anomalie_2022_haute_bigorre_secteurs.xml", "historique")[date(2022, 3, 17)]
+    assert (r["secteur1_libelle"], r["secteur2_libelle"]) == ("Nord", "Sud")
+    assert r["secteur1_cumul_cm"] is None and r["secteur2_cumul_cm"] is None
+    assert r["cumul_min_cm"] is None and r["cumul_max_cm"] is None
+
+
+def test_neige_fraiche_un_seul_secteur() -> None:
+    """Aspe-Ossau 2023 : `SECTEURSS1="massif"`, `SS242="-1"` (pas de second
+    secteur). La fourchette se reduit au secteur unique."""
+    (b,) = parse_file(fixture("v3_2023_aspe_ossau.xml"))
+    for r in b.neige_fraiche:
+        assert r["secteur1_libelle"] == "massif"
+        assert r["secteur2_libelle"] is None and r["secteur2_cumul_cm"] is None
+        assert r["cumul_min_cm"] == r["cumul_max_cm"] == r["secteur1_cumul_cm"]
+
+
+def test_neige_fraiche_moderne_sans_secteur() -> None:
+    """Depuis 2024, `SS24Min` / `SS24Max` : une fourchette, aucun secteur."""
+    (b,) = parse_file(fixture("v4_2024_aspe_ossau.xml"))
+    assert b.neige_fraiche
+    for r in b.neige_fraiche:
+        assert r["secteur1_libelle"] is None and r["secteur1_cumul_cm"] is None
+        assert r["cumul_min_cm"] is not None and r["cumul_min_cm"] <= r["cumul_max_cm"]

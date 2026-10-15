@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='utf-8'?>
+<BULLETINS_NEIGE_AVALANCHE TYPEBULLETIN="BRA" ID="17" MASSIF="Queyras" DATEBULLETIN="2024-01-14T16:00:00" DATEECHEANCE="2024-01-15T18:00:00" DATEVALIDITE="2024-01-15T18:00:00" DATEDIFFUSION="2024-01-14T16:01:39" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="1" EVOLURISQUE1="" LOC1="&lt;2000" ALTITUDE="2000" RISQUE2="2" EVOLURISQUE2="" LOC2="&gt;2000" RISQUEMAXI="2" COMMENTAIRE="Au-dessus de 2000m risque limité, plus bas risque faible." RISQUEMAXIJ2="2" DATE_RISQUE_J2="2024-01-16T00:00:00" />
+    <PENTE NE="true" E="true" SE="true" S="false" SW="false" W="false" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>plaques à vent en place et en formation en altitude</ACCIDENTEL>
+    <NATUREL>peu probables</NATUREL>
+    <RESUME>Départs spontanés : peu probables
+Déclenchements skieurs : plaques à vent en place et en formation en altitude</RESUME>
+    <RisqueJ2>risque limité</RisqueJ2>
+    <CommentaireRisqueJ2>Conditions météo plus calmes, lente stabilisation des plaques en place. Maintien d'un risque limité en altitude.</CommentaireRisqueJ2>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <SitAvalTyp SAT1="2" SAT2="3" />
+    <TEXTE>NOUVELLES PLAQUES ENCORE FRAGILES EN ALTITUDE
+
+DEPARTS SPONTANES : peu probables sous l’effet d’un rafraichissement progressif de la masse d’air (iso0 en baisse vers 2000 m).
+
+DECLENCHEMENTS PROVOQUES : nouvelles instabilités superficielles en formation au dessus de 2000 m, dans un large secteur nord à est, en lien avec le renforcement du vent de nord-ouest. Ces plaques se formant dans la neige récente qui reste légère, sont généralement minces (cassure de l'ordre de 10/30 cm) mais facilement déclenchables. Avalanches petites à moyennes (taille 1 à 2). Leur déclenchement peut faciliter la sollicitation d'une sous couche fragile persistante enfouie et irrégulièrement répartie, présentes en versants froids. Ce scénario de moins en moins probable, peut engendrer une avalanche de taille moyenne à grande (cassure de 40/60 cm). Sous 2000 m, le risque devient faible avec un manteau neigeux bien stabilisé.</TEXTE>
+  </STABILITE>
+  <METEO ALTITUDEVENT1="2000" ALTITUDEVENT2="3000">
+    <COMMENTAIRE>Soleil voilé, doux et peu venté. +4°C à 2000 m</COMMENTAIRE>
+    <ECHEANCE DATE="2024-01-15T06:00:00" FF1="20" DD1="O" FF2="30" DD2="O" ISO0="2000" PLUIENEIGE="-1" TEMPSSENSIBLE="6" MERNUAGES="-1" />
+    <ECHEANCE DATE="2024-01-15T12:00:00" FF1="25" DD1="O" FF2="40" DD2="O" ISO0="1900" PLUIENEIGE="-1" TEMPSSENSIBLE="6" MERNUAGES="-1" />
+    <ECHEANCE DATE="2024-01-15T18:00:00" FF1="35" DD1="O" FF2="50" DD2="O" ISO0="1800" PLUIENEIGE="-1" TEMPSSENSIBLE="1" MERNUAGES="-1" />
+    <ECHEANCE DATE="2024-01-16T00:00:00" FF1="25" DD1="O" FF2="40" DD2="O" ISO0="1800" PLUIENEIGE="-1" TEMPSSENSIBLE="0" MERNUAGES="-1" />
+  </METEO>
+</BULLETINS_NEIGE_AVALANCHE>

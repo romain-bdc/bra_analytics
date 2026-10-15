@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8'?>
+<BULLETINS_NEIGE_AVALANCHE TYPEBULLETIN="BRA" ID="69" MASSIF="Couserans" DATEBULLETIN="2025-11-05T17:00:00" DATEECHEANCE="2025-11-06T18:00:00" DATEVALIDITE="2025-11-06T18:00:00" DATEDIFFUSION="2025-11-05T17:24:00" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="1" EVOLURISQUE1="2" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="2" COMMENTAIRE="Indice de risque faible évoluant en limité." RISQUEMAXIJ2="2" DATE_RISQUE_J2="2025-11-07T00:00:00" />
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>Quelques avalanches de plaques friables de taille petite à moyenne en toutes orientations.</ACCIDENTEL>
+    <NATUREL>Quelques coulées dans la neige fraîche (taille 1 maximum).</NATUREL>
+    <RESUME>Départs spontanés : Quelques coulées dans la neige fraîche (taille 1 maximum).
+Déclenchements skieurs : Quelques avalanches de plaques friables de taille petite à moyenne en toutes orientations.</RESUME>
+    <RisqueJ2>Indice de risque limité</RisqueJ2>
+    <CommentaireRisqueJ2>Poursuite de petites chutes de neige vendredi matin, suivies d'éclaircies.</CommentaireRisqueJ2>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <SitAvalTyp SAT1="1" SAT2="" />
+    <TITRE>Initiation d'un premier manteau neigeux.</TITRE>
+    <TEXTESANSTITRE>Déclenchements provoqués : Les chutes de neige passées ou en cours sont accompagnées d'un vent assez fort, d'abord orienté au sud-ouest dans la matinée, puis nord-ouest dans l'après-midi. Quelques plaques friables de petite voire moyenne taille (1 à 2) se forment au fil des chutes dans un large secteur est, sollicitables au passage d'un randonneur.
+
+Départs spontanés : Des départs ponctuels en neige sèche sont possibles (coulées, taille 1) en toutes orientations.
+
+Autres : Conditions hivernales et très perturbées dès la moyenne montagne.</TEXTESANSTITRE>
+    <TEXTE>Initiation d'un premier manteau neigeux.
+
+Déclenchements provoqués : Les chutes de neige passées ou en cours sont accompagnées d'un vent assez fort, d'abord orienté au sud-ouest dans la matinée, puis nord-ouest dans l'après-midi. Quelques plaques friables de petite voire moyenne taille (1 à 2) se forment au fil des chutes dans un large secteur est, sollicitables au passage d'un randonneur.
+
+Départs spontanés : Des départs ponctuels en neige sèche sont possibles (coulées, taille 1) en toutes orientations.
+
+Autres : Conditions hivernales et très perturbées dès la moyenne montagne.</TEXTE>
+  </STABILITE>
+  <ENNEIGEMENT DATE="2025-11-05T00:00:00" LimiteSud="-1" LimiteNord="-1">
+    <NIVEAU ALTI="1500" N="0" S="0" />
+    <NIVEAU ALTI="2000" N="0" S="0" />
+    <NIVEAU ALTI="2500" N="0" S="0" />
+  </ENNEIGEMENT>
+</BULLETINS_NEIGE_AVALANCHE>

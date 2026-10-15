@@ -360,20 +360,52 @@ def _extract_enneigement(node: ET.Element, path: str, origine: str) -> list[dict
     return rows
 
 
+def _cumul(value: str | None) -> int | None:
+    """Cumul de neige fraiche, toute valeur negative valant « non renseigne ».
+
+    `-1` y signale l'absence de second secteur, `-2` une valeur non observee :
+    sans descriptif de l'ancien format, `-2` est *infere* de sa repartition
+    (15 a 21 % des lignes 2016-2023 dans chaque massif, a toutes les positions
+    du bloc, disparu en 2024). Ni l'un ni l'autre n'est un cumul.
+    """
+    parsed = _int(value)
+    if parsed is not None and parsed < 0:
+        return None
+    return parsed
+
+
 def _extract_neige_fraiche(node: ET.Element, path: str, origine: str) -> list[dict[str, Any]]:
     parent = node.find(path)
     if parent is None:
         return []
     altitude = _int(parent.get("ALTITUDESS"))
+    # Jusqu'en 2023, `NEIGEFRAICHE` nomme un ou deux secteurs (`SECTEURSS1` /
+    # `SECTEURSS2` : « massif » seul, ou Nord/Sud, Ouest/Est...) et `SS241` /
+    # `SS242` sont le cumul de chacun -- pas un minimum et un maximum, comme
+    # le laissait croire leur renommage en `SS24Min` / `SS24Max` en 2024. Les
+    # secteurs sont conserves tels quels ; les bornes en sont derivees.
+    libelle1 = (parent.get("SECTEURSS1") or "").strip() or None
+    libelle2 = (parent.get("SECTEURSS2") or "").strip() or None
     rows = []
     for neige in parent.findall("NEIGE24H"):
+        if neige.get("SS241") is not None:
+            s1, s2 = _cumul(neige.get("SS241")), _cumul(neige.get("SS242"))
+            valeurs = [v for v in (s1, s2) if v is not None]
+            cumul_min = min(valeurs) if valeurs else None
+            cumul_max = max(valeurs) if valeurs else None
+        else:
+            s1 = s2 = None
+            cumul_min, cumul_max = _cumul(neige.get("SS24Min")), _cumul(neige.get("SS24Max"))
         rows.append({
             "origine": origine,
             "date_cumul": parse_datetime(neige.get("DATE")),
             "altitude_mesure_m": altitude,
-            # Renomme en 2024 : SS241/SS242 -> SS24Min/SS24Max.
-            "cumul_min_cm": _int(_attr_fallback(neige, "SS24Min", "SS241")),
-            "cumul_max_cm": _int(_attr_fallback(neige, "SS24Max", "SS242")),
+            "secteur1_libelle": libelle1 if neige.get("SS241") is not None else None,
+            "secteur1_cumul_cm": s1,
+            "secteur2_libelle": libelle2 if neige.get("SS241") is not None else None,
+            "secteur2_cumul_cm": s2,
+            "cumul_min_cm": cumul_min,
+            "cumul_max_cm": cumul_max,
         })
     return rows
 

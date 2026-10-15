@@ -116,6 +116,11 @@ NEIGE_FRAICHE: dict[str, pl.DataType] = {
     "origine": pl.Utf8,
     "date_cumul": pl.Datetime("us"),
     "altitude_mesure_m": pl.Int32,
+    # Format ancien (<= 2023) uniquement : les secteurs nommes et leur cumul.
+    "secteur1_libelle": pl.Utf8,
+    "secteur1_cumul_cm": pl.Int16,
+    "secteur2_libelle": pl.Utf8,
+    "secteur2_cumul_cm": pl.Int16,
     "cumul_min_cm": pl.Int16,
     "cumul_max_cm": pl.Int16,
 }
