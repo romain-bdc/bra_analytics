@@ -561,3 +561,31 @@ def test_limite_renseignee_n_est_pas_absente() -> None:
     assert r["limite_sud_m"] is not None and r["limite_sud_m"] > 0
     assert r["sans_enneigement_continu_sud"] is False
     assert b.bulletin["sans_enneigement_continu_sud"] is False
+
+
+# --------------------------------------------------------------------------
+# Meteo : echeance vide et second vent absent
+# --------------------------------------------------------------------------
+
+def test_echeance_meteo_vide_devient_nulle() -> None:
+    """Andorre, 05/03/2023, echeance de 00 h : toutes les valeurs a `-1`.
+    L'echeance n'a pas ete renseignee ; la ligne reste, sans valeur."""
+    (b,) = parse_file(fixture("anomalie_2023_andorre_releves_vides.xml"))
+    vide, pleine = b.meteo[0], b.meteo[1]
+    assert vide["echeance"] == datetime(2023, 3, 5, 0, 0)
+    for champ in ("vent_bas_vitesse_kmh", "vent_haut_vitesse_kmh", "iso_0_m",
+                  "iso_moins10_m", "temps_sensible", "temps_sensible_libelle"):
+        assert vide[champ] is None, champ
+    assert pleine["iso_0_m"] == 2000 and pleine["vent_bas_vitesse_kmh"] == 0
+
+
+def test_altitude_9999_signifie_pas_de_second_vent() -> None:
+    """Queyras, 14/01/2023 : `ALTITUDEVENT1="3000" ALTITUDEVENT2="9999"`,
+    `FF2="-1"`. Jusqu'en 2023 les neuf massifs des Alpes du Sud n'ont qu'un
+    vent, a 3000 m, porte par `FF1`. Ni altitude ni vitesse de second vent."""
+    (b,) = parse_file(fixture("anomalie_2023_queyras_vent_unique.xml"))
+    assert b.bulletin["vent_altitude_basse_m"] == 3000
+    assert b.bulletin["vent_altitude_haute_m"] is None
+    for r in b.meteo:
+        assert r["vent_haut_vitesse_kmh"] is None and r["vent_haut_direction"] is None
+        assert r["vent_bas_vitesse_kmh"] is not None and r["vent_bas_vitesse_kmh"] >= 0

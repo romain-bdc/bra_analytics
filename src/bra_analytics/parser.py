@@ -319,20 +319,49 @@ def _attr_fallback(el: ET.Element | None, *names: str) -> str | None:
     return None
 
 
+def _meteo(value: str | None) -> int | None:
+    """Valeur meteo, `-1` valant « non renseigne ».
+
+    Avant 2024, des echeances entieres arrivent a `-1` (19 822 sur les 36
+    massifs, dont 244 en prevision), et `FF2="-1"` accompagne l'absence de
+    second vent (`ALTITUDEVENT2="9999"`). Seul `-1` est converti : une autre
+    valeur negative (un vent a -5 km/h, 01/03/2025) est une erreur de saisie,
+    que `bra check` signale au lieu de la faire disparaitre.
+    """
+    parsed = _int(value)
+    if parsed == -1:
+        return None
+    return parsed
+
+
+def _altitude_vent(value: str | None) -> int | None:
+    """Altitude de reference du vent, `9999` valant « pas de second vent ».
+
+    Jusqu'en 2023, les neuf massifs des Alpes du Sud (13, 16 a 23) n'ont qu'un
+    vent, a 3000 m, porte par `FF1` ; `ALTITUDEVENT2="9999"` et `FF2="-1"`.
+    Depuis 2024 ils ont 2000 et 3000 m. Une altitude fictive rangerait la
+    vitesse `-1` en tranche haute.
+    """
+    parsed = _int(value)
+    if parsed is not None and (parsed < 0 or parsed >= 9999):
+        return None
+    return parsed
+
+
 def _extract_meteo(node: ET.Element, path: str, origine: str) -> list[dict[str, Any]]:
     rows = []
     for idx, ech in enumerate(node.findall(path)):
-        code = _int(ech.get("TEMPSSENSIBLE"))
+        code = _meteo(ech.get("TEMPSSENSIBLE"))
         rows.append({
             "origine": origine,
             "rang": idx,
             "echeance": parse_datetime(ech.get("DATE")),
-            "vent_bas_vitesse_kmh": _int(ech.get("FF1")),
+            "vent_bas_vitesse_kmh": _meteo(ech.get("FF1")),
             "vent_bas_direction": normalize_direction(ech.get("DD1")),
-            "vent_haut_vitesse_kmh": _int(ech.get("FF2")),
+            "vent_haut_vitesse_kmh": _meteo(ech.get("FF2")),
             "vent_haut_direction": normalize_direction(ech.get("DD2")),
-            "iso_0_m": _int(ech.get("ISO0")),
-            "iso_moins10_m": _int(ech.get("ISO-10")),
+            "iso_0_m": _meteo(ech.get("ISO0")),
+            "iso_moins10_m": _meteo(ech.get("ISO-10")),
             "limite_pluie_neige_m": _mesure(ech.get("PLUIENEIGE")),
             "temps_sensible": code,
             "temps_sensible_libelle": TEMPS_SENSIBLE.get(code) if code is not None else None,
@@ -563,8 +592,8 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
         "enneigement_limite_sud_m": limites_jour["limite_sud_m"],
         "sans_enneigement_continu_nord": limites_jour["sans_enneigement_continu_nord"],
         "sans_enneigement_continu_sud": limites_jour["sans_enneigement_continu_sud"],
-        "vent_altitude_basse_m": _int(_attr_fallback(node.find("METEO"), "ALTITUDEVENT1")),
-        "vent_altitude_haute_m": _int(_attr_fallback(node.find("METEO"), "ALTITUDEVENT2")),
+        "vent_altitude_basse_m": _altitude_vent(_attr_fallback(node.find("METEO"), "ALTITUDEVENT1")),
+        "vent_altitude_haute_m": _altitude_vent(_attr_fallback(node.find("METEO"), "ALTITUDEVENT2")),
         # --- provenance ---
         "schema_version": version,
         "format_famille": "moderne" if version >= 4 else "legacy",

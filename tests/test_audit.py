@@ -123,19 +123,18 @@ def test_ecarts_entre_prevision_et_historique_meteo() -> None:
     assert ecarts.select("saison", "champ").rows() == [("2023-2024", "mer_nuages_m")]
 
 
-def test_quantiles_ecartent_la_sentinelle(con) -> None:
-    """Un `-1` n'est pas une vitesse de vent : il ne compte ni dans `n` ni dans
-    les quantiles. Les fixtures en portent un en prevision (vent haut, bulletin
-    de 2016), ce qui suffit a distinguer les deux lectures."""
-    total, sentinelles = con.execute(
-        "SELECT count(vent_haut_vitesse_kmh), "
-        "count(*) FILTER (vent_haut_vitesse_kmh = -1) "
+def test_quantiles_ne_comptent_que_des_vitesses(con) -> None:
+    """Couserans, amendement du 31/03/2016 : l'echeance de 00 h arrive vide
+    (`FF2="-1"` et le reste a `-1`). Le parser la rend nulle, et `n` ne compte
+    que les vitesses reellement ecrites."""
+    total, renseignees = con.execute(
+        "SELECT count(*), count(vent_haut_vitesse_kmh) "
         f"FROM ({audit._source('meteo')}) WHERE origine = 'prevision'"
     ).fetchone()
-    assert sentinelles >= 1
+    assert renseignees < total
 
     (ligne,) = [q for q in audit._quantiles(con) if "vent_haut_vitesse_kmh" in q[0]]
-    assert ligne[3] == total - sentinelles
+    assert ligne[3] == renseignees
 
 
 def test_rapport_reproductible(con) -> None:
