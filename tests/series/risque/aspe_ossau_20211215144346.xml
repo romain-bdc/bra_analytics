@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="bra.xslt" type="text/xsl"?>
+<Bulletins nombre="3">
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2021-12-15T16:00:00" DATEECHEANCE="2021-12-16T18:00:00" DATEVALIDITE="2021-12-16T18:00:00" DATEDIFFUSION="2021-12-15T14:43:46" AMENDEMENT="false">
+  <DateValidite>2021-12-16T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="2" COMMENTAIRE="Risque limit&#233;."/>
+    <PENTE NE="false" E="false" SE="true" S="true" SW="true" W="true" NW="false" N="false" COMMENTAIRE="surtout apr&#232;s midi"/>
+    <ACCIDENTEL>plaques en altitude, souvent dures.</ACCIDENTEL>
+    <NATUREL>avalanches de fond, de fonte l'apr&#232;s-midi.</NATUREL>
+    <RESUME>D&#233;parts spontan&#233;s : avalanches de fond, de fonte l'apr&#232;s-midi.
+D&#233;clenchements skieurs : plaques en altitude, souvent dures.</RESUME>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>
+
+
+</Bulletins>

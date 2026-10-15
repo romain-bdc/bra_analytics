@@ -586,6 +586,12 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
                 """
             )
 
+        # Couche metriques, bloc risque (spec section 5.1). Import local : le
+        # module s'appuie lui-meme sur `build` pour ses litteraux SQL.
+        from .metriques.risque import creer_vues as creer_vues_risque
+
+        creer_vues_risque(con)
+
         con.execute("CHECKPOINT")
     finally:
         con.close()

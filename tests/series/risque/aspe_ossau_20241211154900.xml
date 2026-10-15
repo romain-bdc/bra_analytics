@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2024-12-11T16:00:00" DATEECHEANCE="2024-12-12T18:00:00" DATEVALIDITE="2024-12-12T18:00:00" DATEDIFFUSION="2024-12-11T15:49:00" AMENDEMENT="false">
+  <DateValidite>2024-12-12T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="2" COMMENTAIRE="Indice de risque limité." RISQUEMAXIJ2="2" DATE_RISQUE_J2="2024-12-13T00:00:00"/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="false" NW="false" N="false" COMMENTAIRE="loin des crêtes "/>
+    <ACCIDENTEL><![CDATA[Plaques en cours de tassement  ]]></ACCIDENTEL>
+    <NATUREL><![CDATA[Nouvelles plaques de fond surtout sous 2000m]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : Nouvelles plaques de fond surtout sous 2000m
+Déclenchements skieurs : Plaques en cours de tassement  ]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque limité]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Encore des départs naturels surtout au soleil  Poursuite du tassement des rares plaques encore en place.  ]]></CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>

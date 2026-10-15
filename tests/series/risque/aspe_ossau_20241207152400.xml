@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2024-12-07T15:00:00" DATEECHEANCE="2024-12-08T18:00:00" DATEVALIDITE="2024-12-08T18:00:00" DATEDIFFUSION="2024-12-07T15:24:00" AMENDEMENT="false">
+  <DateValidite>2024-12-08T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="3" EVOLURISQUE1="4" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="4" COMMENTAIRE="Indice de risque marqué évoluant en fort." RISQUEMAXIJ2="4" DATE_RISQUE_J2="2024-12-09T00:00:00"/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL><![CDATA[Plaques en formation.]]></ACCIDENTEL>
+    <NATUREL><![CDATA[Grandes à très grandes avalanches]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : Grandes à très grandes avalanches
+Déclenchements skieurs : Plaques en formation.]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque fort]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Risque persistant avec des acccumations importantes.]]></CommentaireRisqueJ2>
+    <AVIS>FORT RISQUE D'AVALANCHE</AVIS>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>

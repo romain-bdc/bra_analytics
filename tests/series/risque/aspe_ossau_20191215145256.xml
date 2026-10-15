@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="bra.xslt" type="text/xsl"?>
+<Bulletins nombre="1">
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2019-12-15T16:00:00" DATEECHEANCE="2019-12-16T18:00:00" DATEVALIDITE="2019-12-16T18:00:00" DATEDIFFUSION="2019-12-15T14:52:56" AMENDEMENT="false">
+  <DateValidite>2019-12-16T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="&lt;2600" ALTITUDE="2600" RISQUE2="3" EVOLURISQUE2="" LOC2="&gt;2600" RISQUEMAXI="3" COMMENTAIRE="Au-dessus de 2600 m : Risque marqu&#233;. En-dessous : Risque limit&#233;."/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="false" NW="false" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL>Plaques &#224; haute altitude</ACCIDENTEL>
+    <NATUREL>Possible en Sud, neige humide</NATUREL>
+    <RESUME>D&#233;parts spontan&#233;s : Possible en Sud, neige humide
+D&#233;clenchements skieurs : Plaques &#224; haute altitude</RESUME>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>
+
+
+</Bulletins>

@@ -2,6 +2,9 @@
 data/
 *.xml
 !tests/fixtures/*.xml
+# Series de bulletins consecutifs (tests du bloc risque) : des fixtures elles
+# aussi, tenues hors de tests/fixtures/ parce que `build()` y lit recursivement.
+!tests/series/**/*.xml
 
 # Sorties et journaux d'execution
 warehouse/

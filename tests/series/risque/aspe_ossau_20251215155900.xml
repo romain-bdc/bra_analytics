@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2025-12-15T16:00:00" DATEECHEANCE="2025-12-16T18:00:00" DATEVALIDITE="2025-12-16T18:00:00" DATEDIFFUSION="2025-12-15T15:59:00" AMENDEMENT="false">
+  <DateValidite>2025-12-16T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="1" EVOLURISQUE1="" LOC1="&lt;2200" ALTITUDE="2200" RISQUE2="2" EVOLURISQUE2="" LOC2="&gt;2200" RISQUEMAXI="2" COMMENTAIRE="Au-dessus de 2200m indice de risque limité, plus bas indice faible." RISQUEMAXIJ2="2" DATE_RISQUE_J2="2025-12-17T00:00:00"/>
+    <PENTE NE="true" E="true" SE="false" S="false" SW="false" W="false" NW="true" N="true" COMMENTAIRE="En crêtes frontières"/>
+    <ACCIDENTEL><![CDATA[plaques en nord, peu épaisses au-dessus de 2200m, plaques plus anciennes au-dessus de 2500m.]]></ACCIDENTEL>
+    <NATUREL><![CDATA[rares, en neige humide, coulées sous 2200m, quelques cassures linéaires au-dessus.]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : rares, en neige humide, coulées sous 2200m, quelques cassures linéaires au-dessus.
+Déclenchements skieurs : plaques en nord, peu épaisses au-dessus de 2200m, plaques plus anciennes au-dessus de 2500m.]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque limité]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Temps calme au programme, maintien d'un risque limité en secteurs nord d'altitude.]]></CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>
