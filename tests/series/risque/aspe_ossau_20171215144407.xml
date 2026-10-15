@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2017-12-15T16:00:00" DATEECHEANCE="2017-12-16T18:00:00" DATEVALIDITE="2017-12-16T18:00:00" DATEDIFFUSION="2017-12-15T14:44:07" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="3" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="3" COMMENTAIRE="Risque marqué." />
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>Surtout dans une large exposition Sud-Est</ACCIDENTEL>
+    <NATUREL>Dans les pentes trés raides au cours des chutes.</NATUREL>
+    <RESUME>Départs spontanés : Dans les pentes trés raides au cours des chutes.
+Déclenchements skieurs : Surtout dans une large exposition Sud-Est</RESUME>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>

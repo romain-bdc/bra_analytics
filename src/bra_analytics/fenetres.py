@@ -173,3 +173,26 @@ def comparable(saison: str) -> bool:
 
 def motif_exclusion(saison: str) -> str | None:
     return SAISONS_NON_COMPARABLES.get(saison)
+
+
+def _litteral(texte: str) -> str:
+    """Chaine Python -> litteral texte SQL.
+
+    `repr()` ne convient pas : sur une chaine contenant une apostrophe il rend
+    des guillemets doubles, que SQL lit comme un identifiant de colonne et non
+    comme du texte. Les motifs d'exclusion sont rediges en francais, donc
+    pleins d'apostrophes.
+    """
+    return "'" + texte.replace("'", "''") + "'"
+
+
+def sql_exclusions() -> str:
+    """Saisons non comparables et leur motif, en litteral `VALUES` SQL.
+
+    Ecrit une seule fois ici : les vues de `build.py` et de la couche
+    metriques le lisent, aucune ne recopie la liste.
+    """
+    return ", ".join(
+        f"({_litteral(saison)}, {_litteral(motif)})"
+        for saison, motif in SAISONS_NON_COMPARABLES.items()
+    )

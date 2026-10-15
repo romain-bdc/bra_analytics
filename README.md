@@ -189,10 +189,19 @@ La base DuckDB expose chaque table, plus des vues de travail :
 | Vue | Grain | Usage |
 |---|---|---|
 | `risque_journalier` | 1 ligne / massif / **jour couvert** | séries temporelles, sur deux axes : `jour_validite` (calendaire) et `jour_de_saison` (rang depuis l'ouverture du massif) |
-| `couverture` | 1 ligne / massif / saison | repérer les trous d'archive |
+| `couverture` | 1 ligne / massif / saison | repérer les trous d'archive (hors lignes `massif_coherent = false`) |
 | `profil_saison` | 1 ligne / massif / saison | profil d'une saison, massif par massif |
 | `saison_fenetre` | 1 ligne / saison / fenêtre | **comparaisons inter-saisons** |
 | `palier_tranche` | 1 ligne / valeur mesurée à une altitude | enneigement, neige fraîche et vent par tranche normée (< 1800, 1800–2400, ≥ 2400 m) |
+| `risque_jour` | 1 ligne / massif / jour couvert | risque du jour, variation depuis la veille, écart à la normale |
+| `risque_episode` | 1 ligne / épisode ≥ 3 / portée | épisodes, avec ce qui les rompt ou les tronque |
+| `risque_saison` | 1 ligne / massif / saison / portée | métriques de risque de la spec § 5.1 |
+| `risque_second_indice` | 1 ligne / massif / jour couvert | `risque1` / `risque2` / `loc_type`, vue experte |
+
+Les quatre vues `risque_*` forment le bloc risque de la couche métriques ; leurs définitions,
+et les fonctions Python qui les lisent (`bra_analytics.metriques.risque`), sont au
+[glossaire, § 9](docs/glossaire.md#9-couche-métriques--bloc-risque). Les comparaisons
+inter-saisons y refusent toute fenêtre autre que `coeur`.
 
 Partitionnement par saison nivologique (`2025-2026` = septembre 2025 → août 2026), dérivé de
 `DATEBULLETIN` et non du chemin source — les deux divergent en 2016.

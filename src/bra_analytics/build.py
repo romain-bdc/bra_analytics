@@ -22,7 +22,7 @@ import duckdb
 import polars as pl
 
 from . import schema
-from .fenetres import FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES
+from .fenetres import FENETRES, SAISON_COMPLETE, sql_exclusions
 from .massifs import BY_ID, libelle_coherent
 from .parser import ParseError, ParsedBulletin, parse_file
 from .tranches import sql_case as sql_case_tranche
@@ -286,17 +286,6 @@ def write_warehouse(
     return written
 
 
-def _litteral(texte: str) -> str:
-    """Chaine Python -> litteral texte SQL.
-
-    `repr()` ne convient pas : sur une chaine contenant une apostrophe il rend
-    des guillemets doubles, que SQL lit comme un identifiant de colonne et non
-    comme du texte. Les motifs d'exclusion sont redigees en francais, donc
-    pleins d'apostrophes.
-    """
-    return "'" + texte.replace("'", "''") + "'"
-
-
 def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
     """Cree une base DuckDB exposant l'entrepot en vues, plus une vue d'analyse."""
     warehouse = Path(warehouse).resolve()
@@ -406,10 +395,7 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         # Les saisons non comparables ne sont pas filtrees mais etiquetees.
         # `bra check` a montre qu'une lacune signalee se traite ; une lacune
         # supprimee se redecouvre au milieu d'une analyse.
-        motifs = ", ".join(
-            f"({_litteral(saison)}, {_litteral(motif)})"
-            for saison, motif in SAISONS_NON_COMPARABLES.items()
-        )
+        motifs = sql_exclusions()
         portees = "\n              UNION ALL BY NAME\n".join(
             f"              (SELECT '{f.nom}' AS fenetre, {f.comparable_entre_saisons} "
             f"AS comparable_entre_saisons, {f.sql_duree()} AS jours_fenetre, * "
@@ -474,6 +460,11 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         # Couverture : ce qui manque compte autant que ce qui est present.
         # L'archive comporte des journees partielles (07/02/2023 : 8 bulletins
         # sur 36) et le massif 71 disparait en 2025-2026.
+        #
+        # Restreinte a `massif_coherent` : sans ce filtre, le message technique
+        # du 05/02/2016 diffuse sous `ID="3"` ouvrait la saison 2015-2016 du
+        # Mont-Blanc un mois trop tot, avec 45 jours manquants fictifs. La ligne
+        # reste dans `risque_journalier`, et `bra info` la liste.
         con.execute(
             """
             CREATE OR REPLACE VIEW couverture AS
@@ -490,6 +481,7 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
                 date_diff('day', min(jour_validite), max(jour_validite)) + 1 - count(*)
                                                        AS jours_manquants
             FROM risque_journalier
+            WHERE massif_coherent
             GROUP BY saison, massif_id
             """
         )
@@ -594,6 +586,12 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
                 FROM paliers p JOIN b USING (massif_id, date_bulletin)
                 """
             )
+
+        # Couche metriques, bloc risque (spec section 5.1). Import local : le
+        # module s'appuie lui-meme sur `build` pour ses litteraux SQL.
+        from .metriques.risque import creer_vues as creer_vues_risque
+
+        creer_vues_risque(con)
 
         con.execute("CHECKPOINT")
     finally:

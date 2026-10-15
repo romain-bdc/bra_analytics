@@ -162,6 +162,26 @@ def test_saison_fenetre_ecarte_la_ligne_hors_perimetre(tmp_path) -> None:
         con.close()
 
 
+def test_couverture_ecarte_la_ligne_hors_perimetre(tmp_path) -> None:
+    """Le message technique du 05/02/2016 diffuse sous `ID="3"` ne doit pas
+    avancer le debut de saison du Mont-Blanc dans `couverture` : sur l'entrepot
+    complet il y ajoutait 45 jours manquants fictifs."""
+    out, db = tmp_path / "warehouse", tmp_path / "bra.duckdb"
+    build(FIXTURES, out, db)
+    c = duckdb.connect(str(db), read_only=True)
+    try:
+        premier, couverts = c.execute(
+            "SELECT premier_jour, jours_couverts FROM couverture "
+            "WHERE massif_id = 3 AND saison = '2015-2016'").fetchone()
+        (attendu,) = c.execute(
+            "SELECT min(jour_validite) FROM risque_journalier "
+            "WHERE massif_id = 3 AND saison = '2015-2016' AND massif_coherent").fetchone()
+    finally:
+        c.close()
+    assert premier == attendu
+    assert couverts == 1
+
+
 def test_couverture_se_rapporte_aux_massifs_actifs(tmp_path) -> None:
     """Le denominateur suit les massifs reellement diffuses, pas un effectif fige.
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2024-12-20T16:00:00" DATEECHEANCE="2024-12-21T18:00:00" DATEVALIDITE="2024-12-21T18:00:00" DATEDIFFUSION="2024-12-20T15:49:00" AMENDEMENT="false">
+  <DateValidite>2024-12-21T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="2" COMMENTAIRE="Indice de risque limité." RISQUEMAXIJ2="2" DATE_RISQUE_J2="2024-12-22T00:00:00"/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL><![CDATA[Rares plaques dans la neige récente au dessus de 2000m]]></ACCIDENTEL>
+    <NATUREL><![CDATA[Nombreuses petites sous la pluie en plus de quelques plaques de fond. ]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : Nombreuses petites sous la pluie en plus de quelques plaques de fond. 
+Déclenchements skieurs : Rares plaques dans la neige récente au dessus de 2000m]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque limité]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Peu de changement au début toujours dans la douceur et l'humidité avant qu'en cours d'après midi une bonne chute de neige débute et se poursuive la nuit suivante avec du vent fort faisant ainsi doucement monter les risques. ]]></CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>

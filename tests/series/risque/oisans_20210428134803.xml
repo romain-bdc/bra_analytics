@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="bra.xslt" type="text/xsl"?>
+<Bulletins nombre="2">
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="15" MASSIF="OISANS" PRODUCTEUR="CDM381" DATEBULLETIN="2021-04-28T16:00:00" DATEECHEANCE="2021-04-29T18:00:00" DATEVALIDITE="2021-04-29T18:00:00" DATEDIFFUSION="2021-04-28T13:48:03" AMENDEMENT="false">
+  <DateValidite>2021-04-29T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="&lt;2500" ALTITUDE="2500" RISQUE2="2" EVOLURISQUE2="3" LOC2="&gt;2500" RISQUEMAXI="3" COMMENTAIRE="Au-dessus de 2500 m : Risque limit&#233; &#233;voluant en Risque marqu&#233;. En-dessous : Risque limit&#233;."/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL>Plaques poudreuses en altitude</ACCIDENTEL>
+    <NATUREL>Coul&#233;es ou avalanches moyennes, rare grande humide</NATUREL>
+    <RESUME>D&#233;parts spontan&#233;s : Coul&#233;es ou avalanches moyennes, rare grande humide
+D&#233;clenchements skieurs : Plaques poudreuses en altitude</RESUME>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>
+
+
+</Bulletins>

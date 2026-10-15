@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2024-12-15T16:00:00" DATEECHEANCE="2024-12-16T18:00:00" DATEVALIDITE="2024-12-16T18:00:00" DATEDIFFUSION="2024-12-15T15:36:00" AMENDEMENT="false">
+  <DateValidite>2024-12-16T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="&lt;1800" ALTITUDE="1800" RISQUE2="3" EVOLURISQUE2="" LOC2="&gt;1800" RISQUEMAXI="3" COMMENTAIRE="Au-dessus de 1800m indice de risque marqué, plus bas indice limité." RISQUEMAXIJ2="3" DATE_RISQUE_J2="2024-12-17T00:00:00"/>
+    <PENTE NE="true" E="true" SE="false" S="true" SW="false" W="false" NW="true" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL><![CDATA[Plaques friables faciles à déclencher dans certaines pentes raides]]></ACCIDENTEL>
+    <NATUREL><![CDATA[Nombreuses de surface en neige humide dans les pentes sud raides qui chaufferont le plus]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : Nombreuses de surface en neige humide dans les pentes sud raides qui chaufferont le plus
+Déclenchements skieurs : Plaques friables faciles à déclencher dans certaines pentes raides]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque marqué]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Poursuite du beau et doux.  Risque en baisse avec d'une part le tassement lent des plaques en place et d'autres part de moins en moins de coulées de fonte en sud car déjà bien purgées ce lundi  avec en plus  du  regel quand même attendu la nuit de lundi à mardi. ]]></CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>

@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2018-12-15T16:00:00" DATEECHEANCE="2018-12-16T18:00:00" DATEVALIDITE="2018-12-16T18:00:00" DATEDIFFUSION="2018-12-15T14:40:45" AMENDEMENT="false">
+  <DateValidite>2018-12-16T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="2" COMMENTAIRE="Risque limité." />
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="" />
+    <ACCIDENTEL>En coupant une pente raide</ACCIDENTEL>
+    <NATUREL>Avalanche de neige humide surtout aux altitudes moyennes</NATUREL>
+    <RESUME>Départs spontanés : Avalanche de neige humide surtout aux altitudes moyennes
+Déclenchements skieurs : En coupant une pente raide</RESUME>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>
