@@ -567,6 +567,12 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
                          m.vent_haut_vitesse_kmh AS vent_vitesse_kmh,
                          m.vent_haut_direction AS vent_direction
                   FROM meteo m JOIN b USING (massif_id, date_bulletin)
+                  -- Pas de second vent (`ALTITUDEVENT2="9999"` avant 2024 dans
+                  -- les Alpes du Sud) : il n'y a pas de palier a rattacher. Les
+                  -- lignes `meteo` restent, et `bra check` compte ces bulletins
+                  -- (`vent_unique`) ; leur seul vent, a 3000 m, entre par
+                  -- `vent_bas` et tombe en tranche haute comme apres 2024.
+                  WHERE b.vent_altitude_haute_m IS NOT NULL
                 )
                 SELECT
                   p.source, p.saison, p.massif_id, p.date_bulletin, p.origine, p.jour,

@@ -94,3 +94,22 @@ def test_massif_dont_les_paliers_tombent_dans_une_seule_tranche(con) -> None:
     assert (nf["altitudes"], nf["tranches"], nf["n_tranches"]) == ("1800", "moyenne", 1)
     enn = ligne("enneigement")
     assert (enn["tranches"], enn["n_tranches"]) == ("basse, moyenne, haute", 3)
+
+
+def _vents(con, massif: int, jour: date) -> list[tuple]:
+    return con.execute(
+        "SELECT DISTINCT source, altitude_m, tranche FROM palier_tranche "
+        "WHERE source LIKE 'vent_%' AND massif_id = ? AND jour = ? ORDER BY altitude_m",
+        [massif, jour],
+    ).fetchall()
+
+
+def test_vent_a_3000_m_en_tranche_haute_aux_deux_epoques(con) -> None:
+    """Queyras : jusqu'en 2023 un seul vent, a 3000 m, porte par `FF1`
+    (`ALTITUDEVENT2="9999"`) ; depuis 2024, 2000 et 3000 m. Le vent a 3000 m
+    change de colonne mais pas de tranche : la serie haute est continue, et
+    aucune altitude fictive n'apparait."""
+    assert _vents(con, 17, date(2023, 1, 15)) == [("vent_bas", 3000, "haute")]
+    assert _vents(con, 17, date(2024, 1, 15)) == [
+        ("vent_bas", 2000, "moyenne"), ("vent_haut", 3000, "haute"),
+    ]
