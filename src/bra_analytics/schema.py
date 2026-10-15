@@ -69,6 +69,9 @@ BULLETINS: dict[str, pl.DataType] = {
     # enneigement du jour
     "enneigement_limite_nord_m": pl.Int32,
     "enneigement_limite_sud_m": pl.Int32,
+    # `-1` d'un releve fait : pas d'enneigement continu (nul si non releve).
+    "sans_enneigement_continu_nord": pl.Boolean,
+    "sans_enneigement_continu_sud": pl.Boolean,
     "vent_altitude_basse_m": pl.Int32,
     "vent_altitude_haute_m": pl.Int32,
     # provenance
@@ -106,6 +109,8 @@ ENNEIGEMENT: dict[str, pl.DataType] = {
     "date_enneigement": pl.Datetime("us"),
     "limite_nord_m": pl.Int32,
     "limite_sud_m": pl.Int32,
+    "sans_enneigement_continu_nord": pl.Boolean,
+    "sans_enneigement_continu_sud": pl.Boolean,
     "altitude_m": pl.Int32,
     "epaisseur_nord_cm": pl.Int32,
     "epaisseur_sud_cm": pl.Int32,

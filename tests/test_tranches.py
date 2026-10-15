@@ -65,11 +65,12 @@ def test_tranche_absente_reste_vide(con) -> None:
     assert sorted({alt for alt, _ in soir}) == [1500, 1800, 2100]
 
 
-def test_sentinelle_sans_tranche_mais_visible(con) -> None:
-    """Couserans, amendement du matin : `ALTI="-1"`. La ligne reste dans la vue,
-    sans tranche ; un `CASE` naif l'aurait rangee en tranche basse."""
+def test_releve_vide_sans_tranche_mais_visible(con) -> None:
+    """Couserans, amendement du matin : `ALTI="-1"` sur les trois paliers,
+    releve non fait. Le parser rend l'altitude nulle ; la ligne reste dans la
+    vue, sans tranche -- un `CASE` naif sur `-1` l'aurait rangee en basse."""
     matin = _par_bulletin(con, 69, date(2016, 3, 31))[6]
-    assert matin and all(alt == -1 and tr is None for alt, tr in matin)
+    assert matin and all(alt is None and tr is None for alt, tr in matin)
 
 
 def test_massif_dont_les_paliers_tombent_dans_une_seule_tranche(con) -> None:

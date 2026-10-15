@@ -341,21 +341,58 @@ def _extract_meteo(node: ET.Element, path: str, origine: str) -> list[dict[str, 
     return rows
 
 
+def _positif(value: str | None) -> int | None:
+    """Altitude ou epaisseur d'enneigement, `-1` valant « non releve »."""
+    parsed = _int(value)
+    if parsed is not None and parsed < 0:
+        return None
+    return parsed
+
+
+def _limites_enneigement(enn: ET.Element) -> dict[str, Any]:
+    """Limites d'enneigement continu et indicateur d'absence, par versant.
+
+    `LimiteNord` / `LimiteSud` valent `-1` dans deux cas que seul le releve
+    distingue. Releve vide (les trois paliers a `ALTI="-1"`, 1 878 releves
+    avant 2024) : rien n'a ete observe. Releve fait : sur les 36 massifs,
+    chaque `-1` (2 903 releves du jour cote sud) accompagne une epaisseur nulle
+    a tous les paliers -- il n'y a pas d'enneigement continu. La limite devient
+    nulle dans les deux cas ; l'indicateur `sans_enneigement_continu_*` garde
+    la difference (vrai, ou nul si rien n'a ete releve).
+    """
+    niveaux = enn.findall("NIVEAU")
+    releve_vide = bool(niveaux) and all(_positif(n.get("ALTI")) is None for n in niveaux)
+    out: dict[str, Any] = {}
+    for cote, attr, ep in (("nord", "LimiteNord", "N"), ("sud", "LimiteSud", "S")):
+        brute = _int(enn.get(attr))
+        if brute is None or releve_vide:
+            limite, sans = None, None
+        elif brute < 0:
+            epaisseurs = [_positif(n.get(ep)) for n in niveaux]
+            # Une limite absente avec de la neige quelque part sur le versant
+            # serait contradictoire : on ne l'affirme pas (jamais vu a ce jour).
+            sans = True if all(e == 0 for e in epaisseurs) else None
+            limite = None
+        else:
+            limite, sans = brute, False
+        out[f"limite_{cote}_m"] = limite
+        out[f"sans_enneigement_continu_{cote}"] = sans
+    return out
+
+
 def _extract_enneigement(node: ET.Element, path: str, origine: str) -> list[dict[str, Any]]:
     rows = []
     for enn in node.findall(path):
         moment = parse_datetime(enn.get("DATE"))
-        limite_n = _int(enn.get("LimiteNord"))
-        limite_s = _int(enn.get("LimiteSud"))
+        limites = _limites_enneigement(enn)
         for niveau in enn.findall("NIVEAU"):
             rows.append({
                 "origine": origine,
                 "date_enneigement": moment,
-                "limite_nord_m": limite_n,
-                "limite_sud_m": limite_s,
-                "altitude_m": _int(niveau.get("ALTI")),
-                "epaisseur_nord_cm": _int(niveau.get("N")),
-                "epaisseur_sud_cm": _int(niveau.get("S")),
+                **limites,
+                "altitude_m": _positif(niveau.get("ALTI")),
+                "epaisseur_nord_cm": _positif(niveau.get("N")),
+                "epaisseur_sud_cm": _positif(niveau.get("S")),
             })
     return rows
 
@@ -464,6 +501,11 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
     stabilite_texte = _bloc_texte(node, "STABILITE/TEXTESANSTITRE") or _bloc_texte(node, "STABILITE/TEXTE")
 
     enneigement_jour = node.find("ENNEIGEMENT")
+    limites_jour = (
+        _limites_enneigement(enneigement_jour) if enneigement_jour is not None
+        else dict.fromkeys(("limite_nord_m", "limite_sud_m", "sans_enneigement_continu_nord",
+                            "sans_enneigement_continu_sud"))
+    )
 
     bulletin = {
         # --- cle et partitionnement ---
@@ -517,8 +559,10 @@ def parse_bulletin_element(node: ET.Element, source: str | None = None) -> Parse
         "sat1": _indice(sat.get("SAT1")) if sat is not None else None,
         "sat2": _indice(sat.get("SAT2")) if sat is not None else None,
         # --- enneigement du jour ---
-        "enneigement_limite_nord_m": _int(enneigement_jour.get("LimiteNord")) if enneigement_jour is not None else None,
-        "enneigement_limite_sud_m": _int(enneigement_jour.get("LimiteSud")) if enneigement_jour is not None else None,
+        "enneigement_limite_nord_m": limites_jour["limite_nord_m"],
+        "enneigement_limite_sud_m": limites_jour["limite_sud_m"],
+        "sans_enneigement_continu_nord": limites_jour["sans_enneigement_continu_nord"],
+        "sans_enneigement_continu_sud": limites_jour["sans_enneigement_continu_sud"],
         "vent_altitude_basse_m": _int(_attr_fallback(node.find("METEO"), "ALTITUDEVENT1")),
         "vent_altitude_haute_m": _int(_attr_fallback(node.find("METEO"), "ALTITUDEVENT2")),
         # --- provenance ---

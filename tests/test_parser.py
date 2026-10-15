@@ -519,3 +519,45 @@ def test_neige_fraiche_moderne_sans_secteur() -> None:
     for r in b.neige_fraiche:
         assert r["secteur1_libelle"] is None and r["secteur1_cumul_cm"] is None
         assert r["cumul_min_cm"] is not None and r["cumul_min_cm"] <= r["cumul_max_cm"]
+
+
+# --------------------------------------------------------------------------
+# Enneigement : releve vide et absence d'enneigement continu
+# --------------------------------------------------------------------------
+
+def test_releve_d_enneigement_vide_devient_nul() -> None:
+    """Andorre, 05/03/2023 : les trois paliers valent `ALTI="-1" N="-1" S="-1"`
+    et les limites `-1`. Le releve n'a pas ete fait : rien n'est mesure, et
+    l'absence d'enneigement continu n'est pas affirmee pour autant."""
+    (b,) = parse_file(fixture("anomalie_2023_andorre_releves_vides.xml"))
+    assert len(b.enneigement) == 3
+    for r in b.enneigement:
+        assert r["altitude_m"] is None
+        assert r["epaisseur_nord_cm"] is None and r["epaisseur_sud_cm"] is None
+        assert r["limite_nord_m"] is None and r["limite_sud_m"] is None
+        assert r["sans_enneigement_continu_nord"] is None
+        assert r["sans_enneigement_continu_sud"] is None
+    assert b.bulletin["enneigement_limite_sud_m"] is None
+    assert b.bulletin["sans_enneigement_continu_sud"] is None
+
+
+def test_limite_absente_sur_releve_sans_neige() -> None:
+    """Couserans, 05/11/2025 : `LimiteSud="-1" LimiteNord="-1"`, epaisseur 0 a
+    1500, 2000 et 2500 m. Le `-1` dit qu'il n'y a pas d'enneigement continu :
+    c'est une information, conservee par l'indicateur, pas une lacune."""
+    (b,) = parse_file(fixture("anomalie_2025_couserans_sans_enneigement.xml"))
+    assert [r["altitude_m"] for r in b.enneigement] == [1500, 2000, 2500]
+    for r in b.enneigement:
+        assert r["limite_nord_m"] is None and r["limite_sud_m"] is None
+        assert r["sans_enneigement_continu_nord"] is True
+        assert r["sans_enneigement_continu_sud"] is True
+    assert b.bulletin["enneigement_limite_nord_m"] is None
+    assert b.bulletin["sans_enneigement_continu_nord"] is True
+
+
+def test_limite_renseignee_n_est_pas_absente() -> None:
+    (b,) = parse_file(fixture("v4_2024_aspe_ossau.xml"))
+    r = b.enneigement[0]
+    assert r["limite_sud_m"] is not None and r["limite_sud_m"] > 0
+    assert r["sans_enneigement_continu_sud"] is False
+    assert b.bulletin["sans_enneigement_continu_sud"] is False
