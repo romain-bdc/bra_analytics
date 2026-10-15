@@ -164,6 +164,11 @@ mesure.
 
 **Dépend de** : T2, T5.
 
+**Règles de parsing arrêtées le 15 octobre 2026** (glossaire § 4 et § 5) : secteurs de neige
+fraîche d'avant 2024 conservés et bornes dérivées, `-2` lu comme non observé, relevés vides et
+limites `-1` convertis avec l'indicateur `sans_enneigement_continu_*`. La rupture de série de
+l'hiver 2023-2024 sur la neige fraîche est à annoncer par toute métrique qui l'enjambe.
+
 ### T8. Bloc météo
 
 Métriques de la spec § 5.3. Commencer par trancher la convention d'extraction (§ 4.3) à la lumière
@@ -177,6 +182,11 @@ les séries ne mélangent jamais deux horizons de prévision ; les seuils sont p
 valeurs par défaut justifiées par les distributions de T2.
 
 **Dépend de** : T2, T5.
+
+**Convention arrêtée le 15 octobre 2026** (spec § 4.3, glossaire § 3) : prévision seule, valeur
+du jour sur les échéances de 06 h et 12 h ; vent lu par altitude ou tranche ; échéances vides et
+`ALTITUDEVENT2="9999"` convertis au parsing ; vents hors [0, 300] km/h signalés par `bra check`
+et exclus des métriques. Reste à construire la vue journalière et les métriques.
 
 ### T9. Bloc rose des pentes et situations typiques
 

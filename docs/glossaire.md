@@ -276,8 +276,16 @@ standard EAWS des cinq *avalanche problems*.
 |---|---|---|---|
 | `enneigement_limite_nord_m` | `<ENNEIGEMENT @LimiteNord>` | m | Altitude d'enneigement continu en versant nord |
 | `enneigement_limite_sud_m` | `<ENNEIGEMENT @LimiteSud>` | m | Idem versant sud |
+| `sans_enneigement_continu_nord` / `_sud` | *(calculé)* | | Vrai si la limite vaut `-1` sur un relevé fait (voir § 4) |
 | `vent_altitude_basse_m` | `<METEO @ALTITUDEVENT1>` | m | Altitude de référence du vent bas |
-| `vent_altitude_haute_m` | `<METEO @ALTITUDEVENT2>` | m | Altitude de référence du vent haut |
+| `vent_altitude_haute_m` | `<METEO @ALTITUDEVENT2>` | m | Altitude du vent haut ; nulle s'il n'y a qu'un vent (`9999`) |
+
+> **Un seul vent dans les Alpes du Sud jusqu'en 2023.** Les neuf massifs 13 et 16 à 23 portent
+> `ALTITUDEVENT1="3000" ALTITUDEVENT2="9999"` et `FF2="-1"` : un vent unique, à 3000 m, dans la
+> colonne « basse ». Depuis 2024 ils ont 2000 et 3000 m. `9999` est lu comme « pas de second
+> vent » (altitude nulle) ; `bra check` compte ces bulletins sous `vent_unique`. Toute métrique
+> de vent passe donc par l'altitude ou la tranche, jamais par le rôle bas / haut : le vent à
+> 3000 m de ces massifs change de colonne en 2024, pas de tranche.
 
 ### 2.10 Provenance
 
@@ -314,6 +322,24 @@ Prévisions météo par échéance. Clé étrangère : `(massif_id, date_bulleti
 **Cardinalités :** 3 échéances de prévision jusqu'en 2023, 4 ensuite ; 21 puis 28 échéances
 d'historique (3 puis 4 par jour sur 7 jours).
 
+> **Échéance vide.** Avant 2024, des échéances entières arrivent à `-1` (19 822 sur les 36
+> massifs, dont 244 en prévision) : vent, isothermes et temps sensible deviennent nuls, la ligne
+> reste. Depuis, 4 454 échéances arrivent avec des attributs vides (142 en prévision). `bra check`
+> compte les unes et les autres sous `echeance_meteo_vide`. Seul `-1` est converti ; une
+> vitesse hors [0, 300] km/h (400 et 530 km/h, −5 km/h, isolées) est une **erreur** de
+> `bra check`, conservée telle quelle et exclue des métriques.
+
+> **Convention d'extraction (spec § 4.3, arrêtée le 15 octobre 2026) : prévision seule,
+> valeur du jour sur 06 h et 12 h.** Pour un jour donné, la météo est lue dans le bulletin qui
+> le couvre (`origine = 'prevision'`, échéance sur `jour_validite`) et jamais dans le bloc
+> historique. Raisons mesurées : l'historique manque toute la saison 2015-2016 et 1 à 2 % des
+> jours jusqu'en 2023, il ne porte plus `mer_nuages_m` depuis 2024, et il diffère à peine de la
+> prévision (isotherme 0 °C : 32 à 37 m d'écart moyen, plus de 500 m dans 1,1 à 1,3 % des cas ;
+> temps sensible identique dans 75 à 80 % des cas). Le préférer aurait mêlé deux horizons pour
+> un gain de l'ordre de 35 m. Les heures diffèrent selon l'époque — 00 h, 06 h, 12 h de J
+> jusqu'en 2023 ; 06 h, 12 h, 18 h de J et 00 h de J+1 ensuite — : la valeur du jour se calcule
+> sur les seules échéances communes, **06 h et 12 h**.
+
 > **Directions de vent.** La source alterne entre convention anglaise (`NW`, `W`, `SW`, variable
 > noté `_`) jusqu'en 2023 et française (`NO`, `O`, `SO`, variable noté `Vrb`) ensuite. Le dataset
 > les harmonise en **convention anglaise** — celle qu'utilise déjà la rose des pentes à toutes
@@ -329,11 +355,22 @@ d'historique (3 puis 4 par jour sur 7 jours).
 |---|---|---|---|
 | `origine` | *(calculé)* | | `jour` ou `historique` |
 | `date_enneigement` | `@DATE` | | Date de la mesure |
-| `altitude_m` | `<NIVEAU @ALTI>` | m | Altitude du palier (3 paliers par relevé) |
+| `altitude_m` | `<NIVEAU @ALTI>` | m | Altitude du palier (3 paliers par relevé) ; nulle si non relevé |
 | `epaisseur_nord_cm` | `<NIVEAU @N>` | cm | Épaisseur en versant nord |
 | `epaisseur_sud_cm` | `<NIVEAU @S>` | cm | Épaisseur en versant sud |
-| `limite_nord_m` | `@LimiteNord` | m | Altitude d'enneigement continu, versant nord |
+| `limite_nord_m` | `@LimiteNord` | m | Altitude d'enneigement continu, versant nord ; nulle si absente |
 | `limite_sud_m` | `@LimiteSud` | m | Idem versant sud |
+| `sans_enneigement_continu_nord` / `_sud` | *(calculé)* | | Vrai : pas d'enneigement continu ; nul : non relevé |
+
+> **Un `-1` de limite n'est pas une lacune.** `LimiteNord` / `LimiteSud` valent `-1` dans deux
+> cas. **Relevé non fait** : les trois paliers valent `ALTI="-1"` (1 878 relevés avant 2024) ;
+> altitudes, épaisseurs et limites deviennent nulles, l'indicateur aussi (`bra check` :
+> `releve_enneigement_vide`). **Relevé fait** : chaque limite `-1` accompagne une épaisseur nulle
+> à tous les paliers (2 903 relevés du jour côté sud, aucun contre-exemple) ; il n'y a pas
+> d'enneigement continu. La limite devient nulle — une altitude fictive fausserait toute
+> moyenne — et `sans_enneigement_continu_*` vaut vrai (`bra check` :
+> `sans_enneigement_continu`). Une métrique de date d'enneigement continu lit l'indicateur, pas
+> la seule limite.
 
 ---
 
@@ -346,21 +383,27 @@ Cumuls de neige fraîche sur 24 h, de 06 UTC à 06 UTC.
 | `origine` | *(calculé)* | | `prevision` ou `historique` |
 | `date_cumul` | `@DATE` | | Jour du cumul |
 | `altitude_mesure_m` | `@ALTITUDESS` | m | Altitude de référence de la mesure |
-| `cumul_min_cm` | `@SS24Min` / `@SS241` | cm | Borne basse de la fourchette |
-| `cumul_max_cm` | `@SS24Max` / `@SS242` | cm | Borne haute |
+| `secteur1_libelle` / `secteur2_libelle` | `@SECTEURSS1` / `@SECTEURSS2` | | Secteurs nommés *(≤ 2023)* : `massif` seul, ou `Nord`/`Sud`, `Ouest`/`Est`… |
+| `secteur1_cumul_cm` / `secteur2_cumul_cm` | `@SS241` / `@SS242` | cm | Cumul de chaque secteur *(≤ 2023)* |
+| `cumul_min_cm` | `@SS24Min`, ou dérivé | cm | Borne basse ; avant 2024, le plus faible des secteurs |
+| `cumul_max_cm` | `@SS24Max`, ou dérivé | cm | Borne haute ; avant 2024, le plus fort des secteurs |
 
 Six échéances par bulletin : 4 analyses passées + 2 prévisions.
 
-> Les attributs ont été renommés en 2024 (`SS241`/`SS242` → `SS24Min`/`SS24Max`). Le parser
-> accepte les deux.
+> **Deux lectures, une rupture de série à l'hiver 2023-2024** (décision du 15 octobre 2026).
+> Jusqu'en 2023, le bloc nomme un ou deux secteurs (`SECTEURSS1` / `SECTEURSS2`) et `SS241` /
+> `SS242` sont le cumul de **chacun** — pas un minimum et un maximum. Six massifs ont deux
+> secteurs sur 81 à 88 % de leurs lignes : Haute-Tarentaise, Haute-Maurienne, Queyras, Ubaye,
+> Haute-Bigorre, Cerdagne-Canigou ; les autres n'en ont qu'un (`massif`). Le parser conserve
+> les secteurs et en dérive les bornes (secteur unique : min = max). Depuis 2024, `SS24Min` /
+> `SS24Max` sont une fourchette sur le massif, égale dans 66 % des lignes. Les deux se lisent,
+> mais ne mesurent pas la même chose : une comparaison qui enjambe l'hiver 2023-2024 l'annonce.
 
-> **Avant 2024, `SS241` / `SS242` ne sont pas une fourchette.** Le bloc legacy porte
-> `SECTEURSS1` / `SECTEURSS2` (`massif` / vide, `Ouest` / `Est`…) : les deux attributs sont les
-> cumuls de **deux secteurs**, et `SS242="-1"` signifie « pas de second secteur ». La pipeline
-> les range pourtant dans `cumul_min_cm` / `cumul_max_cm` : avant 2024, `cumul_max_cm` vaut
-> `-1` sur 155 668 lignes pyrénéennes sur 190 116. *Inféré* de la structure du fichier ; la
-> règle de parsing est à arrêter en T7 avant toute métrique de neige fraîche. Mesure :
-> [`disponibilite.md`](disponibilite.md) § 9.
+> **Valeurs négatives.** `-1` signale l'absence de second secteur ; `-2` (15 à 21 % des lignes
+> 2016-2023 dans chaque massif, à toutes les positions du bloc, disparu en 2024) est lu comme
+> **non observé** — *inféré*, aucun descriptif de l'ancien format ne le documente. Les deux
+> deviennent nuls ; `bra check` compte les cumuls de secteur non observés
+> (`neige_fraiche_non_observee`). Mesure : [`disponibilite.md`](disponibilite.md) § 9.
 
 ### Tranches d'altitude normées — vue `palier_tranche`
 
@@ -388,7 +431,11 @@ valeur — relevé, cumul ou échéance —, pas `jour_validite`.
 > - Neige fraîche et vent ont **une** altitude de référence par bulletin : une seule tranche
 >   par construction. La neige fraîche est mesurée à 1800 m, donc en tranche `moyenne` ; la
 >   tranche `basse` n'a jamais de neige fraîche.
-> - Une altitude `-1` (sentinelle des paliers 2016-2023) garde sa ligne avec `tranche` nulle.
+> - Un relevé non fait (paliers à `ALTI="-1"` avant 2024, altitude rendue nulle par le parser)
+>   garde sa ligne avec `tranche` nulle.
+> - Un bulletin sans second vent (`ALTITUDEVENT2="9999"`, Alpes du Sud jusqu'en 2023) n'a pas de
+>   palier `vent_haut` : son vent unique, à 3000 m, entre par `vent_bas` et tombe en tranche
+>   `haute`, comme le vent à 3000 m de ces massifs après 2024.
 > - L'enneigement reste **indicatif** : la tranche ne transforme pas un palier en mesure.
 
 ---
@@ -447,9 +494,10 @@ Palette documentée dans le descriptif technique.
 | | | 90 | orages |
 | | | 99 | orages violents |
 
-> **Codes hors palette.** Les données contiennent aussi `-1`, `5`, `8`, `9`, `10`, `11`, `12`,
-> `15` et `81`, absents du descriptif. Ils sont conservés bruts dans `temps_sensible`, avec
-> `temps_sensible_libelle` à `NULL`. `-1` signifie vraisemblablement « non renseigné ».
+> **Codes hors palette.** Les données contiennent aussi `5`, `8`, `9`, `10`, `11`, `12`, `15` et
+> `81`, absents du descriptif. Ils sont conservés bruts dans `temps_sensible`, avec
+> `temps_sensible_libelle` à `NULL`. `-1` (« non renseigné », le plus souvent sur une échéance
+> entièrement vide) est rendu nul par le parser, comme les autres valeurs météo à `-1` (§ 3).
 
 ---
 

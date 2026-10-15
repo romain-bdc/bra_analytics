@@ -20,6 +20,7 @@ import duckdb
 import polars as pl
 
 from . import schema
+from .quality import VENT_MAX_KMH
 
 # Colonnes de cle ou de provenance : leur presence est garantie par
 # construction, la mesurer n'apprendrait rien.
@@ -77,9 +78,10 @@ def _compte_exploitable(table: str, champ: str) -> str:
     """Agregat SQL comptant les valeurs exploitables d'un champ.
 
     Exploitable = non nul, et pour un entier different de `-1` : la source
-    emploie `-1` comme sentinelle (paliers, epaisseurs, meteo legacy) et la
-    pipeline ne le convertit en nul que pour `RISQUE1`, `PLUIENEIGE` et
-    `MERNUAGES`. Une colonne pleine de `-1` n'est pas une colonne disponible.
+    emploie `-1` comme sentinelle. Le parser la convertit en nul partout ou
+    son sens est etabli (indices, paliers et limites d'enneigement, meteo,
+    neige fraiche) ; le filtre reste pour toute colonne ou elle subsisterait.
+    Une colonne pleine de `-1` n'est pas une colonne disponible.
     """
     conds = [f'"{champ}" IS NOT NULL']
     if schema.TABLES[table][champ] in _ENTIERS:
@@ -378,8 +380,12 @@ def _quantiles(con: duckdb.DuckDBPyConnection) -> list[tuple]:
     # a l'hiver 2023-2024 (`FAMILLE_NEIGE_FRAICHE_HOMOGENE`).
     famille = FAMILLE_NEIGE_FRAICHE_HOMOGENE
     series = (
-        ("vent_haut_vitesse_kmh", "meteo", "prevision", "origine = 'prevision'", "km/h"),
-        ("vent_bas_vitesse_kmh", "meteo", "prevision", "origine = 'prevision'", "km/h"),
+        # Un vent hors plage est une erreur de saisie (`bra check`,
+        # `vent_hors_plage`) : exclu ici comme des metriques.
+        ("vent_haut_vitesse_kmh", "meteo", "prevision",
+         f"origine = 'prevision' AND vent_haut_vitesse_kmh <= {VENT_MAX_KMH}", "km/h"),
+        ("vent_bas_vitesse_kmh", "meteo", "prevision",
+         f"origine = 'prevision' AND vent_bas_vitesse_kmh <= {VENT_MAX_KMH}", "km/h"),
         ("iso_0_m", "meteo", "prevision", "origine = 'prevision'", "m"),
         ("cumul_max_cm", "neige_fraiche", f"historique, famille {famille}",
          f"origine = 'historique' AND format_famille = '{famille}'", "cm"),
@@ -686,9 +692,11 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
 
     s.append("## 9. Sentinelles `-1` restées dans l'entrepôt\n")
     s.append(
-        "La pipeline ne convertit en nul que le `-1` de `RISQUE1`, `PLUIENEIGE` et "
-        "`MERNUAGES`. Ailleurs il reste une valeur, et une somme ou une moyenne le "
-        "compte. Nombre de `-1` par champ et par saison (lignes `massif_coherent`) :\n"
+        "Le parser convertit en nul le `-1` des indices, des paliers et limites "
+        "d'enneigement, de la météo et de la neige fraîche (glossaire § 3 à 5 ; "
+        "`bra check` compte chaque conversion). Là où il subsiste, il reste une "
+        "valeur, et une somme ou une moyenne le compte. Nombre de `-1` par champ et "
+        "par saison (lignes `massif_coherent`) :\n"
     )
     sent = sentinelles(con)
     if sent.height:
@@ -800,9 +808,9 @@ def _section_tranches(con: duckdb.DuckDBPyConnection, saisons: list[str]) -> str
 def sentinelles(con: duckdb.DuckDBPyConnection) -> pl.DataFrame:
     """Valeurs `-1` restees dans les colonnes numeriques, par table et saison.
 
-    La pipeline convertit en nul le `-1` de `RISQUE1`, `PLUIENEIGE` et
-    `MERNUAGES`. Ailleurs il passe tel quel, et une somme ou une moyenne le
-    compte comme une valeur. Seules les lignes non nulles sont rendues.
+    Garde-fou : le parser convertit les sentinelles dont le sens est etabli ;
+    un `-1` qui reapparait ici est une regle a ecrire. Seules les lignes non
+    nulles sont rendues.
     Colonnes : `table`, `champ`, `saison`, `lignes`, `sentinelles`.
     """
     morceaux = []

@@ -177,7 +177,7 @@ def check_filles(frames: dict[str, pl.DataFrame]) -> list[Anomalie]:
         valeurs = ["vent_bas_vitesse_kmh", "vent_haut_vitesse_kmh", "iso_0_m", "temps_sensible"]
         add("echeance_meteo_vide", "signal",
             meteo.filter(pl.all_horizontal(pl.col(c).is_null() for c in valeurs)).height,
-            "echeances meteo sans aucune valeur (-1 partout avant 2024)")
+            "echeances meteo sans aucune valeur (-1 avant 2024, attributs vides ensuite)")
         hors = pl.lit(False)
         for c in ("vent_bas_vitesse_kmh", "vent_haut_vitesse_kmh"):
             hors = hors | ~pl.col(c).is_between(0, VENT_MAX_KMH).fill_null(True)
