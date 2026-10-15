@@ -55,8 +55,8 @@ Le statut est **dérivé** de la disponibilité mesurée plus bas, pas écrit à
 | enneigement | Date d'enneigement continu | **calculable** |  | — |
 | enneigement | Durée d'enneigement | **calculable** |  | — |
 | enneigement | Maximum saisonnier d'épaisseur | **calculable** |  | — |
-| enneigement | Neige fraîche cumulée | **calculable** |  | — |
-| enneigement | Épisodes de chute | **calculable** |  | — |
+| enneigement | Neige fraîche cumulée | **calculable** |  | rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif |
+| enneigement | Épisodes de chute | **calculable** |  | rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif |
 | enneigement | Anomalie d'enneigement | **calculable** |  | — |
 | meteo | Isotherme 0 °C | **calculable** |  | — |
 | meteo | ISO 0 min / max / moyen | **calculable** |  | — |
@@ -66,7 +66,7 @@ Le statut est **dérivé** de la disponibilité mesurée plus bas, pas écrit à
 | meteo | Jours de vent fort | **calculable** |  | — |
 | meteo | Limite pluie / neige | **calculable** |  | — |
 | meteo | Temps sensible | **calculable** |  | — |
-| meteo | Indice de transport par le vent | **calculable** |  | — |
+| meteo | Indice de transport par le vent | **calculable** |  | rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif |
 | meteo | Épisodes de redoux | **calculable** |  | — |
 | rose | Fréquence d'exposition | **calculable** |  | — |
 | rose | Fréquence pondérée | **calculable** |  | — |
@@ -516,7 +516,7 @@ Base des valeurs par défaut de vent fort, d'épisode de chute et de redoux (spe
 | champ | lignes retenues | unité | n | p50 | p75 | p90 | p95 | p99 | max |
 |---|---|---|---|---|---|---|---|---|---|
 | `meteo.vent_haut_vitesse_kmh` | prevision | km/h | 215482 | 30 | 50 | 70 | 80 | 100 | 170 |
-| `meteo.vent_bas_vitesse_kmh` | prevision | km/h | 255293 | 15 | 30 | 45 | 60 | 80 | 150 |
+| `meteo.vent_bas_vitesse_kmh` | prevision | km/h | 255292 | 15 | 30 | 45 | 60 | 80 | 150 |
 | `meteo.iso_0_m` | prevision | m | 255312 | 2400 | 3000 | 3400 | 3700 | 4100 | 5100 |
 | `neige_fraiche.cumul_max_cm` | historique, famille moderne | cm | 138917 | 0 | 3 | 10 | 20 | 40 | 120 |
 
