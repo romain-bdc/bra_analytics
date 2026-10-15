@@ -97,7 +97,9 @@ Les enfreindre ne produit pas une erreur, mais un chiffre faux.
 
 ## Ne pas faire
 
-- Versionner `data/`, `warehouse/`, `dashboard.html`, les Parquet, les XML (sauf `tests/fixtures/`).
+- Versionner `data/`, `warehouse/`, `dashboard.html`, les Parquet, les XML (sauf `tests/fixtures/`, bulletins
+  isolés partagés par tous les tests, et `tests/series/`, suites de jours consécutifs que seuls
+  les tests de métriques lisent : les mêler aux fixtures changerait les saisons vues par tous).
 - Introduire un serveur applicatif ou une base serveur. Le front est statique, le moteur est
   DuckDB sur Parquet, et le volume — quelques dizaines de mégaoctets — ne justifie rien d'autre.
   Une base serveur ne se discutera que le jour où l'alerting mail apportera des écritures

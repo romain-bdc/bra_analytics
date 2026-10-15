@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="68" MASSIF="Luchonnais" DATEBULLETIN="2023-11-04T16:00:00" DATEECHEANCE="2023-11-05T18:00:00" DATEVALIDITE="2023-11-05T18:00:00" DATEDIFFUSION="2023-11-04T15:00:33" AMENDEMENT="false">
+  <DateValidite>2023-11-05T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="-1" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="1" COMMENTAIRE="Risque ." RISQUEMAXIJ2="" DATE_RISQUE_J2="2023-11-06T00:00:00"/>
+    <PENTE NE="false" E="false" SE="false" S="false" SW="false" W="false" NW="false" N="false" COMMENTAIRE=""/>
+    <ACCIDENTEL>En neige humide.</ACCIDENTEL>
+    <NATUREL>En neige humide.</NATUREL>
+    <RESUME>Départs spontanés : En neige humide.
+Déclenchements skieurs : En neige humide.</RESUME>
+    <RisqueJ2/>
+    <CommentaireRisqueJ2>Regel nocturne du manteau neigeux encore en place. Rares averses de neige en journée dans une atmosphère rafraîchie.</CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>

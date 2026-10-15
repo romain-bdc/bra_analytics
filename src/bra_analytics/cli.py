@@ -208,7 +208,8 @@ def cmd_ui(args: argparse.Namespace) -> int:
 
         print(f"DuckDB UI : {url}", flush=True)
         print(f"base      : {db} (lecture seule)")
-        print("\nvues de travail : risque_journalier, couverture, profil_saison")
+        print("\nvues de travail : risque_journalier, couverture, profil_saison, saison_fenetre")
+        print("metriques       : risque_jour, risque_episode, risque_saison, risque_second_indice")
         print("Ctrl-C pour arreter.", flush=True)
         try:
             threading.Event().wait()

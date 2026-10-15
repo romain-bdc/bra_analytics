@@ -572,3 +572,138 @@ tolérant les variantes de graphie recensées. Toutes les vues de comparaison la
 Sans elle, `bra info` comptait **12 massifs** en 2015-2016 sur une chaîne qui en a onze, et
 faisait démarrer la saison au **4 février** au lieu du 9 mars. `bra info` liste désormais les
 lignes écartées au lieu de les faire disparaître.
+
+---
+
+## 9. Couche métriques — bloc risque
+
+Les métriques de la spec § 5.1, définies une fois dans
+[`src/bra_analytics/metriques/risque.py`](../src/bra_analytics/metriques/risque.py) et posées en
+vues par `bra build`. Toutes partent de `risque_journalier`, restreinte à `massif_coherent`, et
+s'indexent sur `jour_validite`. L'interface les lit telles quelles ; elle ne recopie aucun SQL.
+
+| Vue | Grain | Contenu |
+|---|---|---|
+| `risque_jour` | massif × jour couvert | risque du jour, variation depuis la veille, écart à la normale |
+| `risque_episode` | un épisode ≥ 3 × portée | début, fin, durée, niveau maximal, ce qui le borde |
+| `risque_saison` | massif × saison × portée | comptes par seuil, parts, moyenne, médiane, maximum, occurrences ≥ 3, épisodes, variations, durée de saison |
+| `risque_second_indice` | massif × jour couvert | `risque1`, `risque1_evolution`, `risque2`, `risque2_evolution`, `loc_type`, `altitude_seuil_m`, secteurs — vue experte |
+
+Une **portée** est l'une des fenêtres du § 8 (`coeur`, `commune`) ou la saison entière
+(`saison_complete`) ; la colonne s'appelle `fenetre`, comme dans `saison_fenetre`. Une ligne de
+`risque_saison` porte `comparable` et `motif_exclusion` : vrai seulement sur `coeur`, hors
+saisons écartées.
+
+Les vues sont créées au build. Sur un entrepôt construit avant elles, les fonctions de lecture
+les posent en vues temporaires, sans écrire dans la base :
+
+```python
+import duckdb
+from bra_analytics.metriques import risque
+
+con = duckdb.connect("warehouse/bra.duckdb", read_only=True)
+risque.metriques_saison(con, fenetre="coeur", massifs=[65])  # massif × saison
+risque.comparer_saisons(con)                                  # une ligne par saison, coeur seulement
+risque.moyenne_pluriannuelle(con)                             # métrique d'accueil (spec § 3.2)
+```
+
+### Définitions
+
+| Métrique | Colonnes | Définition |
+|---|---|---|
+| Risque du jour | `risque_jour.risque_maxi` | l'indice retenu, une ligne par jour couvert ; un trou n'a pas de ligne |
+| Jours ≥ 3 / ≥ 4 / = 5 | `jours_3_plus`, `jours_4_plus`, `jours_5` | comptes sur la portée |
+| Part par niveau | `jours_niveau_k`, `part_niveau_k` | part des jours **avec indice** ; les parts somment à 1 |
+| Risque moyen | `risque_moyen`, avec `jours_avec_indice` | moyenne de `risque_maxi IS NOT NULL` ; jamais publiée sans ses jours |
+| Risque médian | `risque_median` | médiane usuelle : vaut x,5 quand le nombre de jours est pair et que les deux valeurs centrales diffèrent |
+| Maximum saisonnier | `risque_max`, `date_max`, `jours_au_max` | `date_max` est le **premier** jour au maximum ; `jours_au_max` dit s'il y en a d'autres |
+| Première / dernière occurrence ≥ 3 | `premier_jour_3_plus`, `dernier_jour_3_plus` | |
+| Durée de saison | `premier_jour`, `dernier_jour`, `jours_calendaires`, `jours_manquants` | reprises de `couverture`, donc toujours celles de la saison entière |
+| Couverture de la portée | `jours_couverts`, `jours_periode`, `couverture_pct` | une fenêtre se rapporte à sa durée nominale, la saison entière à son span observé |
+| Épisodes ≥ 3 | `episodes`, `episodes_rompus_par_trou`, `episodes_bordes_sans_indice`, `episodes_tronques_par_fenetre`, `duree_mediane_episode`, `plus_long_episode`, `plus_long_episode_debut` | voir ci-dessous |
+| Variations | `hausses_1_plus`, `hausses_2_plus`, `baisses_1_plus`, `baisses_2_plus`, `paires_consecutives`, `paires_ecartees` | entre deux jours couverts consécutifs, tous deux avec indice |
+| Écart à la normale | `risque_jour.normale`, `saisons_normale`, `ecart_normale` | voir ci-dessous |
+
+Les jours sans indice (`jours_sans_indice`) et les jours que la source a refusé d'estimer
+(`jours_non_estimes`) sont publiés à part. Les deux diffèrent sur les quatorze lignes du § 2.3 :
+non estimées mais dotées d'un `RISQUEMAXI`, elles comptent comme des jours avec indice, dans la
+moyenne comme dans les parts, les épisodes et les variations.
+
+### Épisodes ≥ 3
+
+Un épisode est une suite de jours couverts **consécutifs au calendrier** à `risque_maxi ≥ 3`.
+Il est défini une seule fois, sur la saison entière ; une fenêtre ne fait que le rogner.
+
+> **Un trou d'archive rompt un épisode.** Une suite interrompue par un jour sans bulletin n'est
+> pas recollée : elle donne deux épisodes, chacun marqué `rompu_par_trou`, et leur nombre est
+> publié à côté du compte. Sur les 36 massifs, **369 épisodes sur 3 791 (9,7 %)** sont rompus par
+> un trou sur la saison entière, **314 sur 3 011** sur `coeur`.
+>
+> Le compte porte sur des **épisodes**, pas sur des trous : un même trou entre deux suites ≥ 3
+> marque les deux. Il marque aussi l'épisode qui commence juste après lui, même si le dernier
+> jour couvert avant le trou était sous 3 — on ne sait pas ce que disait le jour manquant.
+
+Ce qui borde un épisode, de part et d'autre :
+
+- un jour couvert à < 3 : fin franche ;
+- un jour sans bulletin : `rompu_par_trou` ;
+- un jour couvert **sans indice** : `borde_sans_indice`. Ce n'est pas un trou d'archive, mais pas
+  une fin franche non plus — on ne sait pas si l'épisode continuait. Le cas suit la pratique du
+  `-1` : 113 épisodes sur la saison entière, dont 55 en 2017-2018 (premier `-1` de printemps le
+  27 avril, au lendemain d'épisodes encore à 3) ; sur `coeur`, 3, tous en 2019-2020 ;
+- le premier ou le dernier jour de la saison : fin de série, rien à signaler.
+
+Sur une fenêtre, une bordure ne compte que du côté où la fenêtre n'a pas rogné l'épisode : un trou
+du 13 décembre ne rompt rien dans `coeur`, qui ouvre le 15 — l'épisode y est déjà
+`tronque_par_fenetre` (230 épisodes sur `coeur`).
+
+### Variations
+
+Une variation ne se calcule qu'entre deux jours couverts **consécutifs**, tous deux avec indice :
+un écart de deux jours n'est pas une hausse en 24 h. `risque_jour.variation` est nulle sinon. Les
+paires qui enjambent un trou ou touchent un jour sans indice sont comptées dans
+`paires_ecartees` plutôt qu'oubliées. Sur une fenêtre, une paire n'entre que si ses **deux** jours
+y sont : la hausse du 14 au 15 décembre n'appartient pas à `coeur`.
+
+Sur les 36 massifs, saison entière : 6 507 hausses d'un niveau ou plus, dont 344 de deux, sur
+61 408 paires consécutives ; 15 052 paires écartées, presque toutes à cause du `-1` d'avant 2021.
+Sur `coeur` : 4 748 et 263 hausses, 42 295 paires, 649 écartées.
+
+### Écart à la normale
+
+`ecart_normale = risque_maxi − normale`, où `normale` est la médiane de `risque_maxi` **au même
+jour du calendrier** (mois-jour), pour le même massif, sur les saisons comparables.
+
+- **Fenêtre `coeur` seulement.** C'est une comparaison inter-saisons d'indice : hors de `coeur`,
+  les journées `-1` d'avant juin 2021 sortent de la médiane alors que les mêmes journées récentes
+  y entrent à 1. Hors `coeur`, `normale` et `ecart_normale` sont nuls.
+- **Même jour du calendrier, pas même `jour_de_saison`.** L'ouverture de la diffusion varie de
+  deux semaines d'une saison à l'autre : un même rang tomberait à des dates nivologiquement
+  différentes.
+- **Saisons comparables seulement**, et la saison lue entre dans sa propre normale quand elle est
+  comparable. Une saison non comparable reçoit une normale mais pas d'écart, avec son
+  `motif_exclusion`.
+- **Au moins `MIN_SAISONS_NORMALE` saisons (5).** `saisons_normale` est toujours publié ; en
+  dessous du seuil, `normale` est nulle. Seul le 29 février est concerné — une saison comparable
+  seulement, 2023-2024 : sa « normale » serait la valeur du jour elle-même. Partout ailleurs sur
+  `coeur`, la normale repose sur 6 à 9 saisons.
+- La médiane est la médiane usuelle : 1 234 écarts sur 38 736 sont des demi-entiers, quand le
+  nombre de saisons est pair et que les deux valeurs centrales diffèrent.
+
+### Comparaisons inter-saisons
+
+`comparer_saisons()` et `moyenne_pluriannuelle()` **refusent de s'exécuter** hors de `coeur` :
+elles lèvent `ComparaisonRefusee` au lieu de renvoyer un chiffre, parce qu'un chiffre faux se lit
+exactement comme un chiffre juste. `comparer_saisons()` met en commun les jours des massifs
+retenus (moyenne pondérée par jour, pas moyenne de moyennes) et rend aussi les saisons non
+comparables, étiquetées. `moyenne_pluriannuelle()` ne retient que les saisons comparables et
+compte les autres dans `saisons_ecartees`.
+
+`risque_saison` publie aussi `risque_moyen` sur `commune` et la saison entière, pour lire une
+saison isolément ; ces lignes portent `comparable = false`.
+
+### Couverture
+
+`couverture` est restreinte à `massif_coherent` depuis T6 : le message technique du 05/02/2016
+diffusé sous `ID="3"` ouvrait la saison 2015-2016 du Mont-Blanc au 5 février, avec 45 jours
+manquants fictifs. Elle s'ouvre désormais au 11 mars (35 jours couverts, 11 manquants).

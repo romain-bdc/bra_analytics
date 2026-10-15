@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2023-12-15T16:00:00" DATEECHEANCE="2023-12-16T18:00:00" DATEVALIDITE="2023-12-16T18:00:00" DATEDIFFUSION="2023-12-15T16:17:29" AMENDEMENT="false">
+  <DateValidite>2023-12-16T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="3" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="3" COMMENTAIRE="Risque marqué." RISQUEMAXIJ2="3" DATE_RISQUE_J2="2023-12-17T00:00:00"/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="false" NW="false" N="false" COMMENTAIRE=""/>
+    <ACCIDENTEL>plaques instables.</ACCIDENTEL>
+    <NATUREL>en neige récente.</NATUREL>
+    <RESUME>Départs spontanés : en neige récente.
+Déclenchements skieurs : plaques instables.</RESUME>
+    <RisqueJ2>risque marqué</RisqueJ2>
+    <CommentaireRisqueJ2>Evolution en sud raide. Nombreuses plaques en altitude</CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>

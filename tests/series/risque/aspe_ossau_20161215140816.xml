@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2016-12-15T16:00:00" DATEECHEANCE="2016-12-16T18:00:00" DATEVALIDITE="2016-12-16T18:00:00" DATEDIFFUSION="2016-12-15T14:08:16" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="1" EVOLURISQUE1="" LOC1="&lt;2000" ALTITUDE="2000" RISQUE2="2" EVOLURISQUE2="" LOC2="&gt;2000" RISQUEMAXI="2" COMMENTAIRE="Au-dessus de 2000 m : Risque limité. En-dessous : Risque faible." />
+    <PENTE NE="true" E="false" SE="false" S="false" SW="false" W="false" NW="true" N="true" COMMENTAIRE="Surtout vers la frontière" />
+    <ACCIDENTEL>rares plaques dures en Nord</ACCIDENTEL>
+    <NATUREL>aucun</NATUREL>
+    <RESUME>Départs spontanés : aucun
+Déclenchements skieurs : rares plaques dures en Nord</RESUME>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+</BULLETINS_NEIGE_AVALANCHE>
