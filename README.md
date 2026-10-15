@@ -180,6 +180,7 @@ warehouse/
   neige_fraiche/…                              cumuls 24 h
   historique_risque/…                          risque max des 7 jours précédents
   tendances/…                                  tendances J+2 et J+3 (2016-2023 uniquement)
+  conversions/…                                journal des sentinelles rendues nulles au parsing
   bra.duckdb                                   vues sur l'ensemble
 ```
 

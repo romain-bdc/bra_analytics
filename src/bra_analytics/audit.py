@@ -53,8 +53,9 @@ def _frame(con: duckdb.DuckDBPyConnection, sql: str, params: list | None = None)
 
 
 def _tables(con: duckdb.DuckDBPyConnection) -> list[str]:
+    """Tables de donnees presentes ; le journal `conversions` n'en est pas une."""
     presentes = {r[0] for r in con.execute("SELECT view_name FROM duckdb_views()").fetchall()}
-    return [t for t in schema.TABLES if t in presentes]
+    return [t for t in schema.TABLES if t in presentes and t != "conversions"]
 
 
 # Champs dont la valeur existe mais ne veut pas dire ce que son nom annonce,
@@ -70,6 +71,16 @@ SEMANTIQUE_DIVERGENTE: dict[tuple[str, str], tuple[str, str]] = {}
 # depuis, la borne haute d'une fourchette sur le massif. Les deux se lisent,
 # mais ne mesurent pas la meme chose : rupture de serie a l'hiver 2023-2024.
 FAMILLE_NEIGE_FRAICHE_HOMOGENE = "moderne"
+
+# Champs calculables sur toute l'archive mais dont le sens change en cours de
+# route : le statut d'une metrique qui les lit l'annonce, pour qu'aucune
+# comparaison n'enjambe la rupture sans le savoir.
+RUPTURES: dict[tuple[str, str], str] = {
+    ("neige_fraiche", "cumul_min_cm"): (
+        "rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif"),
+    ("neige_fraiche", "cumul_max_cm"): (
+        "rupture de série à l'hiver 2023-2024 : cumuls par secteur nommé, puis fourchette sur le massif"),
+}
 
 _ENTIERS = (pl.Int8, pl.Int16, pl.Int32, pl.Int64)
 
@@ -273,6 +284,12 @@ def statuts(dispo: pl.DataFrame, metriques: tuple[Metrique, ...] = METRIQUES) ->
                     motif += " (" + " ; ".join(raisons) + ")"
             else:
                 statut, motif = NON_CALCULABLE, "aucune saison ne réunit ses champs"
+            ruptures = sorted({
+                RUPTURES[tuple(r.split("."))] for r in m.champs
+                if tuple(r.split(".")) in RUPTURES
+            })
+            if ruptures and statut != NON_CALCULABLE:
+                motif = " ; ".join(([motif] if motif else []) + ruptures)
         lignes.append({
             "bloc": m.bloc, "metrique": m.nom, "statut": statut,
             "saisons": ", ".join(saisons), "champs": ", ".join(m.champs), "motif": motif,
@@ -383,9 +400,9 @@ def _quantiles(con: duckdb.DuckDBPyConnection) -> list[tuple]:
         # Un vent hors plage est une erreur de saisie (`bra check`,
         # `vent_hors_plage`) : exclu ici comme des metriques.
         ("vent_haut_vitesse_kmh", "meteo", "prevision",
-         f"origine = 'prevision' AND vent_haut_vitesse_kmh <= {VENT_MAX_KMH}", "km/h"),
+         f"origine = 'prevision' AND vent_haut_vitesse_kmh BETWEEN 0 AND {VENT_MAX_KMH}", "km/h"),
         ("vent_bas_vitesse_kmh", "meteo", "prevision",
-         f"origine = 'prevision' AND vent_bas_vitesse_kmh <= {VENT_MAX_KMH}", "km/h"),
+         f"origine = 'prevision' AND vent_bas_vitesse_kmh BETWEEN 0 AND {VENT_MAX_KMH}", "km/h"),
         ("iso_0_m", "meteo", "prevision", "origine = 'prevision'", "m"),
         ("cumul_max_cm", "neige_fraiche", f"historique, famille {famille}",
          f"origine = 'historique' AND format_famille = '{famille}'", "cm"),

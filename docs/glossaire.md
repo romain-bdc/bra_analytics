@@ -395,7 +395,8 @@ Six échéances par bulletin : 4 analyses passées + 2 prévisions.
 > `SS242` sont le cumul de **chacun** — pas un minimum et un maximum. Six massifs ont deux
 > secteurs sur 81 à 88 % de leurs lignes : Haute-Tarentaise, Haute-Maurienne, Queyras, Ubaye,
 > Haute-Bigorre, Cerdagne-Canigou ; les autres n'en ont qu'un (`massif`). Le parser conserve
-> les secteurs et en dérive les bornes (secteur unique : min = max). Depuis 2024, `SS24Min` /
+> les secteurs et en dérive les bornes (secteur unique, ou un seul des deux secteurs observé :
+> min = max). Depuis 2024, `SS24Min` /
 > `SS24Max` sont une fourchette sur le massif, égale dans 66 % des lignes. Les deux se lisent,
 > mais ne mesurent pas la même chose : une comparaison qui enjambe l'hiver 2023-2024 l'annonce.
 
@@ -471,6 +472,23 @@ en 2024.
 Valeurs observées, par fréquence : `0` (18 259), `-2` (8 726), `-1` (3 038), `1` (2 943).
 La sémantique n'est pas documentée ; l'amplitude suggère une variation d'indice, `0` valant
 stabilité. **Inféré, à confirmer avant tout usage analytique.**
+
+### `conversions` — journal du parser
+
+Une ligne par bulletin retenu, table, champ et valeur source : chaque sentinelle que le parser
+rend nulle y est comptée (`valeurs`), y compris sur une échéance ou un relevé par ailleurs
+renseigné. `bra check` l'agrège en signaux `sentinelle <table>.<champ>=<valeur>` : une valeur
+devenue nulle sans trace serait une ligne écartée en silence.
+
+| Champ | Description |
+|---|---|
+| `table_cible`, `champ` | Où la valeur a été rendue nulle |
+| `valeur_source` | Valeur lue dans le XML (`-1`, `-2`, `9999`…) |
+| `valeurs` | Nombre de valeurs converties dans ce bulletin |
+
+La règle météo convertit tout `-1` d'un champ, pas seulement les échéances entièrement vides :
+un `FF2="-1"` à côté d'un `ISO0` renseigné (second vent absent) ou un `ISO-10="-1"` isolé
+(6 665 valeurs avant 2024) est aussi une valeur non renseignée.
 
 ---
 

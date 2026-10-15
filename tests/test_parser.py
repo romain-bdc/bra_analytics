@@ -589,3 +589,31 @@ def test_altitude_9999_signifie_pas_de_second_vent() -> None:
     for r in b.meteo:
         assert r["vent_haut_vitesse_kmh"] is None and r["vent_haut_direction"] is None
         assert r["vent_bas_vitesse_kmh"] is not None and r["vent_bas_vitesse_kmh"] >= 0
+
+
+# --------------------------------------------------------------------------
+# Journal des conversions : aucune valeur ne devient nulle sans etre comptee
+# --------------------------------------------------------------------------
+
+def test_chaque_conversion_est_journalisee() -> None:
+    """Queyras, 14/01/2023 : `ALTITUDEVENT2="9999"` une fois, `FF2="-1"` sur
+    les trois echeances de prevision -- echeances par ailleurs renseignees,
+    donc invisibles pour un compte d'echeances entierement vides."""
+    (b,) = parse_file(fixture("anomalie_2023_queyras_vent_unique.xml"))
+    assert b.conversions[("bulletins", "vent_altitude_haute_m", "9999")] == 1
+    assert b.conversions[("meteo", "vent_haut_vitesse_kmh", "-1")] == 3
+    assert all(r["iso_0_m"] is not None for r in b.meteo)
+
+
+def test_conversions_de_neige_fraiche_journalisees() -> None:
+    """Haute-Bigorre, 23/03/2022 : `SS241="-2" SS242="-2"` le 17/03 (bloc
+    historique) ; aucun autre negatif dans le bulletin."""
+    (b,) = parse_file(fixture("anomalie_2022_haute_bigorre_secteurs.xml"))
+    assert b.conversions[("neige_fraiche", "secteur1_cumul_cm", "-2")] == 1
+    assert b.conversions[("neige_fraiche", "secteur2_cumul_cm", "-2")] == 1
+    assert sum(n for (t, _, _), n in b.conversions.items() if t == "neige_fraiche") == 2
+
+
+def test_bulletin_sans_sentinelle_sans_conversion() -> None:
+    (b,) = parse_file(fixture("v6_2026_aspe_ossau.xml"))
+    assert not b.conversions

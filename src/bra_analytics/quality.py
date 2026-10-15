@@ -197,6 +197,18 @@ def check_filles(frames: dict[str, pl.DataFrame]) -> list[Anomalie]:
         add("sans_enneigement_continu", "signal", par_releve.filter(pl.col("sans")).height,
             "releves sans enneigement continu sur un versant (limite -1)")
 
+    # Le journal du parser : chaque valeur sentinelle rendue nulle, y compris
+    # sur une echeance ou un releve par ailleurs renseigne.
+    conv = frames.get("conversions")
+    if conv is not None and conv.height:
+        par_champ = (
+            conv.group_by("table_cible", "champ", "valeur_source")
+            .agg(pl.col("valeurs").sum())
+            .sort("table_cible", "champ", "valeur_source")
+        )
+        for t, c, v, n in par_champ.iter_rows():
+            add(f"sentinelle {t}.{c}={v}", "signal", n, "valeur rendue nulle au parsing")
+
     nf = frames.get("neige_fraiche")
     if nf is not None and nf.height:
         add("neige_fraiche_non_observee", "signal",

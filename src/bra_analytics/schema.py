@@ -142,6 +142,16 @@ TENDANCES: dict[str, pl.DataType] = {
     "valeur": pl.Utf8,
 }
 
+# Journal des sentinelles converties en nul au parsing : une ligne par
+# bulletin retenu, table, champ et valeur source. Relu par `bra check`.
+CONVERSIONS: dict[str, pl.DataType] = {
+    **_KEY,
+    "table_cible": pl.Utf8,
+    "champ": pl.Utf8,
+    "valeur_source": pl.Utf8,
+    "valeurs": pl.Int32,
+}
+
 TABLES: dict[str, dict[str, pl.DataType]] = {
     "bulletins": BULLETINS,
     "meteo": METEO,
@@ -149,4 +159,5 @@ TABLES: dict[str, dict[str, pl.DataType]] = {
     "neige_fraiche": NEIGE_FRAICHE,
     "historique_risque": HISTORIQUE_RISQUE,
     "tendances": TENDANCES,
+    "conversions": CONVERSIONS,
 }

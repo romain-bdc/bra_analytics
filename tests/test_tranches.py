@@ -113,3 +113,13 @@ def test_vent_a_3000_m_en_tranche_haute_aux_deux_epoques(con) -> None:
     assert _vents(con, 17, date(2024, 1, 15)) == [
         ("vent_bas", 2000, "moyenne"), ("vent_haut", 3000, "haute"),
     ]
+
+
+def test_vent_haut_garde_ses_lignes_hors_cas_vent_unique(con) -> None:
+    """Seuls les bulletins a vent unique perdent leur palier `vent_haut` : un
+    bulletin a deux vents garde le sien a chaque echeance."""
+    n = con.execute(
+        "SELECT count(*) FROM palier_tranche WHERE source = 'vent_haut' "
+        "AND massif_id = 17 AND jour = DATE '2024-01-15'"
+    ).fetchone()[0]
+    assert n > 0

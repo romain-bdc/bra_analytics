@@ -131,3 +131,14 @@ def test_rapport_inclut_les_tables_filles() -> None:
     frames = _filles("anomalie_2024_champsaur_vent_aberrant.xml")
     texte = report(frames["bulletins"], frames)
     assert "vent_hors_plage" in texte
+
+
+def test_conversions_partielles_comptees() -> None:
+    """Queyras 2023 : `FF2="-1"` sur des echeances par ailleurs renseignees.
+    Aucune echeance n'est vide, mais les trois conversions sont comptees."""
+    frames = _filles("anomalie_2023_queyras_vent_unique.xml")
+    assert frames["conversions"].height
+    c = _controles(frames)
+    assert "echeance_meteo_vide" not in c
+    assert c["sentinelle meteo.vent_haut_vitesse_kmh=-1"].lignes == 3
+    assert c["sentinelle bulletins.vent_altitude_haute_m=9999"].lignes == 1

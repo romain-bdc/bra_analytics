@@ -132,7 +132,7 @@ def to_frames(parsed: Sequence[ParsedBulletin], report: BuildReport | None = Non
 
     children: dict[str, list[dict]] = {
         "meteo": [], "enneigement": [], "neige_fraiche": [],
-        "historique_risque": [], "tendances": [],
+        "historique_risque": [], "tendances": [], "conversions": [],
     }
     seen_keys: set[tuple] = set()
     for item in parsed:
@@ -155,6 +155,10 @@ def to_frames(parsed: Sequence[ParsedBulletin], report: BuildReport | None = Non
             ("tendances", item.tendances),
         ):
             children[name].extend({**header, **row} for row in rows)
+        children["conversions"].extend(
+            {**header, "table_cible": t, "champ": c, "valeur_source": v, "valeurs": n}
+            for (t, c, v), n in sorted(item.conversions.items())
+        )
 
     frames = {"bulletins": df}
     for name, rows in children.items():
@@ -518,17 +522,18 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         # Paliers d'altitude rattaches aux tranches normees (spec section 4.2). Un
         # format long : une ligne par valeur mesuree a une altitude, quelle que
         # soit sa source. Une tranche sans palier n'a pas de ligne -- rien n'est
-        # interpole -- et une altitude sentinelle (-1) garde sa ligne avec une
-        # tranche nulle : elle reste visible, elle n'entre dans aucune tranche.
+        # interpole -- et un palier non releve (altitude rendue nulle par le
+        # parser) garde sa ligne avec une tranche nulle : il reste visible, il
+        # n'entre dans aucune tranche.
         #
         # `jour` est la date que decrit la valeur (releve, cumul, echeance),
         # pas `jour_validite` : le bloc historique d'un bulletin decrit les
         # sept jours precedents.
         #
-        # Neige fraiche : avant 2024, `cumul_min_cm` / `cumul_max_cm` portent
-        # `SS241` / `SS242`, qui sont les cumuls de deux secteurs et non une
-        # fourchette (voir docs/disponibilite.md section 9). La vue les transmet tels
-        # quels avec `format_famille` ; la regle de parsing est a arreter en T7.
+        # Neige fraiche : avant 2024, `cumul_min_cm` / `cumul_max_cm` sont
+        # derives des cumuls de un ou deux secteurs nommes ; depuis, une
+        # fourchette sur le massif. La vue les transmet avec `format_famille` :
+        # une comparaison qui enjambe l'hiver 2023-2024 doit l'annoncer.
         #
         # Les jointures sur `bulletins` ne perdent aucune ligne : `to_frames()`
         # ne conserve une ligne fille que pour une cle retenue dans la table
@@ -569,10 +574,14 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
                   FROM meteo m JOIN b USING (massif_id, date_bulletin)
                   -- Pas de second vent (`ALTITUDEVENT2="9999"` avant 2024 dans
                   -- les Alpes du Sud) : il n'y a pas de palier a rattacher. Les
-                  -- lignes `meteo` restent, et `bra check` compte ces bulletins
-                  -- (`vent_unique`) ; leur seul vent, a 3000 m, entre par
-                  -- `vent_bas` et tombe en tranche haute comme apres 2024.
-                  WHERE b.vent_altitude_haute_m IS NOT NULL
+                  -- lignes `meteo` restent, et `bra check` compte exactement ces
+                  -- bulletins (`vent_unique`) ; leur seul vent, a 3000 m, entre
+                  -- par `vent_bas` et tombe en tranche haute comme apres 2024.
+                  -- Un bulletin sans aucune altitude de vent (Chablais,
+                  -- 11/06/2018) n'est pas un bulletin a vent unique : ses
+                  -- lignes restent, sans tranche.
+                  WHERE NOT (b.vent_altitude_haute_m IS NULL
+                             AND b.vent_altitude_basse_m IS NOT NULL)
                 )
                 SELECT
                   p.source, p.saison, p.massif_id, p.date_bulletin, p.origine, p.jour,

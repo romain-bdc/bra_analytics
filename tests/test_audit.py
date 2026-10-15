@@ -195,7 +195,16 @@ def test_neige_fraiche_legacy_dans_le_calcul(con) -> None:
     statuts = audit.statuts(audit.disponibilite(con))
     ligne = _statut(statuts, "Épisodes de chute")
     assert "2022-2023" in ligne["saisons"] or ligne["statut"] == "calculable"
-    assert "secteur" not in (ligne["motif"] or "")
+
+
+def test_rupture_de_serie_annoncee_dans_le_statut(con) -> None:
+    """Calculable ne veut pas dire homogene : une metrique de neige fraiche
+    enjambe le passage des secteurs a la fourchette (hiver 2023-2024), et le
+    statut le dit au lieu de le laisser au § 9."""
+    statuts = audit.statuts(audit.disponibilite(con))
+    for nom in ("Épisodes de chute", "Neige fraîche cumulée"):
+        assert "rupture de série" in (_statut(statuts, nom)["motif"] or ""), nom
+    assert "rupture" not in (_statut(statuts, "Risque moyen")["motif"] or "")
 
 
 def test_un_champ_rare_dans_l_historique_est_un_ecart() -> None:
