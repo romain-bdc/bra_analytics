@@ -638,6 +638,10 @@ Il est défini une seule fois, sur la saison entière ; une fenêtre ne fait que
 > pas recollée : elle donne deux épisodes, chacun marqué `rompu_par_trou`, et leur nombre est
 > publié à côté du compte. Sur les 36 massifs, **369 épisodes sur 3 791 (9,7 %)** sont rompus par
 > un trou sur la saison entière, **314 sur 3 011** sur `coeur`.
+>
+> Le compte porte sur des **épisodes**, pas sur des trous : un même trou entre deux suites ≥ 3
+> marque les deux. Il marque aussi l'épisode qui commence juste après lui, même si le dernier
+> jour couvert avant le trou était sous 3 — on ne sait pas ce que disait le jour manquant.
 
 Ce qui borde un épisode, de part et d'autre :
 

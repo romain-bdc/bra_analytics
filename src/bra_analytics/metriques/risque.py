@@ -37,14 +37,13 @@ from collections.abc import Sequence
 import duckdb
 import polars as pl
 
-from ..build import _litteral
 from ..fenetres import (
     DEFAUT,
     FENETRES,
     PAR_NOM,
     SAISON_COMPLETE,
-    SAISONS_NON_COMPARABLES,
     Fenetre,
+    sql_exclusions,
 )
 
 # Seuil d'un episode : indice 3 "marque", le premier niveau ou un skieur seul
@@ -74,14 +73,6 @@ class ComparaisonRefusee(ValueError):
 # --------------------------------------------------------------------------
 # SQL des vues
 # --------------------------------------------------------------------------
-
-def _exclusions() -> str:
-    """Saisons non comparables, en litteral `VALUES`, depuis `fenetres.py`."""
-    return ", ".join(
-        f"({_litteral(saison)}, {_litteral(motif)})"
-        for saison, motif in SAISONS_NON_COMPARABLES.items()
-    )
-
 
 def _sql_risque_jour(min_saisons_normale: int) -> str:
     coeur = f"fenetre_{DEFAUT.nom}"
@@ -113,7 +104,7 @@ def _sql_risque_jour(min_saisons_normale: int) -> str:
           WHERE massif_coherent
           WINDOW w AS (PARTITION BY massif_id, saison ORDER BY jour_validite)
         ),
-        exclusions(saison, motif_exclusion) AS (VALUES {_exclusions()}),
+        exclusions(saison, motif_exclusion) AS (VALUES {sql_exclusions()}),
         normales AS (
           SELECT
             massif_id,

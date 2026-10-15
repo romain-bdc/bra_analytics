@@ -22,7 +22,7 @@ import duckdb
 import polars as pl
 
 from . import schema
-from .fenetres import FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES
+from .fenetres import FENETRES, SAISON_COMPLETE, sql_exclusions
 from .massifs import BY_ID, libelle_coherent
 from .parser import ParseError, ParsedBulletin, parse_file
 from .tranches import sql_case as sql_case_tranche
@@ -282,17 +282,6 @@ def write_warehouse(
     return written
 
 
-def _litteral(texte: str) -> str:
-    """Chaine Python -> litteral texte SQL.
-
-    `repr()` ne convient pas : sur une chaine contenant une apostrophe il rend
-    des guillemets doubles, que SQL lit comme un identifiant de colonne et non
-    comme du texte. Les motifs d'exclusion sont redigees en francais, donc
-    pleins d'apostrophes.
-    """
-    return "'" + texte.replace("'", "''") + "'"
-
-
 def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
     """Cree une base DuckDB exposant l'entrepot en vues, plus une vue d'analyse."""
     warehouse = Path(warehouse).resolve()
@@ -402,10 +391,7 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
         # Les saisons non comparables ne sont pas filtrees mais etiquetees.
         # `bra check` a montre qu'une lacune signalee se traite ; une lacune
         # supprimee se redecouvre au milieu d'une analyse.
-        motifs = ", ".join(
-            f"({_litteral(saison)}, {_litteral(motif)})"
-            for saison, motif in SAISONS_NON_COMPARABLES.items()
-        )
+        motifs = sql_exclusions()
         portees = "\n              UNION ALL BY NAME\n".join(
             f"              (SELECT '{f.nom}' AS fenetre, {f.comparable_entre_saisons} "
             f"AS comparable_entre_saisons, {f.sql_duree()} AS jours_fenetre, * "
