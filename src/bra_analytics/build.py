@@ -128,7 +128,20 @@ def to_frames(parsed: Sequence[ParsedBulletin], report: BuildReport | None = Non
         report.bulletins_kept += df.height
         report.seasons = sorted(s for s in df["saison"].unique().to_list() if s)
 
-    kept = set(zip(df["massif_id"].to_list(), df["date_bulletin"].to_list())) if df.height else set()
+    # Cle retenue -> fichier dont la table mere a garde la version. Les tables
+    # filles doivent venir de ce fichier-la : quand deux diffusions d'une meme
+    # cle different, prendre la premiere lue (ordre des chemins, donc la plus
+    # ancienne) associait le risque d'une version a la meteo, l'enneigement et
+    # la neige fraiche d'une autre. Constate sur Cinto Rotondo, 06/04/2026 : la
+    # reedition de 16 h 21 couvre le 6 avril, la version de 16 h 00 le 7 ; la
+    # table `meteo` portait les echeances du 7 sous un bulletin du 6.
+    kept: dict[tuple, str | None] = (
+        dict(zip(
+            zip(df["massif_id"].to_list(), df["date_bulletin"].to_list()),
+            df["fichier_source"].to_list(),
+        ))
+        if df.height else {}
+    )
 
     children: dict[str, list[dict]] = {
         "meteo": [], "enneigement": [], "neige_fraiche": [],
@@ -138,8 +151,16 @@ def to_frames(parsed: Sequence[ParsedBulletin], report: BuildReport | None = Non
     for item in parsed:
         key = (item.bulletin["massif_id"], item.bulletin["date_bulletin"])
         # Les tables filles suivent la deduplication de la table mere : on ne
-        # garde que la premiere occurrence retenue pour la cle.
+        # garde que les lignes du fichier retenu pour la cle, une seule fois
+        # (un meme fichier peut figurer dans deux repertoires du cache).
         if key not in kept or key in seen_keys:
+            continue
+        # `fichier_source` est toujours renseigne par `parse_file` ; un bulletin
+        # sans source (appel direct de `parse_bulletin_element`) ne peut pas
+        # etre rattache a sa version, et le premier lu gagnerait sans le dire.
+        if kept[key] is None or item.bulletin.get("fichier_source") is None:
+            raise ValueError(f"bulletin sans fichier source pour la cle {key}")
+        if item.bulletin["fichier_source"] != kept[key]:
             continue
         seen_keys.add(key)
         header = {
