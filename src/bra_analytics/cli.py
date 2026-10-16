@@ -210,6 +210,7 @@ def cmd_ui(args: argparse.Namespace) -> int:
         print(f"base      : {db} (lecture seule)")
         print("\nvues de travail : risque_journalier, couverture, profil_saison, saison_fenetre")
         print("metriques       : risque_jour, risque_episode, risque_saison, risque_second_indice")
+        print("                  pente_orientation_saison, pente_saison, pente_situation_saison")
         print("Ctrl-C pour arreter.", flush=True)
         try:
             threading.Event().wait()
