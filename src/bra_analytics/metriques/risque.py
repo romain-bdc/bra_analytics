@@ -289,7 +289,7 @@ def _sql_risque_saison() -> str:
             count(risque_maxi)                               AS jours_avec_indice,
             count(*) - count(risque_maxi)                    AS jours_sans_indice,
             count(*) FILTER (NOT risque_estime)              AS jours_non_estimes,
-            count(*) FILTER (risque_maxi >= 3)               AS jours_3_plus,
+            count(*) FILTER (risque_maxi >= {SEUIL_EPISODE})               AS jours_3_plus,
             count(*) FILTER (risque_maxi >= 4)               AS jours_4_plus,
             count(*) FILTER (risque_maxi = 5)                AS jours_5,
 {niveaux},
@@ -298,8 +298,8 @@ def _sql_risque_saison() -> str:
             max(risque_maxi)                                 AS risque_max,
             min(jour_validite) FILTER (risque_maxi = max_portee) AS date_max,
             count(*) FILTER (risque_maxi = max_portee)       AS jours_au_max,
-            min(jour_validite) FILTER (risque_maxi >= 3)     AS premier_jour_3_plus,
-            max(jour_validite) FILTER (risque_maxi >= 3)     AS dernier_jour_3_plus,
+            min(jour_validite) FILTER (risque_maxi >= {SEUIL_EPISODE})     AS premier_jour_3_plus,
+            max(jour_validite) FILTER (risque_maxi >= {SEUIL_EPISODE})     AS dernier_jour_3_plus,
             count(*) FILTER (paire_dans_portee AND variation >= 1)  AS hausses_1_plus,
             count(*) FILTER (paire_dans_portee AND variation >= 2)  AS hausses_2_plus,
             count(*) FILTER (paire_dans_portee AND variation <= -1) AS baisses_1_plus,
@@ -571,7 +571,7 @@ def comparer_saisons(
           count(risque_maxi)                  AS jours_avec_indice,
           round(avg(risque_maxi), 3)          AS risque_moyen,
           median(risque_maxi)                 AS risque_median,
-          count(*) FILTER (risque_maxi >= 3)  AS jours_3_plus,
+          count(*) FILTER (risque_maxi >= {SEUIL_EPISODE})  AS jours_3_plus,
           count(*) FILTER (risque_maxi >= 4)  AS jours_4_plus,
           count(*) FILTER (risque_maxi = 5)   AS jours_5
         FROM risque_jour{where}
@@ -611,7 +611,7 @@ def moyenne_pluriannuelle(
           count(risque_maxi) FILTER (saison_comparable)                 AS jours_avec_indice,
           round(avg(risque_maxi) FILTER (saison_comparable), 3)         AS risque_moyen,
           median(risque_maxi) FILTER (saison_comparable)                AS risque_median,
-          count(*) FILTER (saison_comparable AND risque_maxi >= 3)      AS jours_3_plus,
+          count(*) FILTER (saison_comparable AND risque_maxi >= {SEUIL_EPISODE})      AS jours_3_plus,
           count(*) FILTER (saison_comparable AND risque_maxi >= 4)      AS jours_4_plus,
           count(*) FILTER (saison_comparable AND risque_maxi = 5)       AS jours_5
         FROM risque_jour{where}
