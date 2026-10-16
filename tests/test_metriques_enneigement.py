@@ -151,6 +151,14 @@ def test_journal_et_vue_s_accordent(con, frames) -> None:
     assert (jointes["retenue"] > jointes["date_bulletin"]).all()
 
 
+def test_le_rapport_de_build_compte_les_lignes_ecartees(tmp_path) -> None:
+    """Le total apparait dans `bra build`, pas seulement dans le journal."""
+    rapport, _ = build(SERIE, tmp_path / "warehouse", None)
+    assert (rapport.neige_fraiche_dropped, rapport.neige_fraiche_divergent) == (126, 1)
+    assert rapport.enneigement_dropped == 6
+    assert "neige fraiche historique ecartee : 126" in rapport.summary()
+
+
 def test_bloc_historique_moderne_recale_d_un_jour(con) -> None:
     """Le BSH moderne date la fenetre de 24 h au lendemain du bloc principal.
     La date source reste lisible ; le jour est celui du bloc principal."""
