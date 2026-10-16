@@ -364,3 +364,17 @@ base64 en ont été retirées : elles représentaient 93 % du poids sans valeur 
 
 Le XML brut n'est **jamais versionné** (`.gitignore`). Il est mis en cache sous `data/raw/`,
 reproduisant l'arborescence de la source, et reste reconstructible par `bra fetch`.
+
+### 8. `bra fiche` — fiche massif-saison
+
+```bash
+uv run bra fiche                      # écrit fiche.html à la racine (non versionné)
+```
+
+Page HTML autonome (environ 4,5 Mo : 36 massifs × 11 saisons × quatre blocs). Massif, saison, axe
+(calendrier ou `jour_de_saison`), tranche d'altitude et fenêtre des indicateurs vivent dans l'URL
+(`fiche.html#m=65&s=2023-2024&a=rang`). Quatre graphes partagent le même axe aligné — risque avec
+bande médiane et interquartile (fenêtre `coeur`, saisons comparables, au moins 5 saisons par case),
+épaisseur de neige, isotherme 0 °C, vent — et chacun affiche sa couverture : une cellule par jour,
+rouge quand la valeur manque. Une saison non comparable reste sélectionnable, avec son motif.
+

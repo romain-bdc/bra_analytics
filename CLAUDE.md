@@ -40,6 +40,7 @@ uv run bra fenetres                                        # comparabilité sais
 uv run bra audit                                           # disponibilité champ × saison -> docs/disponibilite.md
 uv run bra dashboard                                       # page statique
 uv run bra carte                                           # carte d'accueil des 36 massifs
+uv run bra fiche                                           # fiche massif-saison (risque, neige, iso 0, vent)
 uv run bra contours                                        # raccordement + version web des contours
 uv run bra ui                                              # interface web DuckDB
 uv run pytest
