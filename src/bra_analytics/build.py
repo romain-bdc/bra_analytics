@@ -155,7 +155,12 @@ def to_frames(parsed: Sequence[ParsedBulletin], report: BuildReport | None = Non
         # (un meme fichier peut figurer dans deux repertoires du cache).
         if key not in kept or key in seen_keys:
             continue
-        if item.bulletin.get("fichier_source") != kept[key]:
+        # `fichier_source` est toujours renseigne par `parse_file` ; un bulletin
+        # sans source (appel direct de `parse_bulletin_element`) ne peut pas
+        # etre rattache a sa version, et le premier lu gagnerait sans le dire.
+        if kept[key] is None or item.bulletin.get("fichier_source") is None:
+            raise ValueError(f"bulletin sans fichier source pour la cle {key}")
+        if item.bulletin["fichier_source"] != kept[key]:
             continue
         seen_keys.add(key)
         header = {
