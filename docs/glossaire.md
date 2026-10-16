@@ -1232,7 +1232,13 @@ sur [0, 1] entre ses ancres et bornée.
 
 - **Ancres** : percentiles 5 et 95 des 321 lignes `comparable` de `coeur` (36 massifs, neuf
   saisons, mesure du 16 octobre 2026), arrondis. Figées : recalculées à chaque lecture, elles
-  feraient bouger le score à chaque saison ajoutée.
+  feraient bouger le score à chaque saison ajoutée. Mesure faite sur ces neuf saisons ; une
+  saison de plus ne les déplace pas, et une dérive de la distribution se traite par une
+  nouvelle version, à la main.
+- **Poids** : 0,5 / 0,3 / 0,2, validés par le propriétaire le 16 octobre 2026. La mesure les
+  borne sans les déterminer.
+- **Vent, tranche la plus exposée** : à part égale entre tranches, la plus haute l'emporte.
+  « Par altitude et non par rôle » est la décision 3-A du 15 octobre 2026 (T8).
 - **Version** : `<numéro>-<empreinte>`, l'empreinte couvrant poids, ancres, définitions et fenêtre.
   Changer l'un d'eux change la version ; elle est portée par chaque ligne (`version_score`).
 - **Composante manquante** : le score est NULL et `composantes_manquantes` dit laquelle. Aucune

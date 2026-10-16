@@ -199,3 +199,9 @@ def test_la_vue_existe_apres_le_build(tmp_path) -> None:
     df = score.scores(con)
     assert "version_score" in df.columns
     con.close()
+
+
+def test_la_version_v1_est_figee() -> None:
+    # Un changement d'ancre, de poids ou de definition change l'empreinte : ce test
+    # force a le faire exprès (nouvelle version, glossaire § 13 mis a jour).
+    assert score.FORMULE.version == "1-fa30d1"

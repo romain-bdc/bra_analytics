@@ -50,7 +50,7 @@ Les sept décisions du 6 octobre, avec leur sort après lecture du code.
 | Deux axes temporels : calendaire et jours depuis le premier bulletin | **À faire.** Ajouter `jour_de_saison` à `risque_journalier` (§ 4) |
 | Normalisation par défaut : nombre de jours | **Tenue.** Le nombre de jours couverts est déjà publié par `couverture` et `saison_fenetre` |
 | Périmètre v1 : tout ce qui vient du BRA seul | **Tenue.** Aucune source externe n'est ingérée |
-| Score composite retenu, hors carte d'accueil | **Tenue**, pondération encore à fixer |
+| Score composite retenu, hors carte d'accueil | **Tenue**, pondération fixée (v1, validée le 16 octobre 2026) |
 | Réutilisation des données publiques | **Tenue.** Licence Ouverte 2.0, attribution à afficher (§ 7) |
 | Tranches d'altitude fixes normées | **Corrigée** — voir 3.1 |
 | Moyenne du risque sur dix saisons en page d'accueil | **Corrigée** — voir 3.2 |
@@ -120,9 +120,9 @@ Le doc de cadrage listait cinq points en attente de l'audit du XML. Le repo en r
   avec ses trois paliers ; sa couverture par saison reste à mesurer dans l'audit, mais le recours
   à SAFRAN n'est plus un préalable.
 
-Deux points restent ouverts, et les deux demandent les distributions réelles : les **seuils par
-défaut** (vent fort, épisode de chute, altitude de redoux) et la **pondération du score
-composite**.
+Les deux points ouverts demandaient les distributions réelles : les **seuils par défaut** (vent
+fort, épisode de chute, altitude de redoux) et la **pondération du score composite**. Le second
+est fixé (v1, glossaire § 13, validée le 16 octobre 2026).
 
 ## 4. Compléments au modèle de données
 

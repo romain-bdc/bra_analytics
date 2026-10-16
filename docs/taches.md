@@ -216,7 +216,7 @@ version.
 
 **Dépend de** : T6, T7, T8.
 
-**Réalisée par** `metriques/score.py` (vue `score_saison`, `score.formule()`, glossaire § 13). Poids 0,5 / 0,3 / 0,2 à valider par le propriétaire.
+**Réalisée par** `metriques/score.py` (vue `score_saison`, `score.formule()`, glossaire § 13). Poids 0,5 / 0,3 / 0,2, ancres figées et lecture de la rupture neige validés par le propriétaire le 16 octobre 2026.
 
 ---
 

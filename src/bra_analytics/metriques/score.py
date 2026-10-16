@@ -8,7 +8,8 @@ jours* lue dans les blocs deja livres :
              `SEUIL_CHUTE_CM` ou plus (T7) ;
 - vent       part des jours avec vent fort (> `SEUIL_VENT_FORT_KMH`), prise sur
              la tranche d'altitude la plus exposee (T8). Par tranche, jamais par
-             role bas / haut : decision 3-A.
+             role bas / haut (decision T8 du 15 octobre 2026, 3-A : l'altitude
+             du vent est la seule localisation fiable).
 
 Chaque part est ramenee sur [0, 1] entre deux ancres fixes (`ANCRES`), puis les
 trois sont combinees par `POIDS` et mises sur 0-100. Les ancres sont les
@@ -49,9 +50,10 @@ import duckdb
 import polars as pl
 
 from ..fenetres import DEFAUT
+from ..tranches import TRANCHES
 from .enneigement import SEUIL_CHUTE_CM
 from .meteo import SEUIL_VENT_FORT_KMH
-from .risque import _filtres, _frame
+from .risque import SEUIL_EPISODE, _filtres, _frame
 
 VUE = "score_saison"
 
@@ -59,8 +61,8 @@ COMPOSANTES: tuple[str, ...] = ("risque", "neige", "vent")
 
 # Poids : le risque est le signal que le BRA porte lui-meme ; la neige fraiche
 # (correlation 0,54 avec lui sur les lignes comparables) et le vent (0,14) le
-# precisent sans le doubler. A VALIDER : la mesure borne le choix, elle ne le
-# determine pas (voir le rapport de la tache).
+# precisent sans le doubler. La mesure borne le choix sans le determiner ; les
+# poids ont ete valides par le proprietaire le 16 octobre 2026.
 POIDS: dict[str, float] = {"risque": 0.5, "neige": 0.3, "vent": 0.2}
 
 # Ancres (0 -> borne basse, 1 -> borne haute) : p05 / p95 mesures sur les lignes
@@ -73,8 +75,8 @@ ANCRES: dict[str, tuple[float, float]] = {
 }
 
 DEFINITIONS: dict[str, str] = {
-    # Le 3 est celui de `jours_3_plus` dans `risque_saison`, lu tel quel par la vue.
-    "risque": "jours risque_maxi >= 3 / jours avec indice",
+    # Meme seuil que `jours_3_plus` de `risque_saison`, lu tel quel par la vue.
+    "risque": f"jours risque_maxi >= {SEUIL_EPISODE} / jours avec indice",
     "neige": f"jours de chute >= {SEUIL_CHUTE_CM} cm / jours observes",
     "vent": f"jours de vent > {SEUIL_VENT_FORT_KMH} km/h / jours avec vent, tranche la plus exposee",
 }
@@ -167,6 +169,7 @@ def _norm_sql(c: str) -> str:
 def _sql_score() -> str:
     f = FORMULE
     fen = f"'{f.fenetre}'"
+    rangs = " ".join(f"WHEN '{t.nom}' THEN {i}" for i, t in enumerate(TRANCHES))
     manquantes = " || ".join(
         f"CASE WHEN part_{c} IS NULL THEN '{c},' ELSE '' END" for c in COMPOSANTES
     )
@@ -190,11 +193,14 @@ def _sql_score() -> str:
         ),
         v AS (
           -- La tranche la plus exposee : le vent se lit par altitude, pas par role.
+          -- Egalite de part entre tranches : la plus haute l'emporte (max_by a
+          -- sinon un choix arbitraire), d'ou le second critere : le rang de tranche.
           SELECT saison, massif_id, bool_and(comparable) AS comparable_vent,
-                 max_by(jours_avec_vent, jours_vent_fort / nullif(jours_avec_vent, 0)) AS jours_vent,
+                 max_by(jours_avec_vent, [jours_vent_fort / nullif(jours_avec_vent, 0), rang]) AS jours_vent,
                  max(jours_vent_fort / nullif(jours_avec_vent, 0)) AS part_vent,
-                 max_by(tranche, jours_vent_fort / nullif(jours_avec_vent, 0)) AS tranche_vent
-          FROM meteo_vent_saison WHERE fenetre = {fen}
+                 max_by(tranche, [jours_vent_fort / nullif(jours_avec_vent, 0), rang]) AS tranche_vent
+          FROM (SELECT *, CASE tranche {rangs} END AS rang
+                FROM meteo_vent_saison WHERE fenetre = {fen})
           GROUP BY saison, massif_id
         ),
         j AS (
