@@ -888,6 +888,10 @@ La vue que consomme l'indice de transport par le vent (T8, spec § 5.3). Garanti
   rupture de série ; un calcul qui enjambe l'hiver 2023-2024 doit l'annoncer ou la refuser ;
 - l'altitude peut changer **en cours de saison** : les Alpes du Sud passent de 1800 à 2500 m
   en fin de saison depuis 2024 (791 jours en tranche `haute`, tous les autres en `moyenne`).
+  Pour 27 couples massif × saison (massifs 13, 16, 17…), `neige_fraiche_saison` répartit donc
+  le cumul de la saison sur **deux lignes de tranche**, et un épisode de chute peut enjamber le
+  changement. Le cumul d'une saison entière est la somme des deux lignes ; comparer la seule
+  tranche `moyenne` de ces massifs à celle des autres sous-estime leur saison.
 
 | Colonne | Description |
 |---|---|
@@ -989,5 +993,7 @@ observés d'avant 2024 tirent les cumuls anciens vers le bas.
 vrai sur une **fenêtre nommée** (`coeur` ou `commune`) hors saisons écartées, jamais sur la
 saison entière, dont les bornes brutes ne se comparent pas. À la différence du risque,
 `commune` est admise : elle ne corrige pas le `-1`, mais le `-1` ne touche pas l'enneigement,
-et la durée d'enneigement est une « durée de saison », l'usage même de `commune` (§ 8). Pour la
+et la durée d'enneigement est une « durée de saison », l'usage même de `commune` (§ 8). La
+règle est déclarée une fois, par fenêtre, dans `fenetres.py` (`comparable_enneigement`), et le
+SQL du bloc la lit. Pour la
 neige fraîche, `comparable` ne lève pas la rupture de 2023-2024 : `lecture_cumul` le dit.
