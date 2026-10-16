@@ -233,6 +233,14 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_fiche(args: argparse.Namespace) -> int:
+    from .fiche import render
+
+    out = render(args.db, args.out, standalone=not args.fragment)
+    print(f"fiche massif-saison : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    return 0
+
+
 def cmd_carte(args: argparse.Namespace) -> int:
     from .carte import render
 
@@ -377,6 +385,13 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--fragment", action="store_true",
                    help="omettre doctype et <html> (page destinee a etre hebergee)")
     d.set_defaults(func=cmd_dashboard)
+
+    f = sub.add_parser("fiche", help="generer la fiche massif-saison (HTML statique)")
+    f.add_argument("--db", default="warehouse/bra.duckdb")
+    f.add_argument("--out", default="fiche.html", help="fichier de sortie")
+    f.add_argument("--fragment", action="store_true",
+                   help="omettre doctype et <html> (page destinee a etre hebergee)")
+    f.set_defaults(func=cmd_fiche)
 
     k = sub.add_parser("carte", help="generer la carte d'accueil des 36 massifs (HTML statique)")
     k.add_argument("--db", default="warehouse/bra.duckdb")
