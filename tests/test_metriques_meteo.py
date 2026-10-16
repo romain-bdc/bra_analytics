@@ -328,3 +328,44 @@ def test_vent_du_jour_par_tranche_retient_le_plus_fort(con) -> None:
     assert ligne["direction"] == "N"
     assert ligne["altitudes_vent"] == "3000/4000"
     assert ligne["origine"] == "prevision"
+
+
+# --------------------------------------------------------------------------
+# Indice de transport par le vent (spec 5.3), sur la neige fraiche de T7
+# --------------------------------------------------------------------------
+
+@pytest.fixture(scope="module")
+def con_transport(tmp_path_factory):
+    """Aspe-Ossau, bulletins reels du 01 au 10/12/2024 (le 05 manque a
+    l'archive) : meteo, neige fraiche et son bloc historique conserves."""
+    tmp = tmp_path_factory.mktemp("transport")
+    db = tmp / "bra.duckdb"
+    build(SERIES / "transport", tmp / "warehouse", db)
+    c = duckdb.connect(str(db), read_only=True)
+    yield c
+    c.close()
+
+
+def _transport(con, jour: date, tranche: str = "haute") -> dict:
+    df = meteo.transport_vent(con, massifs=[65], tranches=[tranche])
+    (ligne,) = df.filter(df["jour_validite"] == jour).rows(named=True)
+    return ligne
+
+
+def test_transport_vent_fort_sur_neige_recente(con_transport) -> None:
+    """08/12/2024 : vent de NW a 110 km/h en tranche haute, 55 cm tombes les
+    trois jours precedents (05-07/12). Transport, pentes de SE chargees."""
+    t = _transport(con_transport, date(2024, 12, 8))
+    assert (t["vitesse_kmh"], t["direction"], t["pentes_chargees"]) == (110, "NW", "SE")
+    assert (t["neige_recente_cm"], t["jours_neige_observes"]) == (55, 3)
+    assert t["transport"] is True
+    assert t["origine"] == "prevision"
+
+
+def test_pas_de_transport_sans_l_un_des_deux(con_transport) -> None:
+    """07/12 : vent de 95 km/h mais pas de neige recente. 10/12 : 125 cm de
+    neige recente mais 25 km/h. 04/12 : 55 km/h sur 9 cm, sous le seuil."""
+    assert _transport(con_transport, date(2024, 12, 7))["transport"] is False
+    assert _transport(con_transport, date(2024, 12, 10))["transport"] is False
+    quatre = _transport(con_transport, date(2024, 12, 4))
+    assert (quatre["neige_recente_cm"], quatre["transport"]) == (9, False)

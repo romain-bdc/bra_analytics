@@ -188,9 +188,9 @@ du jour sur les échéances de 06 h et 12 h ; vent lu par altitude ou tranche ; 
 `ALTITUDEVENT2="9999"` convertis au parsing ; vents hors [0, 300] km/h signalés par `bra check`
 et exclus des métriques. Reste à construire la vue journalière et les métriques.
 
-**Réalisée par** `metriques/meteo.py` (sept vues `meteo_*`, glossaire § 11), **sauf l'indice de
-transport de neige par le vent** : il combine vent fort et neige fraîche récente, et attend la
-vue de neige fraîche dédupliquée de T7. Le correctif de `to_frames` (tables filles lues dans la
+**Réalisée par** `metriques/meteo.py` (huit vues `meteo_*`, glossaire § 11). L'indice de
+transport de neige par le vent (`meteo_transport`) est arrivé après T7, dont il lit la neige
+fraîche dédupliquée. Le correctif de `to_frames` (tables filles lues dans la
 version retenue du bulletin) est arrivé avec T8 et profite aussi à T7.
 
 ### T9. Bloc rose des pentes et situations typiques
