@@ -52,6 +52,11 @@ class Fenetre:
     usage: str
     justification: str
     comparable_entre_saisons: bool
+    # L'obstacle qui rend une fenetre non comparable pour le risque -- la
+    # sentinelle `RISQUE1=-1` des journees marginales avant juin 2021 -- ne
+    # touche pas l'enneigement : ses releves sont lus de la meme facon a toutes
+    # les epoques. La comparabilite se declare donc par bloc.
+    comparable_enneigement: bool
 
     @property
     def libelle(self) -> str:
@@ -111,6 +116,7 @@ COMMUNE = Fenetre(
         "fenetre reste incluse dans toutes les saisons."
     ),
     comparable_entre_saisons=False,
+    comparable_enneigement=True,
 )
 
 # Bornes calees sur la pratique du `-1`, mesuree saison par saison -- sur les
@@ -139,6 +145,7 @@ COEUR = Fenetre(
         "printemps au plus tot le 27 avril (2017-2018)."
     ),
     comparable_entre_saisons=True,
+    comparable_enneigement=True,
 )
 
 FENETRES: tuple[Fenetre, ...] = (COEUR, COMMUNE)
@@ -198,3 +205,8 @@ def sql_exclusions() -> str:
         f"({_litteral(saison)}, {_litteral(motif)})"
         for saison, motif in SAISONS_NON_COMPARABLES.items()
     )
+
+
+def sql_fenetres_comparables_enneigement() -> str:
+    """Noms des fenetres ou l'enneigement se compare entre saisons, en liste SQL."""
+    return ", ".join(f"'{f.nom}'" for f in FENETRES if f.comparable_enneigement)

@@ -50,7 +50,7 @@ from datetime import date
 import duckdb
 import polars as pl
 
-from ..fenetres import FENETRES, SAISON_COMPLETE, sql_exclusions
+from ..fenetres import FENETRES, SAISON_COMPLETE, sql_exclusions, sql_fenetres_comparables_enneigement
 from ..tranches import MOYENNE, sql_case as sql_case_tranche
 from .risque import (
     MIN_SAISONS_NORMALE as MIN_SAISONS_NORMALE_RISQUE,
@@ -390,7 +390,7 @@ def _sql_enneigement_saison(seuil_epaisseur_cm: int) -> str:
             any_value(zone)         AS zone,
             -- Une portee nommee compare des periodes de meme duree ; la saison
             -- entiere, non (bornes brutes).
-            fenetre <> '{SAISON_COMPLETE}' AND bool_and(saison_comparable) AS comparable,
+            fenetre IN ({sql_fenetres_comparables_enneigement()}) AND bool_and(saison_comparable) AS comparable,
             any_value(motif_exclusion) AS motif_exclusion,
             min(altitude_m) AS altitude_min_m,
             max(altitude_m) AS altitude_max_m,
@@ -562,7 +562,7 @@ def _sql_neige_fraiche_saison(seuil_chute_cm: int) -> str:
             any_value(saison_debut) AS saison_debut,
             any_value(massif_nom)   AS massif_nom,
             any_value(zone)         AS zone,
-            fenetre <> '{SAISON_COMPLETE}' AND bool_and(saison_comparable) AS comparable,
+            fenetre IN ({sql_fenetres_comparables_enneigement()}) AND bool_and(saison_comparable) AS comparable,
             any_value(motif_exclusion) AS motif_exclusion,
             -- La rupture de serie de l'hiver 2023-2024 voyage avec le chiffre :
             -- une ligne ne melange jamais deux lectures sans le dire.

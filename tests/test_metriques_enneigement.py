@@ -390,3 +390,39 @@ def test_fenetre_et_comparabilite(con) -> None:
         enneigement.metriques_saison(con, fenetre="hiver")
     entiere = enneigement.metriques_saison(con, fenetre=SAISON_COMPLETE, massifs=[CHABLAIS])
     assert not entiere["comparable"].any()
+
+
+def test_recalage_verifie_sur_bulletins_reels() -> None:
+    """Le recalage d'un jour n'est pas suppose. Dans chacun des bulletins
+    d'Aspe-Ossau du 27/01 au 11/02/2025, les jours passes du bloc principal
+    (analyses, avant la date de redaction) se retrouvent dans le bloc
+    historique du meme bulletin a la date X + 1 ; lus sans recalage, les deux
+    blocs se contredisent."""
+    from datetime import timedelta
+
+    from bra_analytics.parser import parse_file
+
+    from .conftest import SERIES
+
+    paires, contradictions_sans_recalage = 0, 0
+    for f in sorted((SERIES / "enneigement").glob("aspe_ossau_2025*.xml")):
+        for b in parse_file(f):
+            redige = b.bulletin["date_bulletin"].date()
+            principal = {
+                r["date_cumul"].date(): (r["cumul_min_cm"], r["cumul_max_cm"])
+                for r in b.neige_fraiche if r["origine"] == "prevision"
+                and r["date_cumul"].date() < redige
+            }
+            historique = {
+                r["date_cumul"].date(): (r["cumul_min_cm"], r["cumul_max_cm"])
+                for r in b.neige_fraiche if r["origine"] == "historique"
+            }
+            for jour, valeur in principal.items():
+                if jour + timedelta(days=1) in historique:
+                    assert historique[jour + timedelta(days=1)] == valeur, (f.name, jour)
+                    paires += 1
+                if jour in historique and historique[jour] != valeur:
+                    contradictions_sans_recalage += 1
+    assert paires >= 20
+    assert contradictions_sans_recalage > 0
+    assert enneigement.DECALAGE_HISTORIQUE_MODERNE_JOURS == 1
