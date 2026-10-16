@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="INA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2017-11-15T16:00:00" DATEECHEANCE="2017-11-16T18:00:00" DATEVALIDITE="2017-11-16T18:00:00" DATEDIFFUSION="2017-11-15T14:50:21" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="-1" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="/" COMMENTAIRE="Information neige et avalanche rédigée à partir d'informations réduites" />
+    <PENTE NE="false" E="false" SE="false" S="false" SW="false" W="false" NW="false" N="false" COMMENTAIRE="non renseigné" />
+    <ACCIDENTEL />
+    <NATUREL />
+    <RESUME>Quelques coulées au soleil et quelques plaques en haute montagne</RESUME>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Partie du bulletin rédigée le Lundi13 Novembre et réactualisée au plus tard le Jeudi 16 Novembre
+Le manteau neigeux qui a commencé à se constituer la semaine dernière avec 2 épisodes neigeux significatifs, s'est tassé et humidifié plus ou moins profondément ce week-end jusque vers 2500m au moins , avec le redoux associé parfois à la pluie et au brouillard. Le retour du froid dans la nuit de Dimanche à Lundi, a consolidé ce manteau sur lequel est venu se déposer une petite couche de fraîche ( 1 à 5 cm vers 1800m).
+Au-dessus de 2500/2700m, l'humidification est plus incertaine et le vent ayant fortement travaillé la neige, des plaques souvent dures et accumulations sensibles aux surcharges, sont susceptibles d'être présentes dans les pentes raides chargées notamment à proximité des crêtes et des cols.
+Jusqu'à Jeudi , le temps reste anticyclonique avec une hausse progressive des températures.Avec une isotherme zéro degré atteignant les 3000m, on pourra avoir quelques départs de coulées dans les pentes raides prenant le soleil les après-midi. A haute altitude, avec le vent faiblissant et le redoux , les plaques devraient également gagner en stabilité.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>Malgré la faible épaisseur de neige au départ , on peut chausser les skis en versant Nord  vers 1400/1500m  sur  sol herbeux, plus haut sûrement vers les secteurs frontaliers.  
+Ce lundi , le manteau neigeux est constitué d'un peu de neige fraîche 1 à 5 cm ( loc un peu plus vers les massifs du piémont au dessus de 2000m)  reposant sur une croûte plus ou moins dure. A haute altitude, la neige  fortement travaillée  par le vent est souvent cartonnée et certaines crêtes exposées sont probablement dégarnies.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2017-11-15T00:00:00" LimiteSud="1700" LimiteNord="1600">
+    <NIVEAU ALTI="1500" N="0" S="0" />
+    <NIVEAU ALTI="1800" N="15" S="5" />
+    <NIVEAU ALTI="2400" N="60" S="45" />
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2017-11-11T00:00:00" SS241="-2" SS242="-1" />
+    <NEIGE24H DATE="2017-11-12T00:00:00" SS241="5" SS242="-1" />
+    <NEIGE24H DATE="2017-11-13T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-14T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-15T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-16T00:00:00" SS241="0" SS242="-1" />
+  </NEIGEFRAICHE>
+  <BSH>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2017-11-09T00:00:00" LimiteSud="800" LimiteNord="800">
+        <NIVEAU ALTI="1500" N="40" S="35" />
+        <NIVEAU ALTI="1800" N="60" S="50" />
+        <NIVEAU ALTI="2400" N="80" S="70" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-10T00:00:00" LimiteSud="800" LimiteNord="800">
+        <NIVEAU ALTI="1500" N="40" S="35" />
+        <NIVEAU ALTI="1800" N="60" S="50" />
+        <NIVEAU ALTI="2400" N="80" S="70" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-11T00:00:00" LimiteSud="1400" LimiteNord="1200">
+        <NIVEAU ALTI="1500" N="20" S="15" />
+        <NIVEAU ALTI="1800" N="45" S="35" />
+        <NIVEAU ALTI="2400" N="70" S="50" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-12T00:00:00" LimiteSud="1500" LimiteNord="1300">
+        <NIVEAU ALTI="1500" N="15" S="10" />
+        <NIVEAU ALTI="1800" N="35" S="25" />
+        <NIVEAU ALTI="2400" N="65" S="50" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-13T00:00:00" LimiteSud="1500" LimiteNord="1300">
+        <NIVEAU ALTI="1500" N="8" S="3" />
+        <NIVEAU ALTI="1800" N="23" S="13" />
+        <NIVEAU ALTI="2400" N="60" S="45" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-14T00:00:00" LimiteSud="1600" LimiteNord="1400">
+        <NIVEAU ALTI="1500" N="5" S="0" />
+        <NIVEAU ALTI="1800" N="15" S="10" />
+        <NIVEAU ALTI="2400" N="60" S="45" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-15T00:00:00" LimiteSud="1700" LimiteNord="1600">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="15" S="5" />
+        <NIVEAU ALTI="2400" N="60" S="45" />
+      </ENNEIGEMENT>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+      <NEIGE24H DATE="2017-11-09T00:00:00" SS241="10" SS242="-1" />
+      <NEIGE24H DATE="2017-11-10T00:00:00" SS241="-2" SS242="-1" />
+      <NEIGE24H DATE="2017-11-11T00:00:00" SS241="-2" SS242="-1" />
+      <NEIGE24H DATE="2017-11-12T00:00:00" SS241="5" SS242="-1" />
+      <NEIGE24H DATE="2017-11-13T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2017-11-14T00:00:00" SS241="0" SS242="-1" />
+    </NEIGEFRAICHE>
+    <AVALANCHES>
+      <AVALANCHE DATE="2017-11-09T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-10T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-11T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-12T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-13T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-14T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-15T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+    </AVALANCHES>
+  </BSH>
+</BULLETINS_NEIGE_AVALANCHE>

@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="INA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2017-11-05T16:00:00" DATEECHEANCE="2017-11-06T18:00:00" DATEVALIDITE="2017-11-06T18:00:00Z" DATEDIFFUSION="2017-11-05T15:11:46" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="-1" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="/" COMMENTAIRE="Information neige et avalanche rédigée à partir d'informations réduites" />
+    <PENTE NE="false" E="false" SE="false" S="false" SW="false" W="false" NW="false" N="false" COMMENTAIRE="non renseigné" />
+    <ACCIDENTEL />
+    <NATUREL />
+    <RESUME>Quelques avalanches de fraiche lundi</RESUME>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Une traîne active se met en place ce dimanche après-midi avec une limite pluie et neige qui s'abaisse vers 1000 puis 800 m. Cet épisode neigeux va donner  30 à 60 cm de neige fraîche plus ou moins travaillée par le vent au-dessus de 1800 m. 15 à 25 cm vers 1500 m et 5 cm vers 1000 m.  
+Des plaques sensibles aux surcharges vont se mettre en place sur les pentes raides surtout au dessus de 1800 à 2000 m.
+Les premières  avalanches de fraîche humide vont se produire lundi sur dans les pentes herbeuses les plus raides surtout là où  quelques éclaircies pourraient faire leur retour.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>De la pluie samedi avec un refroidissement dans la nuit de samedi à dimanche donnant quelques cm de neige au dessus 1600 à 1700 m</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2017-11-05T00:00:00" LimiteSud="1700" LimiteNord="1700">
+    <NIVEAU ALTI="1500" N="0" S="0" />
+    <NIVEAU ALTI="1800" N="5" S="5" />
+    <NIVEAU ALTI="2400" N="20" S="15" />
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2017-11-01T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-02T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-03T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-04T00:00:00" SS241="5" SS242="-1" />
+    <NEIGE24H DATE="2017-11-05T00:00:00" SS241="40" SS242="-1" />
+    <NEIGE24H DATE="2017-11-06T00:00:00" SS241="5" SS242="-1" />
+  </NEIGEFRAICHE>
+</BULLETINS_NEIGE_AVALANCHE>
