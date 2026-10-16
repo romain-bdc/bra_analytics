@@ -773,3 +773,140 @@ saison isolément ; ces lignes portent `comparable = false`.
 `couverture` est restreinte à `massif_coherent` depuis T6 : le message technique du 05/02/2016
 diffusé sous `ID="3"` ouvrait la saison 2015-2016 du Mont-Blanc au 5 février, avec 45 jours
 manquants fictifs. Elle s'ouvre désormais au 11 mars (35 jours couverts, 11 manquants).
+
+---
+
+## 10. Couche métriques — bloc météo
+
+Les métriques de la spec § 5.3, définies une fois dans
+[`src/bra_analytics/metriques/meteo.py`](../src/bra_analytics/metriques/meteo.py) et posées en
+vues par `bra build`, après le bloc risque. Toutes partent des jours couverts de
+`risque_journalier`, restreinte à `massif_coherent`, et s'indexent sur `jour_validite`.
+
+**C'est une prévision.** Chaque vue porte `origine = 'prevision'` sur chaque ligne ; l'interface
+le dit là où elle affiche une série (spec § 5.3).
+
+| Vue | Grain | Contenu |
+|---|---|---|
+| `meteo_jour` | massif × jour couvert | isotherme 0 °C, limite pluie-neige et temps sensible à 06 h et 12 h, valeur du jour, variation en 24 h, `motif_lacune` |
+| `meteo_vent_jour` | massif × jour × altitude de vent | vitesse et direction à 06 h et 12 h, vitesse du jour, direction au maximum, `tranche` |
+| `meteo_redoux` | une suite de jours à isotherme haut | début, fin, durée, `retenu`, ce qui la borde, risque de la veille, pendant et du lendemain |
+| `meteo_saison` | massif × saison × portée | isotherme min / max / moyen avec jours, jours au-dessus du seuil, variations, limite pluie-neige, redoux |
+| `meteo_vent_saison` | massif × saison × portée × tranche | jours avec vent, jours de vent fort, vitesse max et médiane, altitudes réunies |
+| `meteo_temps_sensible` | massif × saison × portée × code | échéances par code, libellé, part |
+
+```python
+import duckdb
+from bra_analytics.metriques import meteo
+
+con = duckdb.connect("warehouse/bra.duckdb", read_only=True)
+meteo.serie_jour(con, massifs=[65], saisons=["2024-2025"])        # massif × jour
+meteo.vent_saison(con, fenetre="coeur", tranches=["haute"], seuil_vent_fort_kmh=80)
+meteo.episodes_redoux(con, seuil_iso0_m=3000)                      # redoux et risque
+```
+
+Sur un entrepôt construit avant T8, les fonctions posent les vues en vues temporaires, sans
+écrire dans la base.
+
+### Convention d'extraction appliquée
+
+- **Le bulletin du jour est celui du risque.** `meteo_jour` reprend le `date_bulletin` que
+  `risque_journalier` retient pour le jour : quand deux bulletins couvrent une journée, la météo
+  et le risque viennent de la même rédaction. Les bulletins écartés le sont déjà ligne à ligne par
+  `log_daily_collapse_discards()` ; la météo n'ajoute aucun arbitrage.
+- **Prévision seule, 06 h et 12 h du jour couvert** (§ 3). Le 00 h de J (format ancien), le 18 h
+  de J et le 00 h de J+1 (format moderne) n'entrent dans aucune valeur.
+- **Une valeur du jour exige les deux échéances.** Avec une seule, le « maximum du jour » ne
+  mesurerait pas la même chose d'un jour à l'autre. Exception : la limite pluie-neige (ci-dessous).
+- **Aucun jour couvert n'est retiré.** `meteo_jour` a exactement les lignes de
+  `risque_journalier` (`massif_coherent`) ; un jour sans valeur porte son `motif_lacune` :
+  aucune échéance de prévision, échéances hors du jour couvert, échéance de 06 h ou 12 h absente
+  ou vide.
+
+### Définitions
+
+| Métrique | Colonnes | Définition |
+|---|---|---|
+| Isotherme 0 °C du jour | `iso0_06h_m`, `iso0_12h_m`, `iso0_min_m`, `iso0_max_m`, `iso0_moyen_m` | min, max et moyenne des deux échéances, nuls si l'une manque |
+| ISO 0 min / max / moyen | `meteo_saison.iso0_min_m`, `date_iso0_min`, `iso0_max_m`, `date_iso0_max`, `iso0_moyen_m`, `iso0_median_m`, avec `jours_avec_iso0` | la plus basse et la plus haute échéance de la portée ; moyenne et médiane des moyennes du jour |
+| Jours ISO 0 > seuil | `jours_iso0_au_dessus_seuil`, `seuil_iso0_m` | jours où l'isotherme dépasse **strictement** le seuil **aux deux** échéances (`iso0_min_m > seuil`) |
+| Variation ISO 0 en 24 h | `meteo_jour.variation_iso0_24h_m` ; `paires_consecutives_iso0`, `paires_ecartees_iso0`, `plus_forte_hausse_iso0_24h_m`, `plus_forte_baisse_iso0_24h_m`, `amplitude_moyenne_iso0_24h_m` | différence des moyennes du jour entre deux jours couverts **consécutifs** ; nulle par-dessus un trou, comptée dans `paires_ecartees_iso0` |
+| Vent par tranche | `meteo_vent_jour` | une ligne par **altitude** de vent, rattachée à sa tranche (`tranches.py`) ; vitesse du jour = la plus forte des deux échéances, si les deux sont valides ; direction au maximum, celle de 12 h à égalité |
+| Jours de vent fort | `meteo_vent_saison.jours_vent_fort`, `seuil_vent_fort_kmh`, `altitudes_vent` | jours où la vitesse du jour d'une altitude de la tranche dépasse **strictement** le seuil |
+| Limite pluie / neige | `limite_pluie_neige_06h_m`, `_12h_m`, `limite_pluie_neige_min_m` ; `jours_avec_limite_pluie_neige`, `limite_pluie_neige_min_m`, `limite_pluie_neige_mediane_m` | la plus basse des limites renseignées du jour |
+| Temps sensible | `meteo_temps_sensible` | comptes en **échéances** (deux par jour), pas en jours ; `dans_palette` faux pour les codes hors palette (§ 7), comptés avec un libellé nul |
+| Épisodes de redoux | `meteo_redoux` ; `episodes_redoux`, `redoux_rompus_par_trou`, `redoux_sans_franchissement_observe`, `jours_en_redoux`, `plus_long_redoux` | voir ci-dessous |
+| Indice de transport par le vent | — | **à faire** : vent fort et neige fraîche récente combinés ; attend la neige fraîche dédupliquée du bloc enneigement (T7) |
+
+> **Le vent se lit par altitude, jamais par rôle.** Le vent unique à 3000 m des Alpes du Sud
+> (§ 2.9, colonne « basse » jusqu'en 2023, « haute » ensuite) tombe en tranche haute aux deux
+> époques. Un vent sans altitude n'a pas de ligne : le seul bulletin concerné (Chablais, rédigé
+> le 11/06/2018, `jour_validite` au 01/11/2018) a de toute façon ses échéances hors du jour
+> couvert.
+
+> **Deux vents dans une même tranche.** 3000 et 4000 m, ou 2500 et 3500 m, tombent tous deux en
+> tranche haute (Mont-Blanc, Haute-Tarentaise, Vanoise, Haute-Maurienne, Oisans), et
+> certains massifs changent d'altitudes de vent en cours de saison. La tranche retient alors, pour
+> le jour, la plus forte des vitesses ; `altitudes_vent` publie les altitudes réunies
+> (`3000/4000`, `2500/3000/3500/4000`) : une tranche haute à deux vents a mécaniquement plus de
+> jours de vent fort qu'une tranche à un seul. La comparaison solide reste celle d'un massif à
+> lui-même.
+
+> **Vitesses hors plage.** Une vitesse hors [0, `VENT_MAX_KMH`] (300 km/h) est exclue — la
+> vitesse du jour devient nulle — et comptée dans `vitesses_hors_plage`. Les deux cas de la
+> prévision (400 km/h à 18 h, −5 km/h à 00 h) tombent hors des échéances de 06 h et 12 h.
+
+> **Limite pluie-neige.** `-1` (temps sec) est rendu nul par le parser : une limite nulle dit
+> « pas de précipitation prévue » ou « attribut absent », indiscernables (`disponibilite.md` § 8).
+> D'où la plus basse des limites renseignées, sans exiger les deux échéances.
+
+### Seuils
+
+Paramétrables dans chaque fonction de lecture ; les vues posées au build portent les valeurs par
+défaut, et chaque sortie publie le seuil qui l'a produite. Les deux seuils sont au **90e
+centile** de la prévision, toutes échéances confondues (`disponibilite.md` § 7).
+
+| Constante | Défaut | Justification |
+|---|---|---|
+| `SEUIL_VENT_FORT_KMH` | 70 km/h | p90 du vent haut (p95 80, p99 100) ; entre p95 (60) et p99 (80) du vent bas |
+| `SEUIL_ISO0_M` | 3400 m | p90 de l'isotherme 0 °C (p75 3000, p95 3700) |
+| `DUREE_MIN_REDOUX_JOURS` | 2 jours | « au moins 24 h » : deux jours consécutifs au-dessus à 06 h et 12 h l'attestent sur trente heures, un jour seul sur six |
+
+Sur l'entrepôt des 36 massifs, saison entière : 7 103 jours de vent fort en tranche haute
+(10,7 % des jours avec vent), 1 126 en tranche moyenne (2,3 %), 237 en tranche basse (1,4 %) ;
+au seuil « ≥ 70 », ce serait 10 927, 1 894 et 370 : les vitesses s'écrivent par pas de 5 km/h,
+et le choix entre « > » et « ≥ » déplace la tranche haute d'un tiers.
+
+### Épisodes de redoux
+
+Un épisode est une suite de jours couverts **consécutifs au calendrier** où l'isotherme dépasse
+le seuil aux deux échéances, d'au moins `DUREE_MIN_REDOUX_JOURS` jours. Il est défini sur la
+saison entière et appartient à la portée où il commence (`debut_fenetre_coeur`…).
+
+- **Franchissement à la hausse.** Il n'est *observé* que si la veille est couverte et sous le
+  seuil ; sinon (début de saison, trou, veille sans valeur) l'épisode est compté et
+  `franchissement_observe` est faux.
+- **Un trou d'archive rompt un épisode**, comme pour le risque (§ 9) : deux suites séparées par
+  un jour sans bulletin ne sont pas recollées, chacune est `rompu_par_trou`.
+- **Une suite plus courte que la durée minimale reste dans la vue**, avec `retenu = false`.
+- **Risque avant et après** : `risque_veille` (jour précédant le début), `risque_max_pendant`,
+  `risque_lendemain` (jour suivant la fin), lus dans `risque_jour` ; nuls si ces jours ne sont pas
+  couverts.
+
+Sur les 36 massifs, aux seuils par défaut : **1 186 épisodes**, dont 36 rompus par un trou et 15
+sans franchissement observé ; durée moyenne 3,8 jours, 29 au plus. **285** commencent dans
+`coeur` : risque moyen 2,17 la veille, 2,15 au plus fort, 1,84 le lendemain ; sur les 278 dont la
+veille et le lendemain sont couverts, le risque monte 23 fois, reste égal 153 fois et baisse 102
+fois. Au seuil de 3000 m : 2 767 épisodes ; avec une durée minimale d'un jour : 2 345.
+
+> Ces comptes viennent de l'entrepôt construit avant le correctif de `to_frames` (exploration,
+> rééditions) : 217 jours y lisent les échéances de 06 h et 12 h d'une autre diffusion que la
+> retenue. Une reconstruction les déplacera à la marge.
+
+### Couverture
+
+Sur l'entrepôt des 36 massifs, 76 796 jours couverts sur 76 852 ont une valeur d'isotherme. Les
+56 autres : 27 jours dont les échéances de prévision tombent hors du jour couvert (bulletins mal
+datés de 2016-2017 à 2020-2021, et les deux rééditions du 06/04/2026 que le correctif de
+`to_frames` rétablit), 29 jours dont l'échéance de 06 h ou 12 h est vide (2022-2023 à
+2025-2026).

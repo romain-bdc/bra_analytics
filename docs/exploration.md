@@ -152,6 +152,16 @@ cinq libellés pour quatre éléments.
   (`RESUME`, `STABILITE`, `QUALITE`) strictement identique — seules les images ont été regénérées.
   **`AMENDEMENT` est donc inexploitable pour détecter les révisions** : dédupliquer sur
   `(ID, DATEBULLETIN)` en gardant le `DATEDIFFUSION` maximal.
+- **Toutes les rediffusions ne sont pas identiques.** Sur les 90 054 fichiers, 10 522 clés
+  `(ID, DATEBULLETIN)` sont diffusées par plusieurs fichiers ; pour **1 453** d'entre elles, les
+  blocs `METEO`, `ENNEIGEMENT`, `NEIGEFRAICHE`, `TENDANCES` ou `BSH` diffèrent d'une diffusion à
+  l'autre (décompte indépendant par `ElementTree`, 16/10/2026). Jusqu'au correctif de T8, `bra
+  build` prenait ces blocs dans le premier fichier lu, et non dans celui que la table `bulletins`
+  retient : **1 409 clés** associaient le risque d'une version aux tables filles d'une autre —
+  `BSH` dans 1 104 cas, `METEO` dans 230 (dont 217 sur les échéances de 06 h et 12 h du jour
+  couvert), `NEIGEFRAICHE` 163, `ENNEIGEMENT` 66, `TENDANCES` 63. Dans 34 de ces cas, la rediffusion
+  déplace `DATEECHEANCE` d'un jour (Cinto Rotondo et Renoso-Incudine, 06/04/2026 : la version de
+  16 h 00 prévoit le 7, la réédition de 16 h 21 le 6).
 - **Trous de données réels.** Le 07/02/2023 ne contient que 8 fichiers (Pyrénées orientales et
   Corse) : Alpes et Pyrénées occidentales manquantes. Un jour manquant n'est pas une anomalie de
   pipeline.

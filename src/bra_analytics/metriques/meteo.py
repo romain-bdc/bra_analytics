@@ -495,7 +495,7 @@ def _sql_meteo_saison(seuil_iso0_m: int, duree_min_jours: int) -> str:
 def _sql_meteo_vent_saison(seuil_vent_kmh: int) -> str:
     v = int(seuil_vent_kmh)
     # Deux vents peuvent tomber dans la meme tranche : 3000 et 4000 m (Haute-
-    # Tarentaise, Haute-Maurienne, Vanoise, Mont-Blanc...), 2500 et 3500 m.
+    # Tarentaise, Haute-Maurienne, Vanoise, Mont-Blanc, Oisans), 2500 et 3500 m.
     # La tranche retient alors, pour le jour, la plus forte des deux vitesses,
     # et `altitudes_vent` publie les altitudes qu'elle reunit : une tranche
     # haute a deux vents n'est pas comparable a une tranche haute a un seul.
