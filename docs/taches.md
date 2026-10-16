@@ -237,6 +237,9 @@ diffusés sur la période sont distingués des massifs à zéro.
 
 **Dépend de** : T1, T3, T6.
 
+**Réalisée par** `bra carte` (`carte.py`, `templates/carte.html`). Le sélecteur propose jours
+≥ 3 et maximum atteint ; la durée d'enneigement y figure désactivée tant que T7 n'est pas close.
+
 ### T13. Écran de comparaison
 
 Les trois modes de la spec § 6, plus le classement des saisons en barres horizontales. Sélecteur

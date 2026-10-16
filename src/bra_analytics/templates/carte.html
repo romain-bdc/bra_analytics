@@ -1,0 +1,443 @@
+<title>Carte des massifs BRA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Jetons repris du tableau de bord (templates/dashboard.html) : meme rampe
+   bleue a cinq pas, validee en ordinal sur les deux surfaces. */
+:root{
+  color-scheme:light;
+  --page:#eef0f3; --surface:#ffffff; --surface-2:#f6f8fa;
+  --ink:#10141a; --ink-2:#4d5765; --ink-muted:#828c9a;
+  --grid:#e4e7ec; --rule:#d7dce2; --ring:rgba(16,20,26,.10);
+  --s1:#2a78d6;
+  --o1:#86b6ef; --o2:#5598e7; --o3:#2a78d6; --o4:#1c5cab; --o5:#0d366b;
+  --hachure:#828c9a; --vide:#e9ecf0;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --page:#0b0e13; --surface:#161a21; --surface-2:#1c212a;
+    --ink:#f2f4f7; --ink-2:#aab4c2; --ink-muted:#7b8593;
+    --grid:#242a33; --rule:#2f3742; --ring:rgba(255,255,255,.10);
+    --s1:#3987e5;
+    --o1:#184f95; --o2:#256abf; --o3:#3987e5; --o4:#6da7ec; --o5:#9ec5f4;
+    --hachure:#7b8593; --vide:#20262f;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page:#0b0e13; --surface:#161a21; --surface-2:#1c212a;
+  --ink:#f2f4f7; --ink-2:#aab4c2; --ink-muted:#7b8593;
+  --grid:#242a33; --rule:#2f3742; --ring:rgba(255,255,255,.10);
+  --s1:#3987e5;
+  --o1:#184f95; --o2:#256abf; --o3:#3987e5; --o4:#6da7ec; --o5:#9ec5f4;
+  --hachure:#7b8593; --vide:#20262f;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font-family:var(--sans); font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 72px}
+@media (max-width:600px){.wrap{padding:0 16px 56px}}
+
+header{padding:44px 0 24px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 14px}
+h1{font-size:clamp(28px,4.2vw,44px);font-weight:600;letter-spacing:-.022em;line-height:1.08;margin:0;text-wrap:balance}
+.lede{margin:14px 0 0;max-width:68ch;color:var(--ink-2);font-size:16px}
+.lede b{color:var(--ink)}
+
+.bar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px;
+  padding:12px 0;margin-bottom:22px;background:var(--page);border-bottom:1px solid var(--rule)}
+.bar label{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted)}
+select,.toggle{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--rule);border-radius:6px;padding:7px 11px;cursor:pointer}
+select{min-width:230px;max-width:100%}
+.toggle[aria-pressed="true"]{background:var(--s1);border-color:var(--s1);color:#fff}
+:is(select,.toggle):focus-visible{outline:2px solid var(--s1);outline-offset:2px}
+.bar .spacer{flex:1 1 auto}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin-bottom:30px}
+.kpi{background:var(--surface);padding:16px 18px 14px;display:flex;flex-direction:column;gap:5px}
+.kpi .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted)}
+.kpi .v{font-size:22px;font-weight:600;letter-spacing:-.015em;line-height:1.15}
+.kpi .n{font-size:12.5px;color:var(--ink-2)}
+
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:22px 22px 18px}
+h2{font-size:19px;font-weight:600;letter-spacing:-.012em;margin:0}
+.sous{margin:4px 0 14px;color:var(--ink-2);font-size:13.5px;max-width:86ch}
+.carte svg{display:block;width:100%;height:auto}
+.massif{stroke:var(--surface);stroke-width:1.1;stroke-linejoin:round;cursor:crosshair}
+.massif:hover,.massif:focus-visible{stroke:var(--ink);stroke-width:1.8;outline:none}
+.zonelab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;fill:var(--ink-muted)}
+
+.legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend .titre{color:var(--ink-muted)}
+.legend svg{width:16px;height:16px;flex:none;border-radius:3px;box-shadow:inset 0 0 0 1px var(--ring)}
+.echelle{margin:6px 0 0;font-size:12.5px;color:var(--ink-muted);max-width:86ch}
+.attrib{margin:14px 0 0;padding-top:10px;border-top:1px solid var(--grid);font-size:12px;color:var(--ink-muted)}
+.attrib a{color:var(--ink-2)}
+
+.tables{margin-top:22px}
+.tables[hidden]{display:none}
+.scroller{overflow-x:auto}
+table{border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+caption{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted);padding-bottom:8px}
+th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td.g{text-align:left;white-space:normal}
+thead th{color:var(--ink-2);font-weight:500;border-bottom:1px solid var(--rule)}
+
+#tip{position:fixed;z-index:60;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:7px;
+  padding:9px 11px;font-size:12.5px;line-height:1.5;box-shadow:0 6px 22px rgba(0,0,0,.14);max-width:290px}
+#tip b{font-weight:600}
+#tip .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+#tip .z{color:var(--ink-muted)}
+#tip .alerte{display:block;margin-top:4px;color:var(--ink-2)}
+
+footer{border-top:1px solid var(--rule);margin-top:40px;padding-top:20px;color:var(--ink-muted);
+  font-size:12.5px;display:flex;flex-wrap:wrap;gap:8px 26px}
+footer a{color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (forced-colors:active){.massif{stroke:CanvasText}}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Météo-France · Bulletins d'estimation du risque d'avalanche</p>
+  <h1 id="titre">Le risque d'avalanche, massif par massif</h1>
+  <p class="lede" id="lede"></p>
+</header>
+
+<div class="bar">
+  <label for="met">Métrique</label>
+  <select id="met"></select>
+  <span class="spacer"></span>
+  <button class="toggle" id="tbl" aria-pressed="false">Voir les données</button>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<section class="panel">
+  <h2 id="h2"></h2>
+  <p class="sous" id="sous"></p>
+  <div class="carte"><svg id="carte" role="img" aria-labelledby="h2"></svg></div>
+  <div class="legend" id="legende"></div>
+  <p class="echelle" id="echelle"></p>
+  <p class="attrib" id="attrib"></p>
+  <div class="tables" hidden><div class="scroller"><table id="table"></table></div></div>
+</section>
+
+<footer>
+  <span id="gen"></span>
+  <span>Source : <a href="https://files.data.gouv.fr/meteofrance/data/BULLETIN/BRA/">files.data.gouv.fr — Météo-France</a>, <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence">Licence Ouverte 2.0</a></span>
+  <span>Page générée par <code>bra carte</code></span>
+</footer>
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const D = __DONNEES__;
+const NS = "http://www.w3.org/2000/svg";
+const NIVEAUX = ["Faible", "Limité", "Marqué", "Fort", "Très fort"];
+const RAMPE = ["--o1", "--o2", "--o3", "--o4", "--o5"];
+/* Les zones de massifs.py sont en ASCII ; seule « Pyrenees » perd un accent a l'affichage. */
+const zoneFr = z => z === "Pyrenees" ? "Pyrénées" : z;
+const PAR_ID = new Map(D.massifs.map(m => [m.id, m]));
+const NB_COMP = D.saisons_comparables.length;
+
+/* ---------- utilitaires ---------- */
+const el = (t, at = {}) => { const e = document.createElementNS(NS, t); for (const k in at) e.setAttribute(k, at[k]); return e; };
+const nb = n => n == null ? "—" : n.toLocaleString("fr-FR");
+// Tout texte venu du payload passe par `esc` avant `innerHTML` : les noms et
+// motifs sont des constantes du repo aujourd'hui, mais un `<` ou un `&` dans
+// un libelle futur casserait la page sans prevenir.
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const dec = (v, d = 2) => v == null ? "—" : v.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (a, b) => b ? (100 * a / b).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " %" : "—";
+const dateFr = iso => iso ? new Date(iso + "T00:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "—";
+const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+/* Libelle de la fenetre recompose depuis ses bornes du payload, accentue pour l'affichage. */
+const F = D.fenetre;
+const fenetreTexte = `${F.debut[1]} ${MOIS[F.debut[0] - 1]} → ${F.fin[1]} ${MOIS[F.fin[0] - 1]}`;
+
+/* ---------- projection ----------
+   Equirectangulaire corrigee du cosinus de la latitude moyenne : sur 5 degres
+   de latitude, l'ecart a une projection conforme est invisible, et le calcul
+   tient en deux lignes sans bibliotheque cartographique. */
+const anneaux = f => f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
+let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+for (const f of D.contours.features) for (const poly of anneaux(f)) for (const r of poly) for (const [x, y] of r) {
+  minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+}
+const KX = Math.cos((minY + maxY) / 2 * Math.PI / 180);
+const W = 900, PAD = 18;
+const ECH = (W - 2 * PAD) / ((maxX - minX) * KX);
+const H = Math.ceil((maxY - minY) * ECH + 2 * PAD);
+const px = x => PAD + (x - minX) * KX * ECH;
+const py = y => PAD + (maxY - y) * ECH;
+const chemin = f => anneaux(f).map(poly => poly.map(r =>
+  r.map(([x, y], i) => (i ? "L" : "M") + px(x).toFixed(1) + " " + py(y).toFixed(1)).join("") + "Z").join("")).join("");
+
+/* ---------- classes de couleur ----------
+   Rampe sequentielle a un seul ton, cinq pas. La moyenne et les comptes sont
+   repartis en cinq classes egales sur l'etendue observee ; le maximum, deja
+   ordinal, prend directement le pas de son niveau. */
+const METRIQUES = D.metriques;
+/* La metrique vit dans l'URL (spec section 6) : un etat de la page se partage par son lien. */
+const depuisUrl = () => {
+  const h = decodeURIComponent(location.hash.slice(1));
+  return METRIQUES.some(m => m.cle === h && m.disponible) ? h : D.metrique_defaut;
+};
+let metrique = depuisUrl();
+const defMetrique = () => METRIQUES.find(m => m.cle === metrique);
+
+function echelle(cle) {
+  const vals = D.massifs.map(m => m[cle]).filter(v => v != null);
+  if (cle === "risque_max") {
+    return { pas: v => v - 1, bornes: NIVEAUX.map((n, k) => `${k + 1} — ${n}`), niveaux: true };
+  }
+  const entier = cle !== "risque_moyen";
+  const g = entier ? 10 : 0.1;
+  let lo = Math.floor(Math.min(...vals) / g) * g, hi = Math.ceil(Math.max(...vals) / g) * g;
+  if (hi <= lo) hi = lo + g;
+  const larg = (hi - lo) / 5;
+  const pas = v => Math.min(4, Math.max(0, Math.floor((v - lo) / larg)));
+  const fmt = v => entier ? nb(Math.round(v)) : dec(v, 2);
+  return { pas, lo, hi, bornes: RAMPE.map((_, k) => `${fmt(lo + larg * k)} – ${fmt(lo + larg * (k + 1))}`), niveaux: false };
+}
+
+/* ---------- valeur affichee ---------- */
+function valeurTexte(m, cle) {
+  const v = m[cle];
+  if (v == null) return "aucune donnée";
+  if (cle === "risque_moyen") return dec(v);
+  if (cle === "risque_max") return `${v} — ${NIVEAUX[v - 1]}`;
+  if (cle === "jours_3_plus_par_saison") return `${dec(v, 1)} jours par saison`;
+  return nb(v) + " jours";
+}
+
+/* ---------- infobulle ----------
+   Une moyenne d'indice ordinal ne se lit jamais seule : jours couverts et jours
+   a 4 ou 5 l'accompagnent toujours, quelle que soit la metrique choisie. */
+const tip = document.getElementById("tip");
+function contenu(m) {
+  const cle = metrique, def = defMetrique();
+  let h = `<b>${esc(m.nom)}</b> <span class="z">· ${zoneFr(m.zone)}</span><br>`;
+  if (m.diffusion === "absente") {
+    return h + `Aucun jour couvert sur la période : massif non diffusé sur ${D.libelle_saisons}.`;
+  }
+  h += `${def.libelle} <span class="num">${valeurTexte(m, cle)}</span><br>`;
+  if (cle !== "risque_moyen") h += `indice moyen <span class="num">${dec(m.risque_moyen)}</span><br>`;
+  h += `<span class="num">${nb(m.jours_couverts)}</span> jours couverts sur <span class="num">${nb(m.jours_periode)}</span>
+        (<span class="num">${pct(m.jours_couverts, m.jours_periode)}</span>)<br>
+        <span class="num">${nb(m.jours_4_plus)}</span> jours à risque 4 ou 5`;
+  if (m.jours_5) h += ` <span class="z">(dont <span class="num">${nb(m.jours_5)}</span> à 5)</span>`;
+  if (cle === "jours_3_plus_par_saison" && m.jours_3_plus != null) {
+    h += `<span class="num">${nb(m.jours_3_plus)}</span> jours à 3 ou plus sur <span class="num">${m.saisons}</span> saison${m.saisons > 1 ? "s" : ""}<br>`;
+  }
+  if (cle === "risque_max" && m.risque_max != null) {
+    h += `<br>atteint <span class="num">${nb(m.jours_au_max)}</span> jour${m.jours_au_max > 1 ? "s" : ""}, la première fois le ${dateFr(m.date_max)}`;
+  }
+  const sansIndice = m.jours_couverts - m.jours_avec_indice;
+  if (sansIndice > 0) h += `<br><span class="num">${nb(sansIndice)}</span> jour${sansIndice > 1 ? "s" : ""} sans indice, hors moyenne`;
+  h += `<br><span class="num">${m.saisons_presentes.length}</span> saison${m.saisons_presentes.length > 1 ? "s" : ""} sur <span class="num">${NB_COMP}</span> comparables`;
+  if (m.diffusion === "partielle") {
+    h += `<span class="alerte"><b>Diffusion partielle</b> — pas de bulletin sur : ${esc(m.saisons_manquantes.join(", "))}.`;
+    if (cle === "jours_3_plus_par_saison") h += " La moyenne par saison porte sur les seules saisons diffusées.";
+    h += `</span>`;
+  }
+  return h;
+}
+function place(ev) {
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(Math.max(8, ev.clientX + 14), innerWidth - r.width - 8) + "px";
+  tip.style.top = Math.min(Math.max(8, ev.clientY + 16), innerHeight - r.height - 8) + "px";
+}
+
+/* ---------- motifs : absence et diffusion partielle ----------
+   Deux textures distinctes, pour que l'absence ne se lise jamais comme un zero :
+   un massif sans donnee est hachure sur fond neutre, hors de la rampe ; un
+   massif diffuse une partie de la periode garde sa couleur, surchargee d'une
+   hachure fine dans l'autre sens. */
+function motifs(svg) {
+  const defs = el("defs");
+  const absent = el("pattern", { id: "absent", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" });
+  absent.append(el("rect", { width: 6, height: 6, fill: "var(--vide)" }), el("line", { x1: 0, y1: 0, x2: 0, y2: 6, stroke: "var(--hachure)", "stroke-width": 1.4 }));
+  const partiel = el("pattern", { id: "partiel", width: 5, height: 5, patternUnits: "userSpaceOnUse", patternTransform: "rotate(135)" });
+  partiel.append(el("line", { x1: 0, y1: 0, x2: 0, y2: 5, stroke: "var(--surface)", "stroke-width": 1.6 }));
+  defs.append(absent, partiel);
+  svg.appendChild(defs);
+}
+
+/* ---------- carte ---------- */
+function carte() {
+  const svg = document.getElementById("carte");
+  svg.textContent = "";
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  motifs(svg);
+  const sc = echelle(metrique);
+  const zones = new Map();
+  for (const f of D.contours.features) {
+    const m = PAR_ID.get(f.properties.code);
+    if (!m) continue;
+    const d = chemin(f);
+    const v = m[metrique];
+    const fill = v == null ? "url(#absent)" : `var(${RAMPE[sc.pas(v)]})`;
+    const p = el("path", { d, fill, class: "massif", tabindex: 0, "aria-label": `${m.nom} : ${valeurTexte(m, metrique)}` });
+    p.addEventListener("pointerenter", ev => { tip.innerHTML = contenu(m); tip.style.opacity = "1"; place(ev); });
+    p.addEventListener("pointermove", place);
+    p.addEventListener("pointerleave", () => { tip.style.opacity = "0"; });
+    p.addEventListener("focus", () => {
+      tip.innerHTML = contenu(m); tip.style.opacity = "1";
+      const b = p.getBoundingClientRect(); place({ clientX: b.right, clientY: b.top });
+    });
+    p.addEventListener("blur", () => { tip.style.opacity = "0"; });
+    svg.appendChild(p);
+    if (m.diffusion === "partielle") svg.appendChild(el("path", { d, fill: "url(#partiel)", "pointer-events": "none" }));
+    /* Etiquettes de zone : boite englobante des massifs de chaque zone. */
+    const b = p.getBBox();
+    const z = zones.get(m.zone) || { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
+    zones.set(m.zone, { x0: Math.min(z.x0, b.x), x1: Math.max(z.x1, b.x + b.width), y0: Math.min(z.y0, b.y), y1: Math.max(z.y1, b.y + b.height) });
+  }
+  for (const [nom, z] of zones) {
+    /* Alpes du Nord et Corse : etiquette a gauche du haut du bloc ; les autres dessous. */
+    const gauche = nom !== "Pyrenees" && nom !== "Alpes du Sud";
+    const t = gauche
+      ? el("text", { x: z.x0 - 12, y: z.y0 + 24, "text-anchor": "end", class: "zonelab" })
+      : el("text", { x: (z.x0 + z.x1) / 2, y: z.y1 + 18, "text-anchor": "middle", class: "zonelab" });
+    t.textContent = zoneFr(nom);
+    svg.appendChild(t);
+  }
+  legende(sc);
+}
+
+function pastille(fill, surcharge) {
+  const s = el("svg", { viewBox: "0 0 16 16", "aria-hidden": "true" });
+  s.appendChild(el("rect", { width: 16, height: 16, fill }));
+  if (surcharge) for (let k = -16; k < 32; k += 5) s.appendChild(el("line", { x1: k, y1: 16, x2: k + 16, y2: 0, stroke: "var(--surface)", "stroke-width": 1.6 }));
+  return s;
+}
+function pastilleAbsente() {
+  const s = el("svg", { viewBox: "0 0 16 16", "aria-hidden": "true" });
+  s.appendChild(el("rect", { width: 16, height: 16, fill: "var(--vide)" }));
+  for (let k = -16; k < 32; k += 6) s.appendChild(el("line", { x1: k, y1: 0, x2: k + 16, y2: 16, stroke: "var(--hachure)", "stroke-width": 1.4 }));
+  return s;
+}
+
+function legende(sc) {
+  const box = document.getElementById("legende");
+  box.textContent = "";
+  const titre = document.createElement("span");
+  titre.className = "titre"; titre.textContent = defMetrique().libelle;
+  box.appendChild(titre);
+  const present = new Set(D.massifs.map(m => m[metrique]).filter(v => v != null).map(sc.pas));
+  sc.bornes.forEach((txt, k) => {
+    if (sc.niveaux && !present.has(k)) return;
+    const s = document.createElement("span");
+    s.append(pastille(`var(${RAMPE[k]})`), document.createTextNode(txt));
+    box.appendChild(s);
+  });
+  const partiels = D.massifs.filter(m => m.diffusion === "partielle");
+  const absents = D.massifs.filter(m => m.diffusion === "absente");
+  if (partiels.length) {
+    const s = document.createElement("span");
+    s.append(pastille(`var(${RAMPE[2]})`, true), document.createTextNode(`Diffusé une partie de la période (${partiels.map(m => m.nom).join(", ")})`));
+    box.appendChild(s);
+  }
+  const s = document.createElement("span");
+  s.append(pastilleAbsente(), document.createTextNode(absents.length ? `Aucune donnée (${absents.length} massif${absents.length > 1 ? "s" : ""})` : "Aucune donnée (aucun massif)"));
+  box.appendChild(s);
+
+  const e = document.getElementById("echelle");
+  const cle = metrique;
+  if (cle === "risque_moyen") {
+    e.textContent = `Classes réparties sur l'étendue observée (${dec(sc.lo)} à ${dec(sc.hi)}) : deux teintes voisines peuvent ne différer que de quelques centièmes. L'échelle européenne va de 1 à 5 ; une moyenne d'indices ordinaux se lit avec ses jours, au survol.`;
+  } else if (cle === "jours_3_plus_par_saison") {
+    e.textContent = `Classes réparties sur l'étendue observée (${dec(sc.lo, 1)} à ${dec(sc.hi, 1)} jours par saison). Le compte est rapporté aux saisons diffusées, pour que les massifs hachurés, diffusés moins longtemps, se comparent aux autres ; le compte brut est au survol. Zéro jour est une valeur, colorée comme telle ; l'absence de donnée est hachurée à part.`;
+  } else {
+    e.textContent = "Indice le plus haut publié sur la période, sur l'échelle européenne. Le survol donne le nombre de jours où il a été atteint.";
+  }
+}
+
+/* ---------- tuiles ---------- */
+function tuiles() {
+  const avec = D.massifs.filter(m => m.risque_moyen != null);
+  const tri = [...avec].sort((a, b) => b.risque_moyen - a.risque_moyen);
+  const haut = tri[0], bas = tri[tri.length - 1];
+  const decrit = m => `${dec(m.risque_moyen)} — ${nb(m.jours_couverts)} jours couverts, ${nb(m.jours_4_plus)} à 4 ou 5`;
+  const partiels = D.massifs.filter(m => m.diffusion === "partielle");
+  const cases = [
+    ["Indice moyen le plus haut", haut ? haut.nom : "—", haut ? decrit(haut) : ""],
+    ["Indice moyen le plus bas", bas ? bas.nom : "—", bas ? decrit(bas) : ""],
+    ["Diffusion partielle", nb(partiels.length) + " massif" + (partiels.length > 1 ? "s" : ""),
+      partiels.map(m => `${m.nom} : ${m.saisons_presentes.length} saisons sur ${NB_COMP}`).join(" · ") || "tous diffusés sur toute la période"],
+    ["Période", D.libelle_saisons, `fenêtre ${F.nom}, ${fenetreTexte}`],
+  ];
+  document.getElementById("kpis").innerHTML = cases
+    .map(([k, v, n]) => `<div class="kpi"><span class="k">${k}</span><span class="v">${v}</span><span class="n">${n}</span></div>`).join("");
+}
+
+/* ---------- table ---------- */
+function table() {
+  const cle = metrique;
+  const lignes = [...D.massifs].sort((a, b) => (b[cle] ?? -Infinity) - (a[cle] ?? -Infinity) || a.id - b.id);
+  const statut = m => m.diffusion === "complete" ? "complète"
+    : m.diffusion === "partielle" ? `partielle — manque ${m.saisons_manquantes.join(", ")}` : "aucune donnée";
+  const t = document.getElementById("table");
+  t.innerHTML = `<caption>${defMetrique().libelle} par massif · ${D.libelle_saisons}</caption>
+    <thead><tr>${["Massif", "Zone", "Indice moyen", "Jours ≥ 3 par saison", "Jours ≥ 3", "Maximum", "Jours couverts", "Jours à 4 ou 5", "Saisons", "Diffusion"].map(h => `<th scope="col">${h}</th>`).join("")}</tr></thead>
+    <tbody>${lignes.map(m => `<tr><th scope="row">${esc(m.nom)}</th><td class="g">${zoneFr(m.zone)}</td><td>${dec(m.risque_moyen)}</td>
+      <td>${dec(m.jours_3_plus_par_saison, 1)}</td><td>${nb(m.jours_3_plus)}</td><td>${m.risque_max ?? "—"}</td><td>${nb(m.jours_couverts)}</td><td>${nb(m.jours_4_plus)}</td>
+      <td>${m.saisons_presentes.length} / ${NB_COMP}</td><td class="g">${statut(m)}</td></tr>`).join("")}</tbody>`;
+}
+
+/* ---------- textes ---------- */
+function textes() {
+  const def = defMetrique();
+  document.getElementById("h2").textContent = `${def.libelle}, ${D.libelle_saisons}`;
+  const ecartees = Object.entries(D.saisons_ecartees).map(([s, motif]) => `${s} (${motif})`).join(" ; ");
+  document.getElementById("sous").innerHTML =
+    `${def.description[0].toUpperCase() + def.description.slice(1)}, sur la fenêtre <b>${F.nom}</b> (${fenetreTexte}) de chaque saison,
+     toutes saisons comparables confondues — une valeur par massif. Saisons écartées : ${esc(ecartees) || "aucune"}.`;
+}
+
+/* ---------- assemblage ---------- */
+const sel = document.getElementById("met");
+sel.innerHTML = METRIQUES.map(m => m.disponible
+  ? `<option value="${m.cle}"${m.cle === metrique ? " selected" : ""}>${m.libelle}</option>`
+  : `<option value="${m.cle}" disabled>${m.libelle} — ${m.motif.split(" :")[0]}</option>`).join("");
+const indispo = METRIQUES.filter(m => !m.disponible);
+
+document.getElementById("lede").innerHTML =
+  `Par défaut, chaque massif est coloré par son indice de risque moyen sur <b>${D.libelle_saisons}</b>, mesuré sur la fenêtre
+   <b>${F.nom}</b> (${fenetreTexte}), la seule où les saisons se comparent : avant juin 2021, les journées à manteau insuffisant
+   (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Survolez un massif pour lire ses jours couverts et ses jours à risque 4 ou 5.`
+  + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${esc(m.libelle)} : ${esc(m.motif)}.`).join(" ")}</span>` : "");
+
+const archive = dateFr(D.archive_jusqu_au);
+document.getElementById("attrib").innerHTML =
+  `${esc(D.attribution.donnees)}, archive arrêtée au ${archive}. ${esc(D.attribution.contours)}.`;
+document.getElementById("gen").textContent = `Archive arrêtée au ${archive} · page générée le ${dateFr(D.genere)}`;
+
+function dessine() { textes(); carte(); table(); }
+sel.addEventListener("change", () => { metrique = sel.value; history.replaceState(null, "", "#" + metrique); dessine(); });
+addEventListener("hashchange", () => { metrique = depuisUrl(); sel.value = metrique; dessine(); });
+const bouton = document.getElementById("tbl");
+bouton.addEventListener("click", () => {
+  const on = bouton.getAttribute("aria-pressed") !== "true";
+  bouton.setAttribute("aria-pressed", String(on));
+  bouton.textContent = on ? "Masquer les données" : "Voir les données";
+  document.querySelectorAll(".tables").forEach(t => { t.hidden = !on; });
+});
+tuiles();
+dessine();
+</script>

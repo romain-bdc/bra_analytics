@@ -163,16 +163,15 @@ ENTETE = (
 )
 
 
-def render(
-    db_path: str | Path = "warehouse/bra.duckdb",
-    out_path: str | Path = "dashboard.html",
-    zone: str = "Pyrenees",
-    standalone: bool = True,
-) -> Path:
-    data = payload(db_path, zone)
-    html = TEMPLATE.read_text(encoding="utf-8")
+def injecter(gabarit: Path, data: dict, standalone: bool = True) -> str:
+    """Insere le payload dans un gabarit par son marqueur `__DONNEES__`.
+
+    Partage par tous les ecrans (tableau de bord, carte d'accueil) : c'est le
+    motif de l'interface, et il n'existe qu'une fois.
+    """
+    html = gabarit.read_text(encoding="utf-8")
     if "__DONNEES__" not in html:
-        raise SystemExit(f"gabarit sans marqueur __DONNEES__ : {TEMPLATE}")
+        raise SystemExit(f"gabarit sans marqueur __DONNEES__ : {gabarit}")
     # separators compact : le payload represente l'essentiel du poids de la page.
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     # `</script>` dans une chaine JSON fermerait la balise hote.
@@ -180,6 +179,16 @@ def render(
     page = html.replace("__DONNEES__", blob)
     if standalone:
         page = ENTETE + page + "</html>\n"
+    return page
+
+
+def render(
+    db_path: str | Path = "warehouse/bra.duckdb",
+    out_path: str | Path = "dashboard.html",
+    zone: str = "Pyrenees",
+    standalone: bool = True,
+) -> Path:
+    page = injecter(TEMPLATE, payload(db_path, zone), standalone)
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8")

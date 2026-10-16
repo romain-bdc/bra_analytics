@@ -222,3 +222,12 @@ def test_non_estimes_et_hors_moyenne_sont_deux_comptages(tmp_path) -> None:
     finally:
         con.close()
     assert {"non_estimes", "hors_moyenne"} <= cols
+
+
+def test_motifs_d_exclusion_rediges_pour_l_affichage() -> None:
+    """Les motifs s'affichent tels quels (carte, tableau de bord, `bra
+    fenetres`) : ce sont des textes francais accentues, pas des commentaires."""
+    from bra_analytics.fenetres import SAISONS_NON_COMPARABLES
+
+    assert "Pyrénées" in SAISONS_NON_COMPARABLES["2019-2020"]
+    assert "démarre" in SAISONS_NON_COMPARABLES["2015-2016"]
