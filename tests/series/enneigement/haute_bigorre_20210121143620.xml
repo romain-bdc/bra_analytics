@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="bra.xslt" type="text/xsl"?>
+<Bulletins nombre="1">
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="66" MASSIF="HAUTE-BIGORRE" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2021-01-21T16:00:00" DATEECHEANCE="2021-01-22T18:00:00" DATEVALIDITE="2021-01-22T18:00:00" DATEDIFFUSION="2021-01-21T14:36:20" AMENDEMENT="false">
+  <DateValidite>2021-01-22T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="&lt;1800" ALTITUDE="1800" RISQUE2="3" EVOLURISQUE2="" LOC2="&gt;1800" RISQUEMAXI="3" COMMENTAIRE="Au-dessus de 1800 m : Risque marqu&#233;. En-dessous : Risque limit&#233;."/>
+    <PENTE NE="true" E="true" SE="true" S="false" SW="false" W="false" NW="true" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL>plaques instables en formation.</ACCIDENTEL>
+    <NATUREL>en neige r&#233;cente pendant les chutes.</NATUREL>
+    <RESUME>D&#233;parts spontan&#233;s : en neige r&#233;cente pendant les chutes.
+D&#233;clenchements skieurs : plaques instables en formation.</RESUME>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>FORMATION DE PLAQUES.
+Situations avalancheuses typiques : neige r&#233;cente / neige vent&#233;e
+Les chutes de neige, plus ou moins vent&#233;es d'ouest &#224; nord-ouest de vendredi, vont se faire sur un manteau humidifi&#233; et ressaisi jusque vers 2100m sur le pi&#233;mont, 1700/1800m en fond de cha&#238;ne dans la nuit de jeudi &#224; vendredi.
+D&#233;clenchements provoqu&#233;s : risque marqu&#233; au-dessus de 1800m, dans un large secteur nord-ouest &#224; sud-est, de d&#233;clencher, par faibles surcharges, les plaques en formation durant la journ&#233;e, sous l'effet du vent turbulent d'ouest &#224; nord-ouest, sensible d&#232;s 1700/1800m. Ces nouvelles plaques se forment sur quelques anciennes instables et fragiles persistantes, plut&#244;t au-dessus de 2000m en nord et est, &#224; proximit&#233; des cr&#234;tes et ruptures de pentes.
+D&#233;parts spontan&#233;s : coul&#233;es de neige r&#233;cente durant les chutes de la journ&#233;e, partant des secteurs assez raides qui se chargent. Une rare avalanche moyenne &#224; grande possible l'apr&#232;s-midi partant des zones d'accumulations d&#233;vent&#233;es.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>Enneigement correcte en basse et moyenne montagne, d&#233;butant vers 1000m en nord, 1300 &#224; 1400m en sud, avec une sous-couche maintenant form&#233;e, peu &#233;paisse sous 1500/1600m. Cr&#234;tes, sommets et d&#244;mes d&#233;garnis et en neige dure.
+Ce vendredi au petit matin, neige humide en dessous de 1500m, cro&#251;t&#233;e au-dessus, puis, au fur et &#224; mesure des chutes de la journ&#233;e, neige r&#233;cente meuble mais plus ou moins travaill&#233;e par le vent: cartonn&#233;e en ouest et nord-ouest, fritt&#233;e ailleurs. La couche de fra&#238;che gagne progressivement en &#233;paisseur au cours de la journ&#233;e, recouvrant finalement la neige humide et ressaisie au plus bas du massif.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2021-01-21T00:00:00" LimiteSud="1300" LimiteNord="1000">
+    <NIVEAU ALTI="1500" N="35" S="10"/>
+    <NIVEAU ALTI="1800" N="80" S="35"/>
+    <NIVEAU ALTI="2400" N="120" S="70"/>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="Nord" SECTEURSS2="Sud" ALTITUDESS="1800">
+    <NEIGE24H DATE="2021-01-17T00:00:00" SS241="-2" SS242="-2"/>
+    <NEIGE24H DATE="2021-01-18T00:00:00" SS241="0" SS242="0"/>
+    <NEIGE24H DATE="2021-01-19T00:00:00" SS241="0" SS242="0"/>
+    <NEIGE24H DATE="2021-01-20T00:00:00" SS241="0" SS242="2"/>
+    <NEIGE24H DATE="2021-01-21T00:00:00" SS241="-2" SS242="15"/>
+    <NEIGE24H DATE="2021-01-22T00:00:00" SS241="20" SS242="15"/>
+  </NEIGEFRAICHE>
+  <BSH>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2021-01-15T00:00:00" LimiteSud="1000" LimiteNord="700">
+        <NIVEAU ALTI="1500" N="50" S="30"/>
+        <NIVEAU ALTI="1800" N="90" S="50"/>
+        <NIVEAU ALTI="2400" N="135" S="90"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2021-01-16T00:00:00" LimiteSud="1100" LimiteNord="800">
+        <NIVEAU ALTI="1500" N="55" S="35"/>
+        <NIVEAU ALTI="1800" N="95" S="55"/>
+        <NIVEAU ALTI="2400" N="135" S="95"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2021-01-17T00:00:00" LimiteSud="1200" LimiteNord="900">
+        <NIVEAU ALTI="1500" N="50" S="25"/>
+        <NIVEAU ALTI="1800" N="90" S="45"/>
+        <NIVEAU ALTI="2400" N="130" S="90"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2021-01-18T00:00:00" LimiteSud="1300" LimiteNord="1000">
+        <NIVEAU ALTI="1500" N="45" S="25"/>
+        <NIVEAU ALTI="1800" N="85" S="45"/>
+        <NIVEAU ALTI="2400" N="130" S="85"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2021-01-19T00:00:00" LimiteSud="1300" LimiteNord="1000">
+        <NIVEAU ALTI="1500" N="40" S="20"/>
+        <NIVEAU ALTI="1800" N="85" S="40"/>
+        <NIVEAU ALTI="2400" N="130" S="80"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2021-01-20T00:00:00" LimiteSud="1300" LimiteNord="1000">
+        <NIVEAU ALTI="1500" N="35" S="15"/>
+        <NIVEAU ALTI="1800" N="80" S="35"/>
+        <NIVEAU ALTI="2400" N="125" S="75"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2021-01-21T00:00:00" LimiteSud="1300" LimiteNord="1000">
+        <NIVEAU ALTI="1500" N="35" S="10"/>
+        <NIVEAU ALTI="1800" N="80" S="35"/>
+        <NIVEAU ALTI="2400" N="120" S="70"/>
+      </ENNEIGEMENT>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE SECTEURSS1="Nord" SECTEURSS2="Sud" ALTITUDESS="1800">
+      <NEIGE24H DATE="2021-01-15T00:00:00" SS241="5" SS242="2"/>
+      <NEIGE24H DATE="2021-01-16T00:00:00" SS241="-2" SS242="0"/>
+      <NEIGE24H DATE="2021-01-17T00:00:00" SS241="-2" SS242="-2"/>
+      <NEIGE24H DATE="2021-01-18T00:00:00" SS241="0" SS242="0"/>
+      <NEIGE24H DATE="2021-01-19T00:00:00" SS241="0" SS242="0"/>
+      <NEIGE24H DATE="2021-01-20T00:00:00" SS241="0" SS242="2"/>
+    </NEIGEFRAICHE>
+    <AVALANCHES>
+      <AVALANCHE DATE="2021-01-15T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2021-01-16T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2021-01-17T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2021-01-18T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2021-01-19T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2021-01-20T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2021-01-21T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+    </AVALANCHES>
+  </BSH>
+</BULLETINS_NEIGE_AVALANCHE>
+</Bulletins>

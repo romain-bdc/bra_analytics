@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="INA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2017-11-07T16:00:00" DATEECHEANCE="2017-11-08T18:00:00" DATEVALIDITE="2017-11-09T18:00:00" DATEDIFFUSION="2017-11-07T14:46:42" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="-1" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="/" COMMENTAIRE="Information neige et avalanche rédigée à partir d'informations réduites" />
+    <PENTE NE="false" E="false" SE="false" S="false" SW="false" W="false" NW="false" N="false" COMMENTAIRE="non renseigné" />
+    <ACCIDENTEL />
+    <NATUREL />
+    <RESUME>Quelques plaques</RESUME>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Lundi matin on a relevé en moyenne 25 cm de fraîche à 1800 m, tombés sur un sol peu enneigé, et on atteint environ 30 cm de neige totale à 2100 m. Cette neige a été soufflée par un fort vent de nord sur les crêtes et sommets, elle est souvent cartonnée et travaillée par le vent en altitude. Le soleil et le redoux de ce mardi ont humidifié cette neige surtout sur les versants ensoleillés, avec de petites avalanches de neige récente les pentes raides, surtout à proximité de rochers. Dans la nuit de mardi à mercredi  et demain mercredi une perturbation, donne de 5 à 10 cm de neige fraîche au dessus de 1200 m accompagnée d'un vent de nord fort sur les crêtes. Jeudi, un blocage orographique maintien un temps froid et agité sur le versant nord des Pyrénées. Ces conditions vont conforter l'épaisseur de neige actuelle. Des accumulations et quelques plaques vont se former sous les crêtes et les cols, ou les contre pentes exposées au vent de nord</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>Cette couche de fraîche permet de chausser dans les pentes herbeuses à partir de 1500m environ, avec 10 à 15cm. On trouvera une petite sous couche à partir de 2000m environ, mais aussi des états de surface plus ou moins cartonnés par le vent. On relève jusqu'à 50cm de neige totale à 2500m, dans le réseau des stations automatiques.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2017-11-07T00:00:00" LimiteSud="1300" LimiteNord="1200">
+    <NIVEAU ALTI="1500" N="15" S="10" />
+    <NIVEAU ALTI="1800" N="25" S="20" />
+    <NIVEAU ALTI="2400" N="40" S="30" />
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2017-11-03T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-04T00:00:00" SS241="5" SS242="-1" />
+    <NEIGE24H DATE="2017-11-05T00:00:00" SS241="25" SS242="-1" />
+    <NEIGE24H DATE="2017-11-06T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-07T00:00:00" SS241="5" SS242="-1" />
+    <NEIGE24H DATE="2017-11-08T00:00:00" SS241="10" SS242="-1" />
+  </NEIGEFRAICHE>
+  <BSH>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2017-11-01T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="0" S="0" />
+        <NIVEAU ALTI="2400" N="0" S="0" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-02T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="0" S="0" />
+        <NIVEAU ALTI="2400" N="0" S="0" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-03T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="0" S="0" />
+        <NIVEAU ALTI="2400" N="0" S="0" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-04T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="0" S="0" />
+        <NIVEAU ALTI="2400" N="0" S="0" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-05T00:00:00" LimiteSud="1700" LimiteNord="1700">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="5" S="5" />
+        <NIVEAU ALTI="2400" N="20" S="15" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-06T00:00:00" LimiteSud="1100" LimiteNord="1000">
+        <NIVEAU ALTI="1500" N="15" S="10" />
+        <NIVEAU ALTI="1800" N="25" S="20" />
+        <NIVEAU ALTI="2400" N="40" S="30" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-07T00:00:00" LimiteSud="1300" LimiteNord="1200">
+        <NIVEAU ALTI="1500" N="15" S="10" />
+        <NIVEAU ALTI="1800" N="25" S="20" />
+        <NIVEAU ALTI="2400" N="40" S="30" />
+      </ENNEIGEMENT>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+      <NEIGE24H DATE="2017-11-01T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2017-11-02T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2017-11-03T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2017-11-04T00:00:00" SS241="5" SS242="-1" />
+      <NEIGE24H DATE="2017-11-05T00:00:00" SS241="25" SS242="-1" />
+      <NEIGE24H DATE="2017-11-06T00:00:00" SS241="0" SS242="-1" />
+    </NEIGEFRAICHE>
+    <AVALANCHES>
+      <AVALANCHE DATE="2017-11-01T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-02T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-03T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-04T00:00:00" SPONTANE="0" PROVOQUER="0" />
+      <AVALANCHE DATE="2017-11-05T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-06T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-07T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+    </AVALANCHES>
+  </BSH>
+</BULLETINS_NEIGE_AVALANCHE>

@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="1" MASSIF="CHABLAIS" PRODUCTEUR="CDM741" DATEBULLETIN="2018-01-15T16:00:00" DATEECHEANCE="2018-01-16T18:00:00" DATEVALIDITE="2018-01-16T18:00:00" DATEDIFFUSION="2018-01-15T14:36:20" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="3" LOC1="&lt;1800" ALTITUDE="1800" RISQUE2="3" EVOLURISQUE2="4" LOC2="&gt;1800" RISQUEMAXI="4" COMMENTAIRE="Au-dessus de 1800 m : Risque marqué évoluant en Risque fort. En-dessous : Risque limité évoluant en Risque marqué." />
+    <PENTE NE="true" E="true" SE="false" S="false" SW="false" W="true" NW="true" N="true" COMMENTAIRE="pentes raides" />
+    <ACCIDENTEL>plaques dures ou friables+accumulations de neige fraîche.</ACCIDENTEL>
+    <NATUREL>qq plaques dures ou friables+qq accumulations de neige fraîche.</NATUREL>
+    <RESUME>Départs spontanés : qq plaques dures ou friables+qq accumulations de neige fraîche.
+Déclenchements skieurs : plaques dures ou friables+accumulations de neige fraîche.</RESUME>
+    <AVIS>FORT RISQUE D'AVALANCHE</AVIS>
+    <VIGILANCE>JAUNE</VIGILANCE>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>-Compte tenu de l'arrivée de chutes de neige importantes et très soufflées dans la nuit de lundi à mardi, et mardi en journée, les risques d'avalanches de surface augmenteront au fil des heures dans les pentes raides et en contrebas, à fortiori au-dessus de 1800 m. 
+-Facteur aggravant, dans les pentes Nord, Est et Ouest supérieures à 1500 m environ, la couche de neige fraîche souvent soufflée et de plus en plus épaisse, se déposera en général sur une couche fragile constituée de neige sans cohésion (du type grains anguleux dont la formation a été favorisée par les récentes nuits claires successives). 
+-Avalanches spontanées : dans des pentes raides et en contrebas, des plaques dures ou friables se déclencheront naturellement, surtout en fin de nuit et mardi en cours de journée, selon l'épaisseur de la neige fraîche accumulée.     
+-Déclenchements par skieurs/randonneurs : sur de nombreuses pentes raides et en contrebas, attention aux plaques dures près des cols et des crêtes, mais aussi  aux fréquentes plaques friables dans la neige fraîche poudreuse en versants moins ventés, dont l'épaisseur augmentera cette nuit et surtout mardi...</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>-Cette nuit et mardi, l'épaisseur de neige fraîche, très soufflée notamment dans les parages des cols et des crêtes, augmentera au fil des heures... 
+-On trouvera quand même de la neige fraîche poudreuse dans des combes et des versants plus abrités.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2018-01-15T00:00:00" LimiteSud="1100" LimiteNord="1000">
+    <NIVEAU ALTI="1000" N="10" S="0" />
+    <NIVEAU ALTI="1500" N="100" S="80" />
+    <NIVEAU ALTI="2000" N="180" S="130" />
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2018-01-11T00:00:00" SS241="1" SS242="-1" />
+    <NEIGE24H DATE="2018-01-12T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2018-01-13T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2018-01-14T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2018-01-15T00:00:00" SS241="20" SS242="-1" />
+    <NEIGE24H DATE="2018-01-16T00:00:00" SS241="40" SS242="-1" />
+  </NEIGEFRAICHE>
+  <BSH>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2018-01-09T00:00:00" LimiteSud="1100" LimiteNord="900">
+        <NIVEAU ALTI="1000" N="5" S="0" />
+        <NIVEAU ALTI="1500" N="100" S="80" />
+        <NIVEAU ALTI="2000" N="190" S="140" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2018-01-10T00:00:00" LimiteSud="1100" LimiteNord="900">
+        <NIVEAU ALTI="1000" N="5" S="0" />
+        <NIVEAU ALTI="1500" N="100" S="80" />
+        <NIVEAU ALTI="2000" N="180" S="130" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2018-01-11T00:00:00" LimiteSud="1000" LimiteNord="1000">
+        <NIVEAU ALTI="1000" N="10" S="5" />
+        <NIVEAU ALTI="1500" N="100" S="80" />
+        <NIVEAU ALTI="2000" N="180" S="130" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2018-01-12T00:00:00" LimiteSud="1100" LimiteNord="1000">
+        <NIVEAU ALTI="1000" N="10" S="0" />
+        <NIVEAU ALTI="1500" N="100" S="80" />
+        <NIVEAU ALTI="2000" N="180" S="130" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2018-01-13T00:00:00" LimiteSud="1100" LimiteNord="1000">
+        <NIVEAU ALTI="1000" N="10" S="0" />
+        <NIVEAU ALTI="1500" N="100" S="80" />
+        <NIVEAU ALTI="2000" N="180" S="130" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2018-01-14T00:00:00" LimiteSud="1100" LimiteNord="1000">
+        <NIVEAU ALTI="1000" N="10" S="0" />
+        <NIVEAU ALTI="1500" N="100" S="80" />
+        <NIVEAU ALTI="2000" N="180" S="130" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2018-01-15T00:00:00" LimiteSud="1100" LimiteNord="1000">
+        <NIVEAU ALTI="1000" N="10" S="0" />
+        <NIVEAU ALTI="1500" N="100" S="80" />
+        <NIVEAU ALTI="2000" N="180" S="130" />
+      </ENNEIGEMENT>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+      <NEIGE24H DATE="2018-01-09T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2018-01-10T00:00:00" SS241="5" SS242="-1" />
+      <NEIGE24H DATE="2018-01-11T00:00:00" SS241="1" SS242="-1" />
+      <NEIGE24H DATE="2018-01-12T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2018-01-13T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2018-01-14T00:00:00" SS241="0" SS242="-1" />
+    </NEIGEFRAICHE>
+    <AVALANCHES>
+      <AVALANCHE DATE="2018-01-09T00:00:00" SPONTANE="1" PROVOQUER="1" />
+      <AVALANCHE DATE="2018-01-10T00:00:00" SPONTANE="1" PROVOQUER="3" />
+      <AVALANCHE DATE="2018-01-11T00:00:00" SPONTANE="0" PROVOQUER="1" />
+      <AVALANCHE DATE="2018-01-12T00:00:00" SPONTANE="0" PROVOQUER="0" />
+      <AVALANCHE DATE="2018-01-13T00:00:00" SPONTANE="0" PROVOQUER="0" />
+      <AVALANCHE DATE="2018-01-14T00:00:00" SPONTANE="0" PROVOQUER="0" />
+      <AVALANCHE DATE="2018-01-15T00:00:00" SPONTANE="0" PROVOQUER="0" />
+    </AVALANCHES>
+  </BSH>
+</BULLETINS_NEIGE_AVALANCHE>

@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="INA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2017-11-02T16:00:00" DATEECHEANCE="2017-11-03T18:00:00" DATEVALIDITE="2017-11-03T18:00:00" DATEDIFFUSION="2017-11-02T14:43:28" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="-1" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="/" COMMENTAIRE="Information neige et avalanche rédigée à partir d'informations réduites" />
+    <PENTE NE="false" E="false" SE="false" S="false" SW="false" W="false" NW="false" N="false" COMMENTAIRE="non renseigné" />
+    <ACCIDENTEL />
+    <NATUREL />
+    <RESUME>Quelques avalanches de fraiche possible à partir de lundi</RESUME>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Le temps venteux voilé et doux se poursuit jusqu'à vendredi. Quelques flocons en crête frontière le soir. Samedi une perturbation arrive par l'ouest apportant de la pluie l'après midi  puis la limite pluie neige s'abaisse dans la nuit de samedi à dimanche, blanchissant les sommets au dessus de 1800 m dimanche matin  puis la limite baisse à 1500 m  ensuite en cours de journée de dimanche avec de faibles précipitations. Un blocage bien plus actif est attendu ensuite en fin de journée et nuit de dimanche à lundi avec une limite s'abaissant  jusqu'à 1000 à 1200 m en fin de nuit . Lundi matin on pourrait avoir 30 à 60 cm de neige fraîche plus ou moins travaillée par le vent au-dessus de 1600 m. 10 à 20 cm à 1300 m et des traces à partir de 1000 m.  De quoi occasionner, dès lundi,  les premières  avalanches de fraîche humide dans les pentes herbeuses les plus raides surtout là où  quelques éclaircies pourraient faire leur retour .</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>Pas de neige sur la plupart des massifs ce jeudi sauf versant Nord de la crête frontière. On y trouve de la neige très dure au dessus de 2700 à 2800 m. 
+Ces conditions vont perdurer jusqu'à samedi ensuite la montagne devrait prendre un aspect bien plus hivernal avec un changement radical des conditions d'enneigement. Changement attendu et même espéré histoire de bien débuter une nouvelle saison. Skis  aux pieds dès lundi ?</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2017-11-02T00:00:00" LimiteSud="-1" LimiteNord="-1">
+    <NIVEAU ALTI="1500" N="0" S="0" />
+    <NIVEAU ALTI="1800" N="0" S="0" />
+    <NIVEAU ALTI="2400" N="0" S="0" />
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2017-10-29T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-10-30T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-10-31T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-01T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-02T00:00:00" SS241="0" SS242="-1" />
+    <NEIGE24H DATE="2017-11-03T00:00:00" SS241="0" SS242="-1" />
+  </NEIGEFRAICHE>
+  <BSH>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2017-10-27T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="-1" N="-1" S="-1" />
+        <NIVEAU ALTI="-1" N="-1" S="-1" />
+        <NIVEAU ALTI="-1" N="-1" S="-1" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-10-28T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="-1" N="-1" S="-1" />
+        <NIVEAU ALTI="-1" N="-1" S="-1" />
+        <NIVEAU ALTI="-1" N="-1" S="-1" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-10-29T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="0" S="0" />
+        <NIVEAU ALTI="2400" N="0" S="0" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-10-30T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="0" S="0" />
+        <NIVEAU ALTI="2400" N="0" S="0" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-10-31T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="0" S="0" />
+        <NIVEAU ALTI="2400" N="0" S="0" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-01T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="0" S="0" />
+        <NIVEAU ALTI="2400" N="0" S="0" />
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2017-11-02T00:00:00" LimiteSud="-1" LimiteNord="-1">
+        <NIVEAU ALTI="1500" N="0" S="0" />
+        <NIVEAU ALTI="1800" N="0" S="0" />
+        <NIVEAU ALTI="2400" N="0" S="0" />
+      </ENNEIGEMENT>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+      <NEIGE24H DATE="2017-10-27T00:00:00" SS241="-1" SS242="-1" />
+      <NEIGE24H DATE="2017-10-28T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2017-10-29T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2017-10-30T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2017-10-31T00:00:00" SS241="0" SS242="-1" />
+      <NEIGE24H DATE="2017-11-01T00:00:00" SS241="0" SS242="-1" />
+    </NEIGEFRAICHE>
+    <AVALANCHES>
+      <AVALANCHE DATE="2017-10-27T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-10-28T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-10-29T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-10-30T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-10-31T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-01T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+      <AVALANCHE DATE="2017-11-02T00:00:00" SPONTANE="-1" PROVOQUER="-1" />
+    </AVALANCHES>
+  </BSH>
+</BULLETINS_NEIGE_AVALANCHE>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="bra.xslt" type="text/xsl"?>
+<Bulletins nombre="1">
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="1" MASSIF="CHABLAIS" PRODUCTEUR="CDM741" DATEBULLETIN="2022-01-15T16:00:00" DATEECHEANCE="2022-01-16T18:00:00" DATEVALIDITE="2022-01-16T18:00:00" DATEDIFFUSION="2022-01-15T15:02:13" AMENDEMENT="false">
+  <DateValidite>2022-01-16T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="2" COMMENTAIRE="Risque limit&#233;."/>
+    <PENTE NE="true" E="true" SE="false" S="false" SW="false" W="true" NW="true" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL>Rares plaques dures.</ACCIDENTEL>
+    <NATUREL>Eventuellement, une coul&#233;e au soleil en pente tr&#232;s raides...</NATUREL>
+    <RESUME>D&#233;parts spontan&#233;s : Eventuellement, une coul&#233;e au soleil en pente tr&#232;s raides...
+D&#233;clenchements skieurs : Rares plaques dures.</RESUME>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Situation avalancheuse typique : neige souffl&#233;e.
+D&#233;parts spontan&#233;s : Avec le rafra&#238;chissement, peu probable, ou tout au plus une coul&#233;e de neige humide dans une pentes tr&#232;s raide et ensoleill&#233;e l'apr&#232;s-midi.
+D&#233;clenchements par skieurs : Rares plaques dures, pr&#233;sentes surtout au-dessus de 1800 m dans les versants peu ensoleill&#233;s. Plaques g&#233;n&#233;ralement pas tr&#232;s larges et peu &#233;paisses (taille moyenne), et plut&#244;t difficile &#224; solliciter. On restera attentif dans les secteurs travaill&#233;s par le vent.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>L'enneigement est correct, y compris dans le fond des vall&#233;es &#224; plus de 1000 m d'altitude. 
+Dans les versants peu ensoleill&#233;s, neige encore poudreuse dans les zones abrit&#233;es, mais d&#232;s que l'on monte un peu ou au voisinage des cr&#234;tes, neige fortement travaill&#233;e et compact&#233; voire durcie par le vent, avec parfois la vielle neige dure et glac&#233;e mise &#224; nue.
+Versant ensoleill&#233;e et raide, neige dure ou cro&#251;t&#233;e le matin, s'humidifiant un peu l'apr&#232;s-midi.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2022-01-15T00:00:00" LimiteSud="700" LimiteNord="600">
+    <NIVEAU ALTI="1000" N="30" S="20"/>
+    <NIVEAU ALTI="1500" N="90" S="70"/>
+    <NIVEAU ALTI="2000" N="175" S="145"/>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2022-01-11T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2022-01-12T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2022-01-13T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2022-01-14T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2022-01-15T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2022-01-16T00:00:00" SS241="0" SS242="-1"/>
+  </NEIGEFRAICHE>
+  <BSH>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2022-01-09T00:00:00" LimiteSud="600" LimiteNord="600">
+        <NIVEAU ALTI="1000" N="30" S="25"/>
+        <NIVEAU ALTI="1500" N="90" S="70"/>
+        <NIVEAU ALTI="2000" N="185" S="155"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2022-01-10T00:00:00" LimiteSud="600" LimiteNord="600">
+        <NIVEAU ALTI="1000" N="40" S="35"/>
+        <NIVEAU ALTI="1500" N="100" S="80"/>
+        <NIVEAU ALTI="2000" N="195" S="165"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2022-01-11T00:00:00" LimiteSud="600" LimiteNord="600">
+        <NIVEAU ALTI="1000" N="35" S="30"/>
+        <NIVEAU ALTI="1500" N="95" S="75"/>
+        <NIVEAU ALTI="2000" N="190" S="160"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2022-01-12T00:00:00" LimiteSud="700" LimiteNord="600">
+        <NIVEAU ALTI="1000" N="30" S="30"/>
+        <NIVEAU ALTI="1500" N="90" S="70"/>
+        <NIVEAU ALTI="2000" N="190" S="150"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2022-01-13T00:00:00" LimiteSud="700" LimiteNord="600">
+        <NIVEAU ALTI="1000" N="30" S="25"/>
+        <NIVEAU ALTI="1500" N="90" S="70"/>
+        <NIVEAU ALTI="2000" N="180" S="150"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2022-01-14T00:00:00" LimiteSud="700" LimiteNord="600">
+        <NIVEAU ALTI="1000" N="30" S="25"/>
+        <NIVEAU ALTI="1500" N="90" S="70"/>
+        <NIVEAU ALTI="2000" N="180" S="150"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2022-01-15T00:00:00" LimiteSud="700" LimiteNord="600">
+        <NIVEAU ALTI="1000" N="30" S="20"/>
+        <NIVEAU ALTI="1500" N="90" S="70"/>
+        <NIVEAU ALTI="2000" N="175" S="150"/>
+      </ENNEIGEMENT>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+      <NEIGE24H DATE="2022-01-09T00:00:00" SS241="20" SS242="-1"/>
+      <NEIGE24H DATE="2022-01-10T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2022-01-11T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2022-01-12T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2022-01-13T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2022-01-14T00:00:00" SS241="0" SS242="-1"/>
+    </NEIGEFRAICHE>
+    <AVALANCHES>
+      <AVALANCHE DATE="2022-01-09T00:00:00" SPONTANE="1" PROVOQUER="2"/>
+      <AVALANCHE DATE="2022-01-10T00:00:00" SPONTANE="1" PROVOQUER="2"/>
+      <AVALANCHE DATE="2022-01-11T00:00:00" SPONTANE="1" PROVOQUER="2"/>
+      <AVALANCHE DATE="2022-01-12T00:00:00" SPONTANE="-1" PROVOQUER="3"/>
+      <AVALANCHE DATE="2022-01-13T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2022-01-14T00:00:00" SPONTANE="1" PROVOQUER="0"/>
+      <AVALANCHE DATE="2022-01-15T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+    </AVALANCHES>
+  </BSH>
+</BULLETINS_NEIGE_AVALANCHE>
+</Bulletins>

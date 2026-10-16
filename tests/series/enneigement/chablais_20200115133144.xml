@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="bra.xslt" type="text/xsl"?>
+<Bulletins nombre="1">
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="1" MASSIF="CHABLAIS" PRODUCTEUR="CDM741" DATEBULLETIN="2020-01-15T16:00:00" DATEECHEANCE="2020-01-16T18:00:00" DATEVALIDITE="2020-01-16T18:00:00" DATEDIFFUSION="2020-01-15T13:31:44" AMENDEMENT="false">
+  <DateValidite>2020-01-16T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="1" EVOLURISQUE1="2" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="2" COMMENTAIRE="Risque faible &#233;voluant en Risque limit&#233;."/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="rare plaque de fond"/>
+    <ACCIDENTEL>qq petites plaques de surface diss&#233;min&#233;es en altitude.</ACCIDENTEL>
+    <NATUREL>rares plaques de fond l'apr&#232;s-midi au soleil.</NATUREL>
+    <RESUME>D&#233;parts spontan&#233;s : rares plaques de fond l'apr&#232;s-midi au soleil.
+D&#233;clenchements skieurs : qq petites plaques de surface diss&#233;min&#233;es en altitude.</RESUME>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Manteau neigeux plut&#244;t stable.
+D&#233;parts spontan&#233;s : de rares plaques de fond seront encore possibles l'apr&#232;s-midi sur de fortes pentes au soleil pas compl&#232;tement purg&#233;es (sols herbeux ou en dalles rocheuses essentiellement).
+D&#233;clenchements par randonneurs&#160;: en altitude, quelques petites plaques &#224; vent en surface seront pr&#233;sentes ici ou l&#224;, mais surtout &#224; proximit&#233; des cols et des cr&#234;tes.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>-Enneigement correct au-dessus de 1500 m. On peut skier d&#232;s 1200/1300 m.
+-Hauteur de neige tr&#232;s disparate m&#234;me au sein d'une m&#234;me pente.
+-Versants ensoleill&#233;s : neige dure ou cro&#251;t&#233;e en surface, cro&#251;te souvent portante jusqu'en matin&#233;e, se ramollissant et s'humidifiant plus ou moins dans l'apr&#232;s-midi selon l'altitude.
+-A l'ombre : neige changeante et froide, avec 10/15 cm de vieille neige poudreuse irr&#233;guli&#232;re, sur fond dur portant. Cartonn&#233;e voire compact&#233;e par le vent pr&#232;s des cr&#234;tes et des cols.
+Nombreuses fissures en terrains tr&#232;s raides.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2020-01-15T00:00:00" LimiteSud="1300" LimiteNord="1100">
+    <NIVEAU ALTI="1000" N="0" S="0"/>
+    <NIVEAU ALTI="1500" N="70" S="25"/>
+    <NIVEAU ALTI="2000" N="120" S="100"/>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2020-01-11T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2020-01-12T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2020-01-13T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2020-01-14T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2020-01-15T00:00:00" SS241="0" SS242="-1"/>
+    <NEIGE24H DATE="2020-01-16T00:00:00" SS241="0" SS242="-1"/>
+  </NEIGEFRAICHE>
+  <BSH>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2020-01-09T00:00:00" LimiteSud="1200" LimiteNord="1100">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="80" S="35"/>
+        <NIVEAU ALTI="2000" N="130" S="110"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2020-01-10T00:00:00" LimiteSud="1200" LimiteNord="1100">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="80" S="35"/>
+        <NIVEAU ALTI="2000" N="130" S="110"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2020-01-11T00:00:00" LimiteSud="1300" LimiteNord="1100">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="80" S="30"/>
+        <NIVEAU ALTI="2000" N="130" S="110"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2020-01-12T00:00:00" LimiteSud="1300" LimiteNord="1100">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="70" S="30"/>
+        <NIVEAU ALTI="2000" N="120" S="100"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2020-01-13T00:00:00" LimiteSud="1300" LimiteNord="1100">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="70" S="30"/>
+        <NIVEAU ALTI="2000" N="120" S="100"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2020-01-14T00:00:00" LimiteSud="1300" LimiteNord="1100">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="70" S="30"/>
+        <NIVEAU ALTI="2000" N="120" S="100"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2020-01-15T00:00:00" LimiteSud="1300" LimiteNord="1100">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="70" S="25"/>
+        <NIVEAU ALTI="2000" N="120" S="100"/>
+      </ENNEIGEMENT>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+      <NEIGE24H DATE="2020-01-09T00:00:00" SS241="3" SS242="-1"/>
+      <NEIGE24H DATE="2020-01-10T00:00:00" SS241="2" SS242="-1"/>
+      <NEIGE24H DATE="2020-01-11T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2020-01-12T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2020-01-13T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2020-01-14T00:00:00" SS241="0" SS242="-1"/>
+    </NEIGEFRAICHE>
+    <AVALANCHES>
+      <AVALANCHE DATE="2020-01-09T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2020-01-10T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+      <AVALANCHE DATE="2020-01-11T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+      <AVALANCHE DATE="2020-01-12T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2020-01-13T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+      <AVALANCHE DATE="2020-01-14T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+      <AVALANCHE DATE="2020-01-15T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+    </AVALANCHES>
+  </BSH>
+</BULLETINS_NEIGE_AVALANCHE>
+</Bulletins>

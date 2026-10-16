@@ -228,8 +228,16 @@ La base DuckDB expose chaque table, plus des vues de travail :
 | `risque_episode` | 1 ligne / épisode ≥ 3 / portée | épisodes, avec ce qui les rompt ou les tronque |
 | `risque_saison` | 1 ligne / massif / saison / portée | métriques de risque de la spec § 5.1 |
 | `risque_second_indice` | 1 ligne / massif / jour couvert | `risque1` / `risque2` / `loc_type`, vue experte |
+| `enneigement_jour` | 1 ligne / massif / jour de relevé | limites d'enneigement continu et indicateur `sans_enneigement_continu_*` |
+| `enneigement_palier` | 1 ligne / massif / jour / palier | épaisseur par tranche normée, palier retenu, écart à la normale |
+| `enneigement_saison` | 1 ligne / massif / saison / tranche / portée | jours enneigés, maximum saisonnier et sa date |
+| `enneigement_continu` | 1 ligne / massif / saison / versant | période d'enneigement continu |
+| `neige_fraiche_jour` | 1 ligne / massif / jour | cumul de 24 h dédupliqué (une rédaction par jour), lu par le bloc météo |
+| `neige_fraiche_episode` | 1 ligne / épisode de chute / portée | épisodes de chute, avec ce qui les borde |
+| `neige_fraiche_saison` | 1 ligne / massif / saison / tranche / portée | cumul, jours de chute, plus forte chute, lecture du cumul |
 | `meteo_jour` | 1 ligne / massif / jour couvert | **prévision** du jour (06 h et 12 h) : isotherme 0 °C, limite pluie-neige, temps sensible, motif de lacune |
 | `meteo_vent_jour` | 1 ligne / massif / jour / altitude de vent | vent prévu par altitude et tranche normée |
+| `meteo_vent_tranche_jour` | 1 ligne / massif / jour / tranche | vent prévu par tranche : le plus fort des vents de la tranche, altitudes réunies |
 | `meteo_redoux` | 1 ligne / suite de jours à isotherme haut | épisodes de redoux, risque de la veille, pendant et du lendemain |
 | `meteo_saison` | 1 ligne / massif / saison / portée | isotherme, variations en 24 h, limite pluie-neige, redoux |
 | `meteo_vent_saison` | 1 ligne / massif / saison / portée / tranche | jours de vent fort |
@@ -238,9 +246,18 @@ La base DuckDB expose chaque table, plus des vues de travail :
 Les quatre vues `risque_*` forment le bloc risque de la couche métriques ; leurs définitions,
 et les fonctions Python qui les lisent (`bra_analytics.metriques.risque`), sont au
 [glossaire, § 9](docs/glossaire.md#9-couche-métriques--bloc-risque). Les comparaisons
-inter-saisons y refusent toute fenêtre autre que `coeur`. Les six vues `meteo_*` forment le
-bloc météo (`bra_analytics.metriques.meteo`, [glossaire, § 10](docs/glossaire.md#10-couche-métriques--bloc-météo)) :
+inter-saisons y refusent toute fenêtre autre que `coeur`. Les sept vues `meteo_*` forment le
+bloc météo (`bra_analytics.metriques.meteo`, [glossaire, § 11](docs/glossaire.md#11-couche-métriques--bloc-météo)) :
 c'est une **prévision**, et chaque ligne le dit (`origine = 'prevision'`).
+
+Les sept vues `enneigement_*` et `neige_fraiche_*` forment le bloc enneigement
+(`bra_analytics.metriques.enneigement`, [glossaire, § 10](docs/glossaire.md#10-couche-métriques--bloc-enneigement)).
+L'enneigement du BRA y reste **indicatif** : aucune sortie ne le présente comme une mesure. Un
+même jour de neige fraîche étant décrit par six bulletins, la vue retient la rédaction la plus
+tardive et `bra build` journalise chaque ligne écartée (les répétitions identiques en `DEBUG`,
+les valeurs révisées en `WARNING`). Les seuils (épaisseur, limite, chute) sont des paramètres
+des fonctions de lecture ; une somme de neige fraîche à cheval sur l'hiver 2023-2024 est
+refusée (`RuptureDeSerie`).
 
 Partitionnement par saison nivologique (`2025-2026` = septembre 2025 → août 2026), dérivé de
 `DATEBULLETIN` et non du chemin source — les deux divergent en 2016.
