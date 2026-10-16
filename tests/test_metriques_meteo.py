@@ -369,3 +369,26 @@ def test_pas_de_transport_sans_l_un_des_deux(con_transport) -> None:
     assert _transport(con_transport, date(2024, 12, 10))["transport"] is False
     quatre = _transport(con_transport, date(2024, 12, 4))
     assert (quatre["neige_recente_cm"], quatre["transport"]) == (9, False)
+
+
+def test_fenetre_manquante_ne_masque_pas_un_resultat_certain(con_transport) -> None:
+    """11/12/2024 : deux fenetres de neige seulement dans la serie (70 cm),
+    la troisieme manque. Un cumul manquant ne peut qu'ajouter de la neige : le
+    resultat est certain quand le vent est sous le seuil (faux) ou quand la
+    neige observee l'atteint deja (vrai) ; il n'est nul qu'autrement."""
+    def jour(**seuils):
+        df = meteo.transport_vent(con_transport, massifs=[65], tranches=["haute"], **seuils)
+        (l,) = df.filter(df["jour_validite"] == date(2024, 12, 11)).rows(named=True)
+        return l
+
+    defaut = jour()
+    assert (defaut["vitesse_kmh"], defaut["neige_recente_cm"], defaut["jours_neige_observes"]) == (40, 70, 2)
+    assert defaut["transport"] is False                       # 40 km/h, sous le seuil
+    assert jour(seuil_vent_kmh=30)["transport"] is True        # 70 cm observes suffisent
+    assert jour(seuil_vent_kmh=30, seuil_neige_cm=100)["transport"] is None
+
+
+def test_vent_variable_ne_charge_aucune_pente(con_transport) -> None:
+    """02/12/2024, tranche basse : vent `VRB` a 5 km/h, pas de pente chargee."""
+    t = _transport(con_transport, date(2024, 12, 2), "basse")
+    assert t["direction"] == "VRB" and t["pentes_chargees"] is None

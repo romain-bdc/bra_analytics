@@ -1063,18 +1063,28 @@ Sur un entrepôt construit avant T8, les fonctions posent les vues en vues tempo
 | Indice de transport par le vent | `meteo_transport` ; `transport_vent()` | voir ci-dessous |
 
 > **Indice de transport par le vent.** Un jour et une tranche sont « de transport » quand le vent
-> prévu du jour (`meteo_vent_tranche_jour`) dépasse **strictement 50 km/h** (p75 du vent haut,
-> [`disponibilite.md`](disponibilite.md) § 7) et que les trois fenêtres de neige fraîche qui
-> précèdent le jour (`neige_fraiche_jour`, J-3 à J-1, closes le matin du jour) cumulent
-> **au moins 10 cm** (p90 d'un cumul de 24 h). La fenêtre du jour lui-même n'entre pas : elle
-> s'achève le lendemain matin, après les échéances de 06 h et 12 h. `pentes_chargees` est le
-> secteur opposé à la direction du vent (vent de NW → pentes SE) ; `VRB` n'en charge aucune.
-> Une fenêtre non observée (`-2` d'avant 2024) rend l'indice **nul**, pas faux : environ un jour
-> sur cinq en tranche haute. `lecture_cumul` dit si la neige comptée vient des secteurs (avant
-> 2024) ou de la fourchette. Les trois seuils sont des paramètres de `transport_vent()`. Sur les
-> 36 massifs : 6 220 jours de transport en tranche haute, 1 593 en moyenne, 281 en basse ;
-> pentes chargées d'abord au SE, au S et à l'E. C'est une **prévision** croisée avec une neige
-> indicative, pas une observation de corniches.
+> prévu du jour (`meteo_vent_tranche_jour`) dépasse **strictement 50 km/h** et que les trois
+> fenêtres de neige fraîche qui précèdent le jour (`neige_fraiche_jour`, J-3 à J-1, closes le
+> matin du jour) cumulent **au moins 15 cm**. Seuils (paramètres de `transport_vent()`) : 50 km/h
+> est le p75 du vent haut prévu ([`disponibilite.md`](disponibilite.md) § 7), appliqué à toutes
+> les tranches — leur p75 va de 20 km/h (basse) à 60 km/h (haute), si bien que la tranche basse
+> reste presque toujours sous le seuil ; 15 cm est le p75 de la **somme sur trois jours**, la
+> grandeur testée, mesurée sur la série moderne (p50 2, p75 15, p90 31 cm ; 11 et 30 avant 2024).
+>
+> La fenêtre du jour lui-même n'entre pas : elle s'achève le lendemain matin, après les échéances
+> de 06 h et 12 h — un choix prudent, qui ignore la neige tombant le jour même. L'alignement
+> hérite de la convention « `jour` = début de la fenêtre 06 UTC → 06 UTC », elle-même *inférée*
+> (§ 10). `pentes_chargees` est le secteur opposé à la direction du vent (vent de NW → pentes SE) ;
+> `VRB` n'en charge aucune.
+>
+> Une fenêtre non observée (`-2` d'avant 2024) ne peut qu'ajouter de la neige : la somme observée
+> est un minorant. L'indice est donc **faux** si le vent est sous le seuil, **vrai** si la neige
+> observée atteint déjà le sien, et **nul** seulement sinon — 4,5 % des jours avant 2024, 0,2 %
+> depuis. Cet écart d'époque compte : avant 2024 quelques jours de transport sont indéterminés
+> plutôt que comptés, et la neige se lit par secteurs (`lecture_cumul`), une comparaison qui
+> enjambe l'hiver 2023-2024 doit l'annoncer. Sur les 36 massifs : 5 573 jours de transport en
+> tranche haute, 1 394 en moyenne, 229 en basse ; pentes chargées d'abord au SE, au S et à l'E.
+> C'est une **prévision** croisée avec une neige indicative, pas une observation de corniches.
 
 > **Le vent se lit par altitude, jamais par rôle.** Le vent unique à 3000 m des Alpes du Sud
 > (§ 2.9, colonne « basse » jusqu'en 2023, « haute » ensuite) tombe en tranche haute aux deux

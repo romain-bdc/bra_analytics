@@ -83,11 +83,18 @@ DUREE_MIN_REDOUX_JOURS = 2
 # centile du vent haut en prevision (disponibilite.md section 7 : p50 30,
 # p75 50, p90 70), strictement au-dessus comme pour le vent fort.
 SEUIL_VENT_TRANSPORT_KMH = 50
+# Un seuil unique pour toutes les tranches : le p75 par tranche du vent du jour
+# va de 20 km/h (basse) a 60 km/h (haute), 30 en moyenne ; 50 km/h laisse donc
+# la tranche basse presque toujours sous le seuil, ce qui est voulu -- la
+# neige se transporte d'abord sur les cretes.
+#
 # Neige disponible : la somme des cumuls de 24 h des trois fenetres qui
-# precedent le jour (`neige_fraiche_jour`, deja deduplique et recale). 10 cm
-# est le 90e centile d'un cumul de 24 h (section 7 : p75 3, p90 10, p95 20) :
-# en trois jours, une chute ordinaire ne l'atteint pas.
-SEUIL_NEIGE_RECENTE_CM = 10
+# precedent le jour (`neige_fraiche_jour`, deja deduplique et recale). Le
+# seuil se cale sur la grandeur testee, la somme sur trois jours, et sur la
+# serie homogene (famille moderne, comme les quantiles de l'audit) : p50 2,
+# p75 15, p90 31 cm (11, 30 avant 2024). 15 cm est le p75, meme rang que le
+# seuil de vent.
+SEUIL_NEIGE_RECENTE_CM = 15
 # Les fenetres D-3 a D-1 finissent le matin du jour D, avant les echeances de
 # 06 h et 12 h : la neige comptee est au sol quand le vent souffle. La fenetre
 # du jour D, qui s'acheve le lendemain matin, n'y entre pas.
@@ -98,8 +105,10 @@ _OPPOSE = {"N": "S", "NE": "SW", "E": "W", "SE": "NW", "S": "N", "SW": "NE", "W"
 
 VUES: tuple[str, ...] = (
     "meteo_jour", "meteo_vent_jour", "meteo_vent_tranche_jour", "meteo_redoux",
-    "meteo_saison", "meteo_vent_saison", "meteo_temps_sensible", "meteo_transport",
+    "meteo_saison", "meteo_vent_saison", "meteo_temps_sensible",
 )
+# Posee a part : elle requiert la neige fraiche du bloc enneigement.
+VUE_TRANSPORT = "meteo_transport"
 
 ORIGINE = "prevision"
 
@@ -539,9 +548,11 @@ def _sql_meteo_transport(seuil_vent_kmh: int, seuil_neige_cm: int, jours_neige: 
     v, n, k = int(seuil_vent_kmh), int(seuil_neige_cm), int(jours_neige)
     oppose = " ".join(f"WHEN '{d}' THEN '{o}'" for d, o in _OPPOSE.items())
     # Une fenetre de neige non observee (`-2` d'avant 2024, cumul nul) ne vaut
-    # pas zero : faute des `k` fenetres, l'indice est nul plutot que "pas de
-    # transport". `lecture_cumul` dit si la neige comptee enjambe la rupture
-    # de serie de l'hiver 2023-2024 (`secteurs/fourchette`).
+    # pas zero, mais elle ne peut qu'ajouter de la neige : la somme observee
+    # est un minorant. Le resultat est donc certain quand le vent est sous le
+    # seuil (faux) ou quand la neige observee atteint deja le sien (vrai) ; il
+    # n'est nul que dans le cas restant. `lecture_cumul` dit si la neige
+    # comptee enjambe la rupture de serie de l'hiver 2023-2024.
     return f"""
         WITH jours AS (SELECT DISTINCT massif_id, jour_validite FROM meteo_vent_tranche_jour),
         neige AS (
@@ -564,8 +575,11 @@ def _sql_meteo_transport(seuil_vent_kmh: int, seuil_neige_cm: int, jours_neige: 
           n.neige_recente_cm, n.jours_neige_observes, n.lecture_cumul,
           {v}                                          AS seuil_vent_transport_kmh,
           {n}                                          AS seuil_neige_recente_cm,
-          CASE WHEN v.vitesse_kmh IS NULL OR n.jours_neige_observes < {k} THEN NULL
-               ELSE v.vitesse_kmh > {v} AND n.neige_recente_cm >= {n} END AS transport
+          CASE WHEN v.vitesse_kmh IS NULL THEN NULL
+               WHEN v.vitesse_kmh <= {v} THEN false
+               WHEN coalesce(n.neige_recente_cm, 0) >= {n} THEN true
+               WHEN n.jours_neige_observes = {k} THEN false
+               END AS transport
         FROM meteo_vent_tranche_jour v
         JOIN neige n USING (massif_id, jour_validite)
     """
@@ -687,7 +701,7 @@ def creer_vues(
     presentes = {r[0] for r in con.execute("SELECT view_name FROM duckdb_views()").fetchall()}
     if "neige_fraiche_jour" in presentes:
         con.execute(
-            f"CREATE OR REPLACE {portee}VIEW meteo_transport AS "
+            f"CREATE OR REPLACE {portee}VIEW {VUE_TRANSPORT} AS "
             + _sql_meteo_transport(SEUIL_VENT_TRANSPORT_KMH, SEUIL_NEIGE_RECENTE_CM, JOURS_NEIGE_RECENTE)
         )
     return VUES
@@ -883,6 +897,12 @@ def transport_vent(
     au-dessus du seuil sur de la neige fraiche recente, et les pentes qu'il
     charge. Une prevision, comme tout le bloc."""
     _assurer_vues(con)
+    presentes = {r[0] for r in con.execute("SELECT view_name FROM duckdb_views()").fetchall()}
+    if "neige_fraiche_jour" not in presentes:
+        raise ValueError(
+            "indice de transport indisponible : l'entrepot n'a pas de neige fraiche "
+            "(tables `enneigement` et `neige_fraiche`)"
+        )
     _verifier_seuils(seuil_vent_kmh=seuil_vent_kmh, seuil_neige_cm=seuil_neige_cm, jours_neige=jours_neige)
     params: list[object] = []
     conditions: list[str] = []
