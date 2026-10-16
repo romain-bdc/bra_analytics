@@ -79,7 +79,7 @@ SEUIL_ISO0_M = 3400
 DUREE_MIN_REDOUX_JOURS = 2
 
 VUES: tuple[str, ...] = (
-    "meteo_jour", "meteo_vent_jour", "meteo_redoux",
+    "meteo_jour", "meteo_vent_jour", "meteo_vent_tranche_jour", "meteo_redoux",
     "meteo_saison", "meteo_vent_saison", "meteo_temps_sensible",
 )
 
@@ -492,23 +492,40 @@ def _sql_meteo_saison(seuil_iso0_m: int, duree_min_jours: int) -> str:
     """
 
 
+def _sql_meteo_vent_tranche_jour() -> str:
+    # Spec 5.3 : vent "massif x jour x tranche". Deux vents peuvent tomber dans
+    # la meme tranche : 3000 et 4000 m (Haute-Tarentaise, Haute-Maurienne,
+    # Vanoise, Mont-Blanc, Oisans), 2500 et 3500 m. La tranche retient alors,
+    # pour le jour, la plus forte des deux vitesses et sa direction, et
+    # `altitudes_vent` publie les altitudes qu'elle reunit : une tranche haute
+    # a deux vents n'est pas comparable a une tranche haute a un seul. La
+    # regle est ecrite ici une fois ; l'agregat saisonnier et les ecrans la
+    # lisent au lieu de la recoder.
+    return f"""
+        SELECT
+          saison, saison_debut, massif_id, massif_nom, zone, jour_validite,
+          date_bulletin, format_famille, {_fenetres()}, tranche,
+          '{ORIGINE}'                                    AS origine,
+          string_agg(DISTINCT CAST(altitude_m AS VARCHAR), '/'
+                     ORDER BY CAST(altitude_m AS VARCHAR)) AS altitudes_vent,
+          max(vitesse_max_kmh)                           AS vitesse_kmh,
+          arg_max(direction_au_max, vitesse_max_kmh)     AS direction,
+          sum(vitesses_hors_plage)                       AS vitesses_hors_plage
+        FROM meteo_vent_jour
+        WHERE tranche IS NOT NULL
+        GROUP BY ALL
+    """
+
+
 def _sql_meteo_vent_saison(seuil_vent_kmh: int) -> str:
     v = int(seuil_vent_kmh)
-    # Deux vents peuvent tomber dans la meme tranche : 3000 et 4000 m (Haute-
-    # Tarentaise, Haute-Maurienne, Vanoise, Mont-Blanc, Oisans), 2500 et 3500 m.
-    # La tranche retient alors, pour le jour, la plus forte des deux vitesses,
-    # et `altitudes_vent` publie les altitudes qu'elle reunit : une tranche
-    # haute a deux vents n'est pas comparable a une tranche haute a un seul.
+    # La regle "deux vents dans une tranche" vit dans `meteo_vent_tranche_jour`.
     return f"""
         WITH par_jour AS (
           SELECT
             saison, saison_debut, massif_id, massif_nom, zone, jour_validite,
-            {_fenetres()}, tranche,
-            max(vitesse_max_kmh)     AS vitesse_kmh,
-            sum(vitesses_hors_plage) AS vitesses_hors_plage
-          FROM meteo_vent_jour
-          WHERE tranche IS NOT NULL
-          GROUP BY ALL
+            {_fenetres()}, tranche, vitesse_kmh, vitesses_hors_plage
+          FROM meteo_vent_tranche_jour
         ),
         altitudes AS (
           SELECT saison, massif_id, tranche,
@@ -604,6 +621,7 @@ def creer_vues(
     for nom, sql in (
         ("meteo_jour", _sql_meteo_jour()),
         ("meteo_vent_jour", _sql_meteo_vent_jour()),
+        ("meteo_vent_tranche_jour", _sql_meteo_vent_tranche_jour()),
         ("meteo_redoux", _sql_meteo_redoux(SEUIL_ISO0_M, DUREE_MIN_REDOUX_JOURS)),
         ("meteo_saison", _sql_meteo_saison(SEUIL_ISO0_M, DUREE_MIN_REDOUX_JOURS)),
         ("meteo_vent_saison", _sql_meteo_vent_saison(SEUIL_VENT_FORT_KMH)),
@@ -661,12 +679,34 @@ def vent_jour(
     _assurer_vues(con)
     params: list[object] = []
     conditions: list[str] = []
-    where = _filtres(massifs, saisons, conditions, params)
+    _filtres(massifs, saisons, conditions, params)
     _tranches(tranches, conditions, params)
     where = " WHERE " + " AND ".join(conditions) if conditions else ""
     return _frame(
         con,
         f"SELECT * FROM meteo_vent_jour{where} ORDER BY massif_id, jour_validite, altitude_m",
+        params,
+    )
+
+
+def vent_tranche_jour(
+    con: duckdb.DuckDBPyConnection,
+    *,
+    massifs: Sequence[int] | None = None,
+    saisons: Sequence[str] | None = None,
+    tranches: Sequence[str] | None = None,
+) -> pl.DataFrame:
+    """Vent prevu du jour par tranche (massif x jour x tranche) : le plus fort
+    des vents de la tranche, sa direction, et les altitudes reunies."""
+    _assurer_vues(con)
+    params: list[object] = []
+    conditions: list[str] = []
+    _filtres(massifs, saisons, conditions, params)
+    _tranches(tranches, conditions, params)
+    where = " WHERE " + " AND ".join(conditions) if conditions else ""
+    return _frame(
+        con,
+        f"SELECT * FROM meteo_vent_tranche_jour{where} ORDER BY massif_id, jour_validite, tranche",
         params,
     )
 

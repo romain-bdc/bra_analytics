@@ -522,7 +522,7 @@ Base des valeurs par défaut de vent fort, d'épisode de chute et de redoux (spe
 
 ## 8. Bloc météo selon `origine` (spec § 4.3)
 
-La convention d'extraction préfère l'historique (analyse) à la prévision pour un même jour. Elle n'est tenable que pour les champs que l'historique porte.
+Mesure qui a fondé la convention d'extraction arrêtée le 15 octobre 2026 (spec § 4.3, glossaire § 3) : **prévision seule**, valeur du jour sur 06 h et 12 h. Préférer l'historique aurait mêlé deux horizons ; le tableau dit où il manque.
 
 | saison | origine | `iso_0_m` | `iso_moins10_m` | `limite_pluie_neige_m` | `mer_nuages_m` | `temps_sensible` | `temps_sensible_libelle` | `vent_bas_direction` | `vent_bas_vitesse_kmh` | `vent_haut_direction` | `vent_haut_vitesse_kmh` |
 |---|---|---|---|---|---|---|---|---|---|---|---|

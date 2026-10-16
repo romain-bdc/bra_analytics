@@ -790,6 +790,7 @@ le dit là où elle affiche une série (spec § 5.3).
 |---|---|---|
 | `meteo_jour` | massif × jour couvert | isotherme 0 °C, limite pluie-neige et temps sensible à 06 h et 12 h, valeur du jour, variation en 24 h, `motif_lacune` |
 | `meteo_vent_jour` | massif × jour × altitude de vent | vitesse et direction à 06 h et 12 h, vitesse du jour, direction au maximum, `tranche` |
+| `meteo_vent_tranche_jour` | massif × jour × tranche | le plus fort des vents de la tranche, sa direction, `altitudes_vent` réunies |
 | `meteo_redoux` | une suite de jours à isotherme haut | début, fin, durée, `retenu`, ce qui la borde, risque de la veille, pendant et du lendemain |
 | `meteo_saison` | massif × saison × portée | isotherme min / max / moyen avec jours, jours au-dessus du seuil, variations, limite pluie-neige, redoux |
 | `meteo_vent_saison` | massif × saison × portée × tranche | jours avec vent, jours de vent fort, vitesse max et médiane, altitudes réunies |
@@ -831,7 +832,7 @@ Sur un entrepôt construit avant T8, les fonctions posent les vues en vues tempo
 | ISO 0 min / max / moyen | `meteo_saison.iso0_min_m`, `date_iso0_min`, `iso0_max_m`, `date_iso0_max`, `iso0_moyen_m`, `iso0_median_m`, avec `jours_avec_iso0` | la plus basse et la plus haute échéance de la portée ; moyenne et médiane des moyennes du jour |
 | Jours ISO 0 > seuil | `jours_iso0_au_dessus_seuil`, `seuil_iso0_m` | jours où l'isotherme dépasse **strictement** le seuil **aux deux** échéances (`iso0_min_m > seuil`) |
 | Variation ISO 0 en 24 h | `meteo_jour.variation_iso0_24h_m` ; `paires_consecutives_iso0`, `paires_ecartees_iso0`, `plus_forte_hausse_iso0_24h_m`, `plus_forte_baisse_iso0_24h_m`, `amplitude_moyenne_iso0_24h_m` | différence des moyennes du jour entre deux jours couverts **consécutifs** ; nulle par-dessus un trou, comptée dans `paires_ecartees_iso0` |
-| Vent par tranche | `meteo_vent_jour` | une ligne par **altitude** de vent, rattachée à sa tranche (`tranches.py`) ; vitesse du jour = la plus forte des deux échéances, si les deux sont valides ; direction au maximum, celle de 12 h à égalité |
+| Vent par tranche | `meteo_vent_tranche_jour` (sur `meteo_vent_jour`) | une ligne par **altitude** de vent dans `meteo_vent_jour`, rattachée à sa tranche (`tranches.py`) ; vitesse du jour = la plus forte des deux échéances, si les deux sont valides ; direction au maximum, celle de 12 h à égalité. `meteo_vent_tranche_jour` ramène à une ligne par tranche : deux vents dans une même tranche (3000 et 4000 m) → le plus fort, altitudes publiées |
 | Jours de vent fort | `meteo_vent_saison.jours_vent_fort`, `seuil_vent_fort_kmh`, `altitudes_vent` | jours où la vitesse du jour d'une altitude de la tranche dépasse **strictement** le seuil |
 | Limite pluie / neige | `limite_pluie_neige_06h_m`, `_12h_m`, `limite_pluie_neige_min_m` ; `jours_avec_limite_pluie_neige`, `limite_pluie_neige_min_m`, `limite_pluie_neige_mediane_m` | la plus basse des limites renseignées du jour |
 | Temps sensible | `meteo_temps_sensible` | comptes en **échéances** (deux par jour), pas en jours ; `dans_palette` faux pour les codes hors palette (§ 7), comptés avec un libellé nul |

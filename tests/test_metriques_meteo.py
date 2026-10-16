@@ -315,3 +315,16 @@ def test_fenetre_coeur_ne_compte_que_les_paires_interieures(con) -> None:
     assert c["jours_couverts"] == 13  # 15 -> 28 decembre, sauf le 20
     assert (c["paires_consecutives_iso0"], c["paires_ecartees_iso0"]) == (11, 1)
     assert c["comparable"] is True
+
+
+def test_vent_du_jour_par_tranche_retient_le_plus_fort(con) -> None:
+    """Haute-Tarentaise, prevision du 23/12/2024 : deux vents en tranche haute,
+    3000 m (`FF1` 75 puis 95 km/h) et 4000 m (`FF2` 95 puis 110 km/h, `DD2="N"`
+    a 12 h). La tranche porte le plus fort, sa direction, et les altitudes
+    qu'elle reunit ; la regle est ecrite une fois, ici, et non dans l'ecran."""
+    df = meteo.vent_tranche_jour(con, massifs=[6], tranches=["haute"])
+    (ligne,) = df.filter(df["jour_validite"] == date(2024, 12, 23)).rows(named=True)
+    assert ligne["vitesse_kmh"] == 110
+    assert ligne["direction"] == "N"
+    assert ligne["altitudes_vent"] == "3000/4000"
+    assert ligne["origine"] == "prevision"
