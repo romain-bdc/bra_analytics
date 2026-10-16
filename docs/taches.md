@@ -216,6 +216,8 @@ version.
 
 **Dépend de** : T6, T7, T8.
 
+**Réalisée par** `metriques/score.py` (vue `score_saison`, `score.formule()`, glossaire § 13). Poids 0,5 / 0,3 / 0,2 à valider par le propriétaire.
+
 ---
 
 ## Lot 3 — Écrans

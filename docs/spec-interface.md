@@ -34,7 +34,7 @@ cherche un chiffre ou un graphe partageable.
 | Documentation des champs | Fait | `docs/glossaire.md` |
 | Page statique Pyrénées | Fait, 5 sections | `bra dashboard` |
 | Couverture géographique complète | Fait : 36 massifs, 77 488 bulletins | `bra fetch`, T1 |
-| **Couche métriques** | **blocs risque (T6), enneigement (T7), météo (T8) et rose des pentes (T9) faits** ; score à faire | `metriques/`, § 5 |
+| **Couche métriques** | **blocs risque (T6), enneigement (T7), météo (T8) et rose des pentes (T9) faits** ; score fait (T10) | `metriques/`, § 5 |
 | **Les quatre écrans** | **partiellement : la fiche existe en germe** | § 6 |
 
 Conséquence directe : la spec ne redécrit pas le socle. Elle décrit ce qui s'ajoute, et seulement
@@ -269,7 +269,7 @@ montré, ses composantes restent consultables séparément, et sa version est tr
 changement de pondération rend silencieusement incomparables deux captures prises à six mois
 d'intervalle.
 
-Sa pondération ne peut être fixée qu'après l'audit, sur les distributions réelles.
+Sa pondération a été fixée sur les distributions réelles (glossaire § 13) ; sa version se dérive des poids et des ancres.
 
 ## 6. Écrans
 

@@ -1214,3 +1214,32 @@ pentes.situations(con, massifs=[65])                             # depuis 2023-2
   insuffisant) a `est_situation_typique = false`. `sat1` n'existe qu'à partir de 2023-2024 : avant,
   la vue n'a pas de ligne, pas des lignes nulles ; `restriction` le rappelle sur chaque ligne.
   `sat2`, renseigné sur 60 % des jours, est rapporté aux jours où `sat1` l'est.
+
+## 13. Couche métriques — score composite
+
+Module `metriques/score.py`, vue `score_saison` (massif × saison, fenêtre `coeur` seule). Spec § 5.5.
+La formule, sa version et ses paramètres sortent de `score.formule()` : l'interface les affiche
+sans les recopier.
+
+| Composante | Part de jours | Source | Ancres (0 → 1) | Poids |
+|---|---|---|---|---|
+| `risque` | jours `risque_maxi >= 3` / jours avec indice | `risque_saison` | 0,10 → 0,80 | 0,5 |
+| `neige` | jours de chute ≥ 20 cm / jours observés | `neige_fraiche_saison` | 0,02 → 0,12 | 0,3 |
+| `vent` | jours de vent > 70 km/h / jours avec vent, tranche la plus exposée | `meteo_vent_saison` | 0,03 → 0,26 | 0,2 |
+
+`score = 100 × (0,5·n_risque + 0,3·n_neige + 0,2·n_vent)`, chaque `n_*` étant la part ramenée
+sur [0, 1] entre ses ancres et bornée.
+
+- **Ancres** : percentiles 5 et 95 des 321 lignes `comparable` de `coeur` (36 massifs, neuf
+  saisons, mesure du 16 octobre 2026), arrondis. Figées : recalculées à chaque lecture, elles
+  feraient bouger le score à chaque saison ajoutée.
+- **Version** : `<numéro>-<empreinte>`, l'empreinte couvrant poids, ancres, définitions et fenêtre.
+  Changer l'un d'eux change la version ; elle est portée par chaque ligne (`version_score`).
+- **Composante manquante** : le score est NULL et `composantes_manquantes` dit laquelle. Aucune
+  imputation, aucune renormalisation sur deux composantes. Sur `coeur`, 35 lignes sur 392 n'ont
+  pas de neige fraîche.
+- **Rupture de lecture** : la neige fraîche passe de `secteurs` à `fourchette` en 2023-2024
+  (§ 2) ; `lecture_neige` et `rupture_neige` le disent sur chaque ligne.
+- **Lignes non comparables** : conservées, avec `comparable = false` et `motif_exclusion`.
+- **Corrélations** (lignes comparables) : risque–neige 0,54 ; risque–vent 0,14 ; neige–vent 0,19.
+  Distribution du score : p5 10, médiane 41, p95 79.

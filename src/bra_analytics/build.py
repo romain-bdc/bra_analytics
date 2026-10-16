@@ -642,6 +642,12 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
 
         creer_vues_pentes(con)
 
+        # Score composite (spec section 5.5) : il lit les vues des trois blocs.
+        if {"enneigement", "neige_fraiche", "meteo"} <= presentes:
+            from .metriques.score import creer_vues as creer_vues_score
+
+            creer_vues_score(con)
+
         con.execute("CHECKPOINT")
     finally:
         con.close()
