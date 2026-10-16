@@ -242,11 +242,12 @@ La base DuckDB expose chaque table, plus des vues de travail :
 | `meteo_saison` | 1 ligne / massif / saison / portée | isotherme, variations en 24 h, limite pluie-neige, redoux |
 | `meteo_vent_saison` | 1 ligne / massif / saison / portée / tranche | jours de vent fort |
 | `meteo_temps_sensible` | 1 ligne / massif / saison / portée / code | répartition des codes de temps, avec libellés |
+| `meteo_transport` | 1 ligne / massif / jour / tranche | indice de transport par le vent : vent prévu sur neige fraîche récente, pentes chargées |
 
 Les quatre vues `risque_*` forment le bloc risque de la couche métriques ; leurs définitions,
 et les fonctions Python qui les lisent (`bra_analytics.metriques.risque`), sont au
 [glossaire, § 9](docs/glossaire.md#9-couche-métriques--bloc-risque). Les comparaisons
-inter-saisons y refusent toute fenêtre autre que `coeur`. Les sept vues `meteo_*` forment le
+inter-saisons y refusent toute fenêtre autre que `coeur`. Les huit vues `meteo_*` forment le
 bloc météo (`bra_analytics.metriques.meteo`, [glossaire, § 11](docs/glossaire.md#11-couche-métriques--bloc-météo)) :
 c'est une **prévision**, et chaque ligne le dit (`origine = 'prevision'`).
 
