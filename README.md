@@ -58,7 +58,10 @@ C'est l'étape de transformation. Elle lit tout le XML présent dans `data/raw/`
    détail et l'indicateur `sans_enneigement_continu_*` sont au glossaire), secteurs de neige
    fraîche d'avant 2024 conservés, dates ramenées à l'heure locale ;
 3. **déduplique** sur `(massif_id, date_bulletin)` en retenant la diffusion la plus tardive —
-   un même bulletin est souvent republié dans la journée ;
+   un même bulletin est souvent republié dans la journée. Les tables filles (météo,
+   enneigement, neige fraîche, historiques) sont lues dans **le même fichier** que la table
+   `bulletins` : 1 409 clés de l'archive ont des diffusions dont ces blocs diffèrent (voir
+   [exploration](docs/exploration.md)) ;
 4. **enrichit** avec le référentiel des massifs et la saison nivologique ;
 5. **écrit** six tables en Parquet partitionné par saison, puis crée la base DuckDB et ses vues.
 
@@ -232,11 +235,20 @@ La base DuckDB expose chaque table, plus des vues de travail :
 | `neige_fraiche_jour` | 1 ligne / massif / jour | cumul de 24 h dédupliqué (une rédaction par jour), lu par le bloc météo |
 | `neige_fraiche_episode` | 1 ligne / épisode de chute / portée | épisodes de chute, avec ce qui les borde |
 | `neige_fraiche_saison` | 1 ligne / massif / saison / tranche / portée | cumul, jours de chute, plus forte chute, lecture du cumul |
+| `meteo_jour` | 1 ligne / massif / jour couvert | **prévision** du jour (06 h et 12 h) : isotherme 0 °C, limite pluie-neige, temps sensible, motif de lacune |
+| `meteo_vent_jour` | 1 ligne / massif / jour / altitude de vent | vent prévu par altitude et tranche normée |
+| `meteo_vent_tranche_jour` | 1 ligne / massif / jour / tranche | vent prévu par tranche : le plus fort des vents de la tranche, altitudes réunies |
+| `meteo_redoux` | 1 ligne / suite de jours à isotherme haut | épisodes de redoux, risque de la veille, pendant et du lendemain |
+| `meteo_saison` | 1 ligne / massif / saison / portée | isotherme, variations en 24 h, limite pluie-neige, redoux |
+| `meteo_vent_saison` | 1 ligne / massif / saison / portée / tranche | jours de vent fort |
+| `meteo_temps_sensible` | 1 ligne / massif / saison / portée / code | répartition des codes de temps, avec libellés |
 
 Les quatre vues `risque_*` forment le bloc risque de la couche métriques ; leurs définitions,
 et les fonctions Python qui les lisent (`bra_analytics.metriques.risque`), sont au
 [glossaire, § 9](docs/glossaire.md#9-couche-métriques--bloc-risque). Les comparaisons
-inter-saisons y refusent toute fenêtre autre que `coeur`.
+inter-saisons y refusent toute fenêtre autre que `coeur`. Les sept vues `meteo_*` forment le
+bloc météo (`bra_analytics.metriques.meteo`, [glossaire, § 11](docs/glossaire.md#11-couche-métriques--bloc-météo)) :
+c'est une **prévision**, et chaque ligne le dit (`origine = 'prevision'`).
 
 Les sept vues `enneigement_*` et `neige_fraiche_*` forment le bloc enneigement
 (`bra_analytics.metriques.enneigement`, [glossaire, § 10](docs/glossaire.md#10-couche-métriques--bloc-enneigement)).

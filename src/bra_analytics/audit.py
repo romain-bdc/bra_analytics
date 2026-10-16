@@ -669,8 +669,10 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
 
     s.append("## 8. Bloc météo selon `origine` (spec § 4.3)\n")
     s.append(
-        "La convention d'extraction préfère l'historique (analyse) à la prévision pour un "
-        "même jour. Elle n'est tenable que pour les champs que l'historique porte.\n"
+        "Mesure qui a fondé la convention d'extraction arrêtée le 15 octobre 2026 "
+        "(spec § 4.3, glossaire § 3) : **prévision seule**, valeur du jour sur 06 h et "
+        "12 h. Préférer l'historique aurait mêlé deux horizons ; le tableau dit où il "
+        "manque.\n"
     )
     parts_meteo = meteo_par_origine(con)
     champs_m = parts_meteo["champ"].unique(maintain_order=True).to_list()

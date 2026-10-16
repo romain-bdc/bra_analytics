@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2024-12-22T16:00:00" DATEECHEANCE="2024-12-23T18:00:00" DATEVALIDITE="2024-12-23T18:00:00" DATEDIFFUSION="2024-12-22T15:45:00" AMENDEMENT="false">
+  <DateValidite>2024-12-23T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="3" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="3" COMMENTAIRE="Indice de risque marqué." RISQUEMAXIJ2="3" DATE_RISQUE_J2="2024-12-24T00:00:00"/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="Sous le vent"/>
+    <ACCIDENTEL><![CDATA[Nombreuses plaques fragiles surtout en secteurs sud à Est, possibles en nord à nord-est.]]></ACCIDENTEL>
+    <NATUREL><![CDATA[Nombreuses avalanches de taille 1 à 2 voire 3.]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : Nombreuses avalanches de taille 1 à 2 voire 3.
+Déclenchements skieurs : Nombreuses plaques fragiles surtout en secteurs sud à Est, possibles en nord à nord-est.]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque marqué]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Risque restant marqué, incertitude cependant selon les cumuls réel observés lundi et si supérieurs à la prévision, risque pouvant augmenter.]]></CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+    <ImageRisque>montagne_risques_65.png</ImageRisque>
+    <ImagePente>rose_pentes_65.png</ImagePente>
+  </CARTOUCHERISQUE>
+  <METEO ALTITUDEVENT1="1500" ALTITUDEVENT2="3000">
+    <COMMENTAIRE>Chutes de neige marquées dès ce dimanche jusqu'à lundi soir et la nuit suivante. Vent de nord-ouest fort ce dimanche dès la moyenne montagne.</COMMENTAIRE>
+    <ECHEANCE DATE="2024-12-23T06:00:00" FF1="85" DD1="NO" FF2="115" DD2="NO" ISO0="1700" PLUIENEIGE="1400" TEMPSSENSIBLE="63" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-23T12:00:00" FF1="70" DD1="N" FF2="115" DD2="N" ISO0="1500" PLUIENEIGE="1000" TEMPSSENSIBLE="80" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-23T18:00:00" FF1="65" DD1="Vrb" FF2="110" DD2="N" ISO0="1400" PLUIENEIGE="1100" TEMPSSENSIBLE="80" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-24T00:00:00" FF1="55" DD1="N" FF2="105" DD2="N" ISO0="1500" PLUIENEIGE="1200" TEMPSSENSIBLE="61" MERNUAGES="-1"/>
+    <ImageMeteo>apercu_meteo_65.png</ImageMeteo>
+  </METEO>
+</BULLETINS_NEIGE_AVALANCHE>

@@ -629,6 +629,13 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
 
             creer_vues_enneigement(con)
 
+        # Bloc meteo (spec section 5.3) : apres le bloc risque, dont il reprend
+        # `risque_jour` pour le risque avant et apres un redoux.
+        if "meteo" in presentes:
+            from .metriques.meteo import creer_vues as creer_vues_meteo
+
+            creer_vues_meteo(con)
+
         con.execute("CHECKPOINT")
     finally:
         con.close()

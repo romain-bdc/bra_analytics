@@ -34,7 +34,7 @@ cherche un chiffre ou un graphe partageable.
 | Documentation des champs | Fait | `docs/glossaire.md` |
 | Page statique Pyrénées | Fait, 5 sections | `bra dashboard` |
 | Couverture géographique complète | Fait : 36 massifs, 77 488 bulletins | `bra fetch`, T1 |
-| **Couche métriques** | **blocs risque (T6) et enneigement (T7) faits** ; météo, rose des pentes et score à faire | `metriques/`, § 5 |
+| **Couche métriques** | **blocs risque (T6), enneigement (T7) et météo (T8) faits**, sauf l'indice de transport par le vent ; rose des pentes et score à faire | `metriques/`, § 5 |
 | **Les quatre écrans** | **partiellement : la fiche existe en germe** | § 6 |
 
 Conséquence directe : la spec ne redécrit pas le socle. Elle décrit ce qui s'ajoute, et seulement

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="6" MASSIF="Haute-Tarentaise" DATEBULLETIN="2024-12-22T15:00:00" DATEECHEANCE="2024-12-23T18:00:00" DATEVALIDITE="2024-12-23T18:00:00" DATEDIFFUSION="2024-12-22T15:18:00" AMENDEMENT="false">
+  <DateValidite>2024-12-23T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="4" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="4" COMMENTAIRE="Indice de risque fort." RISQUEMAXIJ2="4" DATE_RISQUE_J2="2024-12-24T00:00:00"/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL><![CDATA[Plaques friables ou dures.]]></ACCIDENTEL>
+    <NATUREL><![CDATA[Avalanche de neige fraiches.]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : Avalanche de neige fraiches.
+Déclenchements skieurs : Plaques friables ou dures.]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque fort]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Fin des chutes de neige, mais vent fort de nord-nord-est favorisant encore l'accroissement des plaques. Le risque est cependant en légère baisse.]]></CommentaireRisqueJ2>
+    <AVIS>FORT RISQUE D'AVALANCHE</AVIS>
+    <VIGILANCE>ORANGE</VIGILANCE>
+    <ImageRisque>montagne_risques_6.png</ImageRisque>
+    <ImagePente>rose_pentes_6.png</ImagePente>
+  </CARTOUCHERISQUE>
+  <METEO ALTITUDEVENT1="3000" ALTITUDEVENT2="4000">
+    <COMMENTAIRE>Couvert et bouché avec des chutes de neige soutenues jusqu'en soirée. Vent fort de nord-nord-ouest.</COMMENTAIRE>
+    <ECHEANCE DATE="2024-12-23T06:00:00" FF1="75" DD1="NO" FF2="95" DD2="NO" ISO0="700" PLUIENEIGE="300" TEMPSSENSIBLE="63" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-23T12:00:00" FF1="95" DD1="NO" FF2="110" DD2="N" ISO0="800" PLUIENEIGE="500" TEMPSSENSIBLE="63" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-23T18:00:00" FF1="105" DD1="NO" FF2="115" DD2="N" ISO0="900" PLUIENEIGE="600" TEMPSSENSIBLE="61" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-24T00:00:00" FF1="85" DD1="N" FF2="100" DD2="N" ISO0="800" PLUIENEIGE="400" TEMPSSENSIBLE="80" MERNUAGES="-1"/>
+    <ImageMeteo>apercu_meteo_6.png</ImageMeteo>
+  </METEO>
+</BULLETINS_NEIGE_AVALANCHE>

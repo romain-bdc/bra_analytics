@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2024-12-17T16:00:00" DATEECHEANCE="2024-12-18T18:00:00" DATEVALIDITE="2024-12-18T18:00:00" DATEDIFFUSION="2024-12-17T15:55:00" AMENDEMENT="false">
+  <DateValidite>2024-12-18T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="&lt;1800" ALTITUDE="1800" RISQUE2="3" EVOLURISQUE2="" LOC2="&gt;1800" RISQUEMAXI="3" COMMENTAIRE="Au-dessus de 1800m indice de risque marqué, plus bas indice limité." RISQUEMAXIJ2="3" DATE_RISQUE_J2="2024-12-19T00:00:00"/>
+    <PENTE NE="true" E="false" SE="false" S="false" SW="false" W="false" NW="false" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL><![CDATA[plaques friables en pentes nord à nord-est.]]></ACCIDENTEL>
+    <NATUREL><![CDATA[en neige humide au soleil.]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : en neige humide au soleil.
+Déclenchements skieurs : plaques friables en pentes nord à nord-est.]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque marqué]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Lente stabilisation du manteau neigeux, risque sans grande évolution, au mieux remontant en altitude.]]></CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+    <ImageRisque>montagne_risques_65.png</ImageRisque>
+    <ImagePente>rose_pentes_65.png</ImagePente>
+  </CARTOUCHERISQUE>
+  <METEO ALTITUDEVENT1="1500" ALTITUDEVENT2="3000">
+    <COMMENTAIRE>Temps sec, doux, plus ou moins voilé.</COMMENTAIRE>
+    <ECHEANCE DATE="2024-12-18T06:00:00" FF1="15" DD1="S" FF2="55" DD2="O" ISO0="3200" PLUIENEIGE="-1" TEMPSSENSIBLE="2" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-18T12:00:00" FF1="20" DD1="S" FF2="55" DD2="O" ISO0="3300" PLUIENEIGE="-1" TEMPSSENSIBLE="1" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-18T18:00:00" FF1="25" DD1="S" FF2="60" DD2="O" ISO0="3500" PLUIENEIGE="-1" TEMPSSENSIBLE="6" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-19T00:00:00" FF1="25" DD1="S" FF2="70" DD2="O" ISO0="3300" PLUIENEIGE="-1" TEMPSSENSIBLE="6" MERNUAGES="-1"/>
+    <ImageMeteo>apercu_meteo_65.png</ImageMeteo>
+  </METEO>
+</BULLETINS_NEIGE_AVALANCHE>
