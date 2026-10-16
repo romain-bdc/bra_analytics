@@ -636,6 +636,12 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
 
             creer_vues_meteo(con)
 
+        # Rose des pentes et situations typiques (spec section 5.4) : apres le
+        # bloc meteo, dont `pente_vent_saison` lit le vent par tranche.
+        from .metriques.pentes import creer_vues as creer_vues_pentes
+
+        creer_vues_pentes(con)
+
         con.execute("CHECKPOINT")
     finally:
         con.close()

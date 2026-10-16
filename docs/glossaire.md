@@ -1158,3 +1158,59 @@ Sur l'entrepôt des 36 massifs, 76 796 jours couverts sur 76 852 ont une valeur 
 datés de 2016-2017 à 2020-2021, et les deux rééditions du 06/04/2026 que le correctif de
 `to_frames` rétablit), 29 jours dont l'échéance de 06 h ou 12 h est vide (2022-2023 à
 2025-2026).
+
+---
+
+## 12. Couche métriques — rose des pentes et situations typiques
+
+Module `metriques/pentes.py` (spec § 5.4, T9). Vues restreintes à `massif_coherent`, indexées sur
+`jour_validite`, lisant la rose et `sat1` / `sat2` dans le bulletin que `risque_journalier` retient
+pour le jour.
+
+> **La rose n'a pas d'altitude.** `<PENTE>` est un jeu unique de huit booléens par bulletin, sans
+> attribut d'altitude, et `<SitAvalTyp>` n'en a pas non plus. Toute sortie porte
+> `altitude = 'non localisee'`. Ce n'est pas « toutes altitudes confondues » : le bulletin ne dit
+> pas à quelle altitude la rose s'applique. Seul le croisement avec le vent se ventile par tranche,
+> parce que l'altitude du vent est réelle.
+
+| Vue | Maille | Contenu |
+|---|---|---|
+| `pente_jour` | massif × jour couvert | huit orientations, `nb_secteurs`, `sat1` / `sat2` avec libellés |
+| `pente_orientation_saison` | massif × saison × portée × orientation | `jours_signales` / `jours_couverts` → `frequence` ; même chose restreinte aux jours ≥ 3 (`_ge3`) et ≥ 4 (`_ge4`) |
+| `pente_saison` | massif × saison × portée | `secteur_dominant`, `secteurs_ex_aequo`, `secteurs_moyens` (concentration), `jours_sans_secteur`, `rose_vide_risque_ge2` |
+| `pente_mois_orientation` | massif × mois × portée × orientation | saisonnalité, `nb_saisons` et `jours_couverts` |
+| `pente_vent_saison` | massif × saison × portée × tranche × direction du vent | jours où la pente chargée par ce vent (opposée à sa direction) est signalée dans la rose |
+| `pente_situation_saison` | massif × saison × portée × rang × code | `jours`, `part`, `libelle`, `restriction` ; `rang` 1 = `sat1`, 2 = `sat2` |
+
+```python
+from bra_analytics.metriques import pentes
+
+pentes.rose_saison(con, fenetre="coeur", massifs=[65])           # massif × saison × orientation
+pentes.resume_saison(con, fenetre="coeur")                       # dominant, concentration
+pentes.croisement_vent(con, fenetre="coeur", tranches=["haute"]) # par tranche de vent
+pentes.situations(con, massifs=[65])                             # depuis 2023-2024
+```
+
+- **Dénominateur** : les jours couverts avec `risque_maxi IS NOT NULL`, comme toute moyenne du repo.
+  Chaque fréquence est publiée avec les jours dont elle est tirée. Les fréquences pondérées sont
+  nulles, et non 0 %, quand la saison n'a aucun jour de ce niveau.
+- **Rose vide** : 8 094 jours sur 62 388 n'ont aucun secteur signalé, dont 8 086 à risque 1 (la rose
+  dit alors « aucune orientation particulière »). Ils restent dans le dénominateur. Huit jours ont une
+  rose vide à risque ≥ 2 (sept à 2, un à 3) : incohérence d'archive, comptée dans
+  `rose_vide_risque_ge2`, jamais écartée.
+- **Rose pleine** : 22 485 jours (36 %) signalent les huit secteurs. Le secteur dominant est donc un
+  signal faible : `secteurs_ex_aequo` le dit, et 113 des 392 couples massif × saison de `coeur` ont
+  au moins un ex aequo. À égalité le secteur retenu est le premier dans l'ordre N, NE, E, SE, S, SW,
+  W, NW.
+- **Mélange de risques** : la fréquence d'exposition dépend de la part de jours à risque 1 (rose
+  souvent vide) de la saison. La lecture comparable entre saisons est la fréquence pondérée ≥ 3,
+  sur `coeur` et `comparable = true`. Sur `coeur`, moyenne des fréquences ≥ 3 : N 0,95, NE 0,96, E 0,92,
+  NW 0,90, W 0,76, SE 0,73, S 0,65, SW 0,64.
+- **Vent** : le croisement lit `meteo_vent_tranche_jour` (prévision seule, § 3 et § 11), et ignore les
+  directions variables (`VRB`), qui ne chargent aucune pente. Il ne filtre pas sur la vitesse :
+  c'est la direction qui est croisée avec la rose, pas l'intensité (voir `meteo_transport` pour le
+  vent fort sur neige fraîche).
+- **Situations** : libellés **inférés** (§ 2.7), publiés avec `libelle_source`. Le code 6 (manteau
+  insuffisant) a `est_situation_typique = false`. `sat1` n'existe qu'à partir de 2023-2024 : avant,
+  la vue n'a pas de ligne, pas des lignes nulles ; `restriction` le rappelle sur chaque ligne.
+  `sat2`, renseigné sur 60 % des jours, est rapporté aux jours où `sat1` l'est.

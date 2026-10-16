@@ -195,13 +195,15 @@ version retenue du bulletin) est arrivé avec T8 et profite aussi à T7.
 
 ### T9. Bloc rose des pentes et situations typiques
 
-Métriques de la spec § 5.4. `sat1` / `sat2` sont restreints à 2024+ et étiquetés comme tels.
+Métriques de la spec § 5.4. `sat1` / `sat2` sont restreints aux saisons qui en portent (depuis 2023-2024) et étiquetés comme tels.
 
-**Fait quand** : les fréquences sont calculées par tranche d'altitude ; une sortie toutes altitudes
-confondues est impossible par construction ; les codes `sat` sont traduits par leurs libellés du
-glossaire.
+**Fait quand** : les fréquences sont publiées avec leurs jours ; toute sortie porte `altitude = 'non localisee'` ; seul le croisement vent × orientation est ventilé par tranche ; les codes `sat` sont traduits par leurs libellés du glossaire.
 
 **Dépend de** : T2, T5.
+
+**Correction (16 octobre 2026)** : le critère d'origine, « fréquences calculées par tranche d'altitude », était inapplicable : `<PENTE>` et `<SitAvalTyp>` n'ont aucune altitude (spec § 5.4). Décidé avec le propriétaire : corriger la spec plutôt que ventiler sur le seuil de risque, qui ne localise pas la rose. Conséquence pour T14 : la matrice altitude × orientation n'existe pas.
+
+**Réalisée par** `metriques/pentes.py` (six vues `pente_*`, glossaire § 12).
 
 ### T10. Score composite versionné
 
@@ -261,7 +263,7 @@ comparable apparaît étiquetée et non supprimée.
 Rose des pentes, rose des vents, matrice altitude × orientation. Comparaison par roses côte à
 côte ou barres par secteur, jamais par superposition.
 
-**Fait quand** : chaque rose porte sa tranche d'altitude ; la matrice 8 × 3 est lisible ; les
+**Fait quand** : chaque rose est étiquetée « non localisée en altitude » ; le croisement vent × orientation est lisible par tranche de vent (à la place de la matrice 8 × 3, voir T9) ; les
 situations typiques sont affichées avec leur restriction d'époque.
 
 **Dépend de** : T9, T11.

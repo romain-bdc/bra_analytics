@@ -34,7 +34,7 @@ cherche un chiffre ou un graphe partageable.
 | Documentation des champs | Fait | `docs/glossaire.md` |
 | Page statique Pyrénées | Fait, 5 sections | `bra dashboard` |
 | Couverture géographique complète | Fait : 36 massifs, 77 488 bulletins | `bra fetch`, T1 |
-| **Couche métriques** | **blocs risque (T6), enneigement (T7) et météo (T8) faits** ; rose des pentes et score à faire | `metriques/`, § 5 |
+| **Couche métriques** | **blocs risque (T6), enneigement (T7), météo (T8) et rose des pentes (T9) faits** ; score à faire | `metriques/`, § 5 |
 | **Les quatre écrans** | **partiellement : la fiche existe en germe** | § 6 |
 
 Conséquence directe : la spec ne redécrit pas le socle. Elle décrit ce qui s'ajoute, et seulement
@@ -249,10 +249,16 @@ pas dans une note de bas de page.
 | Concentration | Nombre moyen de secteurs signalés par jour : risque diffus ou localisé | massif × saison |
 | Saisonnalité | Fréquence par secteur et par mois | massif × mois × orientation |
 | Croisement vent × orientation | Orientations exposées face aux directions de vent dominantes | massif × période |
-| Situations typiques | Répartition de `sat1` / `sat2`, **2024+ uniquement** | massif × saison |
+| Situations typiques | Répartition de `sat1` / `sat2`, **depuis 2023-2024 uniquement** (première saison qui en porte, mesurée par l'audit) | massif × saison |
 
-La rose se dessine pour une tranche d'altitude à la fois ; une rose toutes altitudes confondues ne
-veut rien dire. Et pour comparer deux saisons, deux roses côte à côte ou un graphe en barres par
+**Correction (16 octobre 2026) : la rose n'a pas d'altitude.** `<PENTE>` est un jeu unique de huit
+booléens par bulletin, sans attribut d'altitude, comme `<SitAvalTyp>` ; la consigne « une tranche à
+la fois » ne pouvait pas s'appliquer, faute de donnée à ventiler (même cas que § 3.1 pour le risque).
+Rose, secteur dominant, concentration, saisonnalité et situations typiques sont donc publiés par massif
+× saison, étiquetés `altitude = 'non localisee'`, sans prétendre à une tranche. Seul le croisement
+vent × orientation se ventile par tranche, parce que les altitudes de vent, elles, sont réelles.
+
+Pour comparer deux saisons, deux roses côte à côte ou un graphe en barres par
 secteur, jamais deux couches superposées sur la même rose.
 
 ### 5.5 Score composite
@@ -293,7 +299,7 @@ la vue partageable par excellence — celle qui produit la phrase « 2024-25 est
 la plus avalancheuse des dix dernières années en Haute-Bigorre ». Au-delà de quatre courbes
 superposées, c'est illisible : brider le sélecteur.
 
-**Exploration.** Rose des pentes, rose des vents et matrice altitude × orientation.
+**Exploration.** Rose des pentes (non localisée en altitude, § 5.4), rose des vents et croisement vent × orientation par tranche de vent. La matrice altitude × orientation n'existe pas : la rose n'a pas d'altitude.
 
 Tous reprennent le motif existant : un payload JSON construit en Python, inséré dans un gabarit
 via `__DONNEES__`, et tout le filtrage côté client. Pas de serveur, pas de framework.
