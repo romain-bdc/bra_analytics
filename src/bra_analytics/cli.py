@@ -1,4 +1,4 @@
-"""Interface en ligne de commande : `bra fetch`, `bra build`, `bra info`, `bra audit`, `bra ui`."""
+"""Interface en ligne de commande : `bra fetch`, `bra build`, `bra info`, `bra audit`, `bra ui`, `bra carte`."""
 
 from __future__ import annotations
 
@@ -232,6 +232,18 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_carte(args: argparse.Namespace) -> int:
+    from .carte import render
+
+    out = render(args.db, args.out, standalone=not args.fragment)
+    print(f"carte d'accueil : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    if args.fragment:
+        print("fragment sans doctype : a inserer dans un hote qui fournit le squelette HTML.")
+    else:
+        print("page autonome : ouvrir directement dans un navigateur, aucun serveur requis.")
+    return 0
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     import polars as pl
 
@@ -364,6 +376,13 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--fragment", action="store_true",
                    help="omettre doctype et <html> (page destinee a etre hebergee)")
     d.set_defaults(func=cmd_dashboard)
+
+    k = sub.add_parser("carte", help="generer la carte d'accueil des 36 massifs (HTML statique)")
+    k.add_argument("--db", default="warehouse/bra.duckdb")
+    k.add_argument("--out", default="carte.html", help="fichier de sortie")
+    k.add_argument("--fragment", action="store_true",
+                   help="omettre doctype et <html> (page destinee a etre hebergee)")
+    k.set_defaults(func=cmd_carte)
 
     from . import geo
 
