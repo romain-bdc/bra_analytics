@@ -262,6 +262,8 @@ comparable apparaît étiquetée et non supprimée.
 
 **Dépend de** : T6, T11.
 
+**Réalisée par** `bra comparaison` (`comparaison.py`, `templates/comparaison.html`). Critères vérifiés dans Chromium headless (`tests/test_comparaison.py`) : troncature à période égale par défaut et annoncée dans le sous-titre de chaque bloc ; classement refusant une métrique d'indice hors `coeur` ; saison non comparable étiquetée, non classée, non supprimée. Les aides JavaScript communes aux écrans à graphes sont dans `templates/commun.js` (marqueur `__COMMUN__`, `dashboard.injecter`).
+
 ### T14. Écran d'exploration
 
 Rose des pentes, rose des vents, matrice altitude × orientation. Comparaison par roses côte à

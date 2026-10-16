@@ -139,26 +139,16 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
 <div id="tip"></div>
 
 <script>
+__COMMUN__
+</script>
+<script>
 const D = __DONNEES__;
-const NS = "http://www.w3.org/2000/svg";
-const DAY = 86400000;
-const NIVEAUX = ["Faible", "Limité", "Marqué", "Fort", "Très fort"];
-const MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
-const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const $ = id => document.getElementById(id);
-const fr = n => n == null ? "—" : String(n).replace(".", ",");
-const dateFr = iso => { const [y, m, d] = iso.split("-").map(Number); return `${d} ${MOIS[m - 1]} ${y}`; };
-
 /* Les bornes de fenetre et les seuils viennent du payload : definis une seule fois cote Python. */
 const FEN = new Map(D.fenetres.map(f => [f.nom, f]));
 const COEUR = FEN.get(D.fenetre_defaut);
 const SAISON = new Map(D.saisons.map(s => [s.nom, s]));
 const MASSIF = new Map(D.massifs.map(m => [m.id, m]));
 const SLOT = new Map(D.axe.map((c, i) => [c, i]));
-const pad = n => String(n).padStart(2, "0");
-const T0 = iso => Date.parse(iso + "T00:00:00Z");
-const mmdd = ms => { const d = new Date(ms); return pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate()); };
-const nombres = s => s == null ? [] : s.split(",").map(v => v === "" ? null : +v);
 
 /* ---------- etat, porte par l'URL ---------- */
 const etat = { m: null, s: null, a: "cal", t: "moyenne", f: D.fenetre_defaut, o: true };
@@ -216,21 +206,6 @@ function dansCoeur(saison, e, i) {
 
 /* ---------- traces ---------- */
 const W = 1100, L = 54, R = 14, TOP = 10, BAND = 22;
-function el(nom, attrs, parent) {
-  const n = document.createElementNS(NS, nom);
-  for (const k in attrs) n.setAttribute(k, attrs[k]);
-  if (parent) parent.appendChild(n);
-  return n;
-}
-function chemin(points) {           // points : [x, y] ou null ; un null rompt le trait
-  let d = "", ouvert = false;
-  for (const p of points) {
-    if (!p) { ouvert = false; continue; }
-    d += (ouvert ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1);
-    ouvert = true;
-  }
-  return d;
-}
 
 /* Un graphe : cadre, axes, fond de la fenetre coeur, bande de couverture. Renvoie un contexte de trace. */
 function cadre(svgId, hauteur, [ymin, ymax], ticksY, unite) {

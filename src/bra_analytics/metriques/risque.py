@@ -459,6 +459,11 @@ def _fenetre_comparable(fenetre: str) -> Fenetre:
     return f
 
 
+# Nom public : les ecrans qui classent des saisons (T13) y demandent la meme
+# decision que les metriques, au lieu de la reecrire.
+fenetre_comparable = _fenetre_comparable
+
+
 def _filtres(
     massifs: Sequence[int] | None,
     saisons: Sequence[str] | None,

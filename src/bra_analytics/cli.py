@@ -241,6 +241,14 @@ def cmd_fiche(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_comparaison(args: argparse.Namespace) -> int:
+    from .comparaison import render
+
+    out = render(args.db, args.out, standalone=not args.fragment)
+    print(f"ecran de comparaison : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    return 0
+
+
 def cmd_carte(args: argparse.Namespace) -> int:
     from .carte import render
 
@@ -392,6 +400,13 @@ def build_parser() -> argparse.ArgumentParser:
     f.add_argument("--fragment", action="store_true",
                    help="omettre doctype et <html> (page destinee a etre hebergee)")
     f.set_defaults(func=cmd_fiche)
+
+    c = sub.add_parser("comparaison", help="generer l'ecran de comparaison de saisons (HTML statique)")
+    c.add_argument("--db", default="warehouse/bra.duckdb")
+    c.add_argument("--out", default="comparaison.html", help="fichier de sortie")
+    c.add_argument("--fragment", action="store_true",
+                   help="omettre doctype et <html> (page destinee a etre hebergee)")
+    c.set_defaults(func=cmd_comparaison)
 
     k = sub.add_parser("carte", help="generer la carte d'accueil des 36 massifs (HTML statique)")
     k.add_argument("--db", default="warehouse/bra.duckdb")

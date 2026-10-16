@@ -25,3 +25,4 @@ __pycache__/
 # carte d accueil generee par `bra carte` (meme raison : ancrer a la racine)
 /carte.html
 /fiche.html
+/comparaison.html
