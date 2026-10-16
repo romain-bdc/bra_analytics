@@ -54,7 +54,6 @@ from ..fenetres import FENETRES, SAISON_COMPLETE, sql_exclusions
 from ..tranches import MOYENNE, sql_case as sql_case_tranche
 from .risque import (
     MIN_SAISONS_NORMALE as MIN_SAISONS_NORMALE_RISQUE,
-    ComparaisonRefusee,
     _filtres,
     _frame,
     _portee,
@@ -1020,7 +1019,6 @@ def cumul_neige_fraiche(
 
 
 __all__ = [
-    "ComparaisonRefusee",
     "RuptureDeSerie",
     "VUES",
     "creer_vues",
