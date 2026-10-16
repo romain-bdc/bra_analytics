@@ -38,6 +38,9 @@ class BuildReport:
     bulletins_kept: int = 0
     duplicates_dropped: int = 0
     daily_collapse_dropped: int = 0
+    neige_fraiche_dropped: int = 0
+    neige_fraiche_divergent: int = 0
+    enneigement_dropped: int = 0
     seasons: list[str] = field(default_factory=list)
     failures: list[tuple[str, str]] = field(default_factory=list)
     stray_dirs: list[str] = field(default_factory=list)
@@ -52,6 +55,11 @@ class BuildReport:
             f"  dont ecartes par la collapse quotidienne : {self.daily_collapse_dropped}"
             f" (journalises en WARNING ; {self.bulletins_kept - self.daily_collapse_dropped}"
             f" lignes dans risque_journalier)",
+            f"neige fraiche historique ecartee : {self.neige_fraiche_dropped}"
+            f" (une redaction par jour ; dont {self.neige_fraiche_divergent} de valeur"
+            f" differente, en WARNING, les autres en DEBUG)",
+            f"releves d'enneigement ecartes : {self.enneigement_dropped}"
+            f" lignes (redaction plus tardive du meme jour, en WARNING)",
             f"saisons               : {', '.join(self.seasons) or '-'}",
         ]
         if self.stray_dirs:
@@ -614,6 +622,13 @@ def create_duckdb(warehouse: str | Path, db_path: str | Path) -> Path:
 
         creer_vues_risque(con)
 
+        # Couche metriques, bloc enneigement (spec section 5.2). Les journaux
+        # de ses deduplications sont ecrits par `build()`, sur les frames.
+        if {"enneigement", "neige_fraiche"} <= presentes:
+            from .metriques.enneigement import creer_vues as creer_vues_enneigement
+
+            creer_vues_enneigement(con)
+
         con.execute("CHECKPOINT")
     finally:
         con.close()
@@ -648,6 +663,14 @@ def build(
     parsed = parse_all(paths, report)
     frames = to_frames(parsed, report)
     report.daily_collapse_dropped = log_daily_collapse_discards(frames["bulletins"])
+    from .metriques.enneigement import log_enneigement_discards, log_neige_fraiche_discards
+
+    report.neige_fraiche_dropped, report.neige_fraiche_divergent = log_neige_fraiche_discards(
+        frames["neige_fraiche"], frames["bulletins"]
+    )
+    report.enneigement_dropped = log_enneigement_discards(
+        frames["enneigement"], frames["bulletins"]
+    )
     report.stray_dirs = stray_parquet_dirs(out_dir)
     written = write_warehouse(frames, out_dir, replace=replace)
     if db_path is not None:

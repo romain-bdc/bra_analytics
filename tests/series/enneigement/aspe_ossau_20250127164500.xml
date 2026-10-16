@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2025-01-27T17:00:00" DATEECHEANCE="2025-01-28T18:00:00" DATEVALIDITE="2025-01-28T18:00:00" DATEDIFFUSION="2025-01-27T16:45:00" AMENDEMENT="false">
+  <DateValidite>2025-01-28T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="3" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="3" COMMENTAIRE="Indice de risque marqué." RISQUEMAXIJ2="3" DATE_RISQUE_J2="2025-01-29T00:00:00"/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="false" W="false" NW="true" N="true" COMMENTAIRE="Plaques à vent"/>
+    <ACCIDENTEL><![CDATA[Plaques dans un large secteur est, plus fréquentes et épaisses en altitude vers la frontière.]]></ACCIDENTEL>
+    <NATUREL><![CDATA[Possibles sous l'effet du vent puis des chutes de neige, parfois grandes vers la frontière]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : Possibles sous l'effet du vent puis des chutes de neige, parfois grandes vers la frontière
+Déclenchements skieurs : Plaques dans un large secteur est, plus fréquentes et épaisses en altitude vers la frontière.]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque marqué]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Risque maintenu par les nouvelles chutes attendues mardi.]]></CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+    <ImageRisque>montagne_risques_65.png</ImageRisque>
+    <ImagePente>rose_pentes_65.png</ImagePente>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <SitAvalTyp SAT1="1" SAT2="2"/>
+    <TITRE><![CDATA[Risque marqué en particulier dans les secteurs frontaliers d'altitude.]]></TITRE>
+    <TEXTESANSTITRE><![CDATA[Situation avalancheuse typique "neige fraîche" en fond de chaîne avec les cumuls importants en altitude, "neige ventée" ailleurs.
+Déclenchements provoqués : Dans un large secteur nord, est, sud-est des plaques sont présentes dès le matin, parfois loin des crêtes et cols avec le vent fort des derniers jours. A l'avant du massif, elles se situent dans des zones d'accumulation plutôt bien identifiables à l'abri du vent. Elles sont nettement plus fréquentes et épaisses dans les secteurs frontaliers au-dessus de 2300/2400m où les cumuls des derniers jours sont plus importants. Les cassures peuvent y dépasser 50 cm d'épaisseur sur des largeurs importantes en présence de couche fragile type face plane dans les pentes nord-est en particulier. De nouvelles plaques se forment l'après-midi avec les nouvelles chutes de neige, dans un large secteur est.
+Départs spontanés :  Certaines plaques formées dans ce large secteur est peuvent se déclencher spontanément dans les pentes raides par surcharge par le vent en matinée, puis par les nouvelles chutes de neige attendues l'après-midi. Elles sont plus fréquentes dans les secteurs frontaliers au-dessus de 2300/2400m et peuvent y atteindre une grande taille en particulier dans les pentes nord-est. Ailleurs, elles sont plutôt de taille 1 à 2.]]></TEXTESANSTITRE>
+    <TEXTE><![CDATA[Risque marqué en particulier dans les secteurs frontaliers d'altitude.
+Situation avalancheuse typique "neige fraîche" en fond de chaîne avec les cumuls importants en altitude, "neige ventée" ailleurs.
+Déclenchements provoqués : Dans un large secteur nord, est, sud-est des plaques sont présentes dès le matin, parfois loin des crêtes et cols avec le vent fort des derniers jours. A l'avant du massif, elles se situent dans des zones d'accumulation plutôt bien identifiables à l'abri du vent. Elles sont nettement plus fréquentes et épaisses dans les secteurs frontaliers au-dessus de 2300/2400m où les cumuls des derniers jours sont plus importants. Les cassures peuvent y dépasser 50 cm d'épaisseur sur des largeurs importantes en présence de couche fragile type face plane dans les pentes nord-est en particulier. De nouvelles plaques se forment l'après-midi avec les nouvelles chutes de neige, dans un large secteur est.
+Départs spontanés :  Certaines plaques formées dans ce large secteur est peuvent se déclencher spontanément dans les pentes raides par surcharge par le vent en matinée, puis par les nouvelles chutes de neige attendues l'après-midi. Elles sont plus fréquentes dans les secteurs frontaliers au-dessus de 2300/2400m et peuvent y atteindre une grande taille en particulier dans les pentes nord-est. Ailleurs, elles sont plutôt de taille 1 à 2.]]></TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE><![CDATA[Enneigement : Manteau bien déficitaire pour la saison, inégal avec des versants ouest à sud dégarnis par le vent et le soleil jusqu'à 2000m, et des accumulations en versants ombragés dès 1600-1700m.
+Qualité de la neige : Petite couche de neige fraîche reposant sur un sol nu en moyenne montagne. Plus haut elle repose sur une sous-couche humide regelée ou en cours de regel. En altitude, de nombreuses zones sont en neige très dure ou en glace.]]></TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2025-01-27T00:00:00" LimiteSud="2000" LimiteNord="1800">
+    <NIVEAU ALTI="1500" N="0" S="0"/>
+    <NIVEAU ALTI="2000" N="35" S="2"/>
+    <NIVEAU ALTI="2500" N="120" S="60"/>
+    <ImageEnneigement>montagne_enneigement_65.png</ImageEnneigement>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE ALTITUDESS="1800">
+    <NEIGE24H DATE="2025-01-23T00:00:00" SS24Min="0" SS24Max="0"/>
+    <NEIGE24H DATE="2025-01-24T00:00:00" SS24Min="0" SS24Max="0"/>
+    <NEIGE24H DATE="2025-01-25T00:00:00" SS24Min="0" SS24Max="2"/>
+    <NEIGE24H DATE="2025-01-26T00:00:00" SS24Min="0" SS24Max="0"/>
+    <NEIGE24H DATE="2025-01-27T00:00:00" SS24Min="5" SS24Max="10"/>
+    <NEIGE24H DATE="2025-01-28T00:00:00" SS24Min="7" SS24Max="15"/>
+    <ImageNeigeFraiche>graphe_neige_fraiche_65.png</ImageNeigeFraiche>
+  </NEIGEFRAICHE>
+  <BSH>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2025-01-21T00:00:00" LimiteSud="1900" LimiteNord="1500">
+        <NIVEAU ALTI="1500" N="2" S="0"/>
+        <NIVEAU ALTI="2000" N="45" S="10"/>
+        <NIVEAU ALTI="2500" N="125" S="65"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2025-01-22T00:00:00" LimiteSud="1900" LimiteNord="1700">
+        <NIVEAU ALTI="1500" N="0" S="0"/>
+        <NIVEAU ALTI="2000" N="40" S="5"/>
+        <NIVEAU ALTI="2500" N="120" S="60"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2025-01-23T00:00:00" LimiteSud="1800" LimiteNord="1700">
+        <NIVEAU ALTI="1500" N="0" S="0"/>
+        <NIVEAU ALTI="2000" N="40" S="5"/>
+        <NIVEAU ALTI="2500" N="125" S="65"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2025-01-24T00:00:00" LimiteSud="1800" LimiteNord="1700">
+        <NIVEAU ALTI="1500" N="0" S="0"/>
+        <NIVEAU ALTI="2000" N="40" S="2"/>
+        <NIVEAU ALTI="2500" N="125" S="65"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2025-01-25T00:00:00" LimiteSud="1500" LimiteNord="1500">
+        <NIVEAU ALTI="1500" N="1" S="1"/>
+        <NIVEAU ALTI="2000" N="40" S="5"/>
+        <NIVEAU ALTI="2500" N="125" S="65"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2025-01-26T00:00:00" LimiteSud="2000" LimiteNord="1800">
+        <NIVEAU ALTI="1500" N="0" S="0"/>
+        <NIVEAU ALTI="2000" N="35" S="2"/>
+        <NIVEAU ALTI="2500" N="125" S="60"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2025-01-27T00:00:00" LimiteSud="2000" LimiteNord="1800">
+        <NIVEAU ALTI="1500" N="0" S="0"/>
+        <NIVEAU ALTI="2000" N="35" S="2"/>
+        <NIVEAU ALTI="2500" N="120" S="60"/>
+      </ENNEIGEMENT>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE ALTITUDESS="1800">
+      <NEIGE24H DATE="2025-01-22T00:00:00" SS24Min="0" SS24Max="0"/>
+      <NEIGE24H DATE="2025-01-23T00:00:00" SS24Min="0" SS24Max="0"/>
+      <NEIGE24H DATE="2025-01-24T00:00:00" SS24Min="0" SS24Max="0"/>
+      <NEIGE24H DATE="2025-01-25T00:00:00" SS24Min="0" SS24Max="0"/>
+      <NEIGE24H DATE="2025-01-26T00:00:00" SS24Min="0" SS24Max="2"/>
+      <NEIGE24H DATE="2025-01-27T00:00:00" SS24Min="0" SS24Max="0"/>
+    </NEIGEFRAICHE>
+    <Image7derniersjours>sept_derniers_jours_65.png</Image7derniersjours>
+    <Image7derniersjours_portrait>sept_derniers_jours_portrait_65.png</Image7derniersjours_portrait>
+  </BSH>
+  <TexteMeta>
+    <Vigilance>Pour consulter la vigilance en cours, veuillez vous rendre sur le site <a href="https://vigilance.meteofrance.fr/fr">https://vigilance.meteofrance.fr/fr</a></Vigilance>
+    <EnteteGenerique/>
+    <BasDePageGenerique/>
+    <LienDocumentation/>
+    <Partenaires>Rédigé par Météo-France avec la contribution des observateurs du réseau nivo-météorologique. Partenariat : ANMSM (Maires de Stations de Montagne), DSF (Domaines Skiables de France), ADSP (Directeurs de Pistes et de la Sécurité des Stations de Sports d'Hiver) et autres acteurs de la montagne.</Partenaires>
+  </TexteMeta>
+</BULLETINS_NEIGE_AVALANCHE>

@@ -406,6 +406,12 @@ Six échéances par bulletin : 4 analyses passées + 2 prévisions.
 > deviennent nuls ; `bra check` compte les cumuls de secteur non observés
 > (`neige_fraiche_non_observee`). Mesure : [`disponibilite.md`](disponibilite.md) § 9.
 
+> **Un même cumul, deux dates selon le bloc depuis 2024.** Le bloc historique moderne date une
+> fenêtre de 24 h au lendemain du bloc principal (31 254 paires non nulles sur 31 254) ; avant
+> 2024, les deux blocs portent la même date. `date_cumul` reste la date écrite dans le XML ; la
+> vue `neige_fraiche_jour` recale le bloc moderne et dédoublonne les six rédactions d'un même
+> jour (§ 10).
+
 ### Tranches d'altitude normées — vue `palier_tranche`
 
 Les altitudes de référence varient d'un massif et d'une époque à l'autre. La vue
@@ -773,3 +779,221 @@ saison isolément ; ces lignes portent `comparable = false`.
 `couverture` est restreinte à `massif_coherent` depuis T6 : le message technique du 05/02/2016
 diffusé sous `ID="3"` ouvrait la saison 2015-2016 du Mont-Blanc au 5 février, avec 45 jours
 manquants fictifs. Elle s'ouvre désormais au 11 mars (35 jours couverts, 11 manquants).
+
+---
+
+## 10. Couche métriques — bloc enneigement
+
+Les métriques de la spec § 5.2, définies une fois dans
+[`src/bra_analytics/metriques/enneigement.py`](../src/bra_analytics/metriques/enneigement.py) et
+posées en vues par `bra build`, comme le bloc risque (§ 9). Toutes sont restreintes à
+`massif_coherent`. L'interface les lit telles quelles ; elle ne recopie aucun SQL.
+
+> **L'enneigement du BRA est indicatif.** Une épaisseur est l'estimation du prévisionniste à une
+> altitude de référence, pas une mesure de station. Aucune colonne du bloc ne s'appelle
+> « mesure » (un test le vérifie), et les seuils appliqués voyagent avec les chiffres qu'ils
+> produisent (`seuil_epaisseur_cm`, `seuil_limite_m`, `seuil_chute_cm`). Comparer un massif à
+> lui-même dans le temps est solide ; comparer deux massifs à altitude nominale égale l'est
+> beaucoup moins (spec § 5.2).
+
+| Vue | Grain | Contenu |
+|---|---|---|
+| `enneigement_jour` | massif × jour | limites d'enneigement continu, `sans_enneigement_continu_*`, `releve_fait` |
+| `enneigement_palier` | massif × jour × palier | épaisseur nord / sud, tranche, `palier_retenu`, écart à la normale |
+| `enneigement_saison` | massif × saison × tranche × portée | jours enneigés, maximum saisonnier et sa date, couverture |
+| `enneigement_continu` | massif × saison × versant | période d'enneigement continu : début, fin, durée, jours non observés |
+| `neige_fraiche_jour` | massif × jour | cumul de 24 h, une rédaction par jour — **contrat consommé par le bloc météo (T8)** |
+| `neige_fraiche_episode` | un épisode de chute × portée | début, fin, durée, cumul, plus forte chute, ce qui le borde |
+| `neige_fraiche_saison` | massif × saison × tranche × portée | cumul, jours de chute, épisodes, plus forte chute, lecture du cumul |
+
+Une **portée** est, comme au § 9, `coeur`, `commune` ou `saison_complete` (colonne `fenetre`).
+Sur un entrepôt construit avant T7, les fonctions de lecture posent les vues en vues
+temporaires, sans écrire dans la base :
+
+```python
+import datetime as dt
+import duckdb
+from bra_analytics.metriques import enneigement
+
+con = duckdb.connect("warehouse/bra.duckdb", read_only=True)
+enneigement.metriques_saison(con, fenetre="coeur", massifs=[65], tranches=["moyenne"])
+enneigement.enneigement_continu(con, massifs=[65], seuil_limite_m=1500)
+enneigement.neige_fraiche_saison(con, fenetre="commune", seuil_chute_cm=10)
+enneigement.cumul_neige_fraiche(con, debut=dt.date(2025, 1, 1), fin=dt.date(2025, 1, 31))
+```
+
+Les seuils se passent aux fonctions de lecture, qui recalculent sans toucher aux vues ; les vues
+portent les valeurs par défaut.
+
+### Deux séries journalières, une rédaction par jour
+
+**Neige fraîche : bloc historique seul, rédaction la plus tardive.** Un même jour figure dans le
+bloc `BSH` de six bulletins successifs. `neige_fraiche_jour` en retient un, celui du bulletin
+rédigé le plus tard (`ORDER BY date_bulletin DESC, date_diffusion DESC`, comme
+`risque_journalier`) ; `redactions` dit combien le décrivaient, `redactions_divergentes` s'ils
+n'étaient pas d'accord. Sur les 36 massifs : **444 570 lignes historiques → 78 172 jours**.
+`log_neige_fraiche_discards()` rejoue le même tri au build et journalise **chaque** ligne
+écartée, 366 398 en tout : les **2 222** dont la valeur diffère de la ligne retenue (révision,
+ou cumul observé puis non observé) en `WARNING`, les répétitions à l'identique en `DEBUG` —
+ligne à ligne dans les deux cas, seul le volume change. Le tri est écrit une fois
+(`ORDRE_REDACTION`) et la vue comme le journal en dérivent ; un test vérifie que lignes gardées
+et écartées partitionnent exactement le bloc historique.
+
+Le bloc de **prévision** n'est jamais lu : il mêlerait un horizon prévu à un horizon analysé.
+La saison 2015-2016, sans bloc `BSH`, n'a donc pas de neige fraîche. À l'inverse, le bloc
+historique comble les trous d'archive : un jour sans bulletin reste décrit par les six suivants,
+et aucun épisode de chute n'est rompu par un trou sur les 36 massifs.
+
+**Épaisseur et limite : relevé du jour seul, même règle.** `enneigement_jour` et
+`enneigement_palier` lisent `origine = 'jour'`, indexé sur la date du relevé (le BRA rédigé le
+10 décrit le manteau du 10) ; `jour_validite` du bulletin source est conservé pour la jointure
+avec le risque. Un relevé rédigé deux fois — réédition de 16 h à 18 h, ou bulletin du matin qui
+redonne le relevé de la veille — garde la rédaction la plus tardive :
+**232 461 lignes → 230 400**, les **2 061** écartées (687 relevés de trois paliers) journalisées
+en `WARNING` par `log_enneigement_discards()`.
+
+Le bloc historique d'enneigement **n'est pas lu**, et c'est un choix : il manque toute la
+saison 2015-2016, et réécrit le relevé du jour dans 1 à 3 % des paliers (1 794 épaisseurs nord
+sur 158 055 avant 2024, 2 087 sur 69 711 depuis). Le mêler au relevé du jour changerait
+d'horizon d'un jour à l'autre. Ce qu'il apporterait en plus : 3 090 jours-massifs, pour
+l'essentiel la semaine qui précède l'ouverture de la diffusion et les trous d'archive.
+
+### Recalage du bloc historique moderne
+
+Le bloc principal `NEIGEFRAICHE` et le bloc historique d'avant 2024 datent une fenêtre de 24 h
+du **même** jour : le cumul historique du jour J y vaut celui du bloc principal du jour J dans
+53 602 paires non nulles sur 54 107. Le bloc historique **moderne** (2024+) date la même
+fenêtre **au lendemain** : son jour J+1 vaut le jour J du bloc principal dans
+**31 254 paires non nulles sur 31 254**, et son jour J dans 3 437 sur 52 961 seulement. Quelques
+dates y portent d'ailleurs `06:00`, la fin de la fenêtre 06 UTC → 06 UTC. Les deux blocs
+historiques couvrent ainsi les mêmes six fenêtres (J−6 à J−1 du jour de rédaction), étiquetées
+différemment.
+
+`neige_fraiche_jour` ramène le bloc moderne à la convention commune
+(`DECALAGE_HISTORIQUE_MODERNE_JOURS = 1`) et garde la date source dans `date_cumul_source`.
+Sans ce recalage, la série glisserait d'un jour à l'hiver 2023-2024, en plus d'y changer de
+lecture. *Inféré* : que `jour` soit le **début** de la fenêtre (06 UTC du jour → 06 UTC du
+lendemain) se lit sur les `06:00` du bloc moderne, aucun descriptif ne le dit.
+
+### Contrat de `neige_fraiche_jour`
+
+La vue que consomme l'indice de transport par le vent (T8, spec § 5.3). Garanties :
+
+- **une ligne par `(massif_id, jour)`**, sur les seuls bulletins `massif_coherent` ;
+- `jour` suit la convention du bloc principal (voir ci-dessus), pas `jour_validite` : la
+  fenêtre de 24 h décrite commence ce jour-là ;
+- un cumul **nul n'est pas zéro** : c'est un cumul non observé (`-2` d'avant 2024, 15 à 21 % des
+  lignes) ; ne jamais le remplacer par 0 dans une somme sans le compter ;
+- `lecture_cumul` (`secteurs` avant 2024, `fourchette` depuis) et `format_famille` portent la
+  rupture de série ; un calcul qui enjambe l'hiver 2023-2024 doit l'annoncer ou la refuser ;
+- l'altitude peut changer **en cours de saison** : les Alpes du Sud passent de 1800 à 2500 m
+  en fin de saison depuis 2024 (791 jours en tranche `haute`, tous les autres en `moyenne`).
+  Pour 27 couples massif × saison (massifs 13, 16, 17…), `neige_fraiche_saison` répartit donc
+  le cumul de la saison sur **deux lignes de tranche**, et un épisode de chute peut enjamber le
+  changement. Le cumul d'une saison entière est la somme des deux lignes ; comparer la seule
+  tranche `moyenne` de ces massifs à celle des autres sous-estime leur saison.
+
+| Colonne | Description |
+|---|---|
+| `saison`, `saison_debut`, `massif_id`, `massif_nom`, `zone` | identification (saison du bulletin source) |
+| `jour` | jour de la fenêtre de 24 h, convention du bloc principal |
+| `cumul_min_cm`, `cumul_max_cm` | bornes du cumul (§ 5) ; nulles si non observé |
+| `altitude_m`, `tranche` | altitude de référence et tranche normée |
+| `format_famille`, `lecture_cumul` | `legacy` / `secteurs` ou `moderne` / `fourchette` |
+| `secteur1_libelle` … `secteur2_cumul_cm` | secteurs nommés d'avant 2024, tels que lus |
+| `date_cumul_source` | date écrite dans le XML, avant recalage |
+| `date_bulletin`, `fichier_source` | rédaction retenue |
+| `redactions`, `redactions_divergentes` | combien de bulletins décrivaient ce jour, et s'ils divergeaient |
+| `saison_comparable`, `motif_exclusion` | saisons écartées du § 8, étiquetées |
+| `fenetre_coeur`, `fenetre_commune` | appartenance du jour aux fenêtres, lue sur `jour` |
+
+### Définitions
+
+| Métrique (spec § 5.2) | Colonnes | Définition |
+|---|---|---|
+| Limite d'enneigement | `enneigement_jour.limite_nord_m`, `limite_sud_m`, `sans_enneigement_continu_*` | limite nulle + indicateur vrai = pas d'enneigement continu ; limite et indicateur nuls = non relevé |
+| Épaisseur par tranche | `enneigement_palier.epaisseur_nord_cm`, `epaisseur_sud_cm`, `tranche`, `palier_retenu` | une ligne par palier ; rien n'est interpolé |
+| Date d'enneigement continu | `enneigement_continu.debut_enneigement_continu`, `fin_…`, `duree_jours`, `jours_non_observes_periode` | voir ci-dessous |
+| Durée d'enneigement | `enneigement_saison.jours_enneiges_nord` / `_sud`, avec `jours_observes_*`, `jours_releves` | jours où l'épaisseur du palier retenu atteint `seuil_epaisseur_cm` |
+| Maximum saisonnier | `epaisseur_max_nord_cm`, `date_max_nord`, `jours_au_max_nord` (et `_sud`) | `date_max` est le **premier** jour au maximum |
+| Neige fraîche cumulée | `neige_fraiche_saison.cumul_max_cm`, `cumul_min_cm`, `jours_non_observes` ; `cumul_neige_fraiche()` sur une période quelconque | somme sur les jours observés : un minorant, publié avec ses jours non observés |
+| Épisodes de chute | `jours_chute`, `episodes_chute`, `episodes_rompus_par_trou`, `episodes_bordes_non_observe`, `plus_long_episode`, `plus_forte_chute_cm`, `date_plus_forte_chute` | un épisode = jours **consécutifs au calendrier** à `cumul_max_cm ≥ seuil_chute_cm` ; un jour présent mais non observé le borde, un trou le rompt ; une fenêtre rogne l'épisode qui chevauche sa borne |
+| Anomalie d'enneigement | `enneigement_palier.normale_nord_cm`, `saisons_normale_nord`, `ecart_normale_nord_cm` (et `_sud`) | voir ci-dessous |
+
+### Paramètres
+
+| Constante | Défaut | Justification | Effet mesuré (36 massifs) |
+|---|---|---|---|
+| `SEUIL_EPAISSEUR_CM` | 1 cm | la frontière que l'archive trace elle-même : une limite `-1` sur relevé fait accompagne une épaisseur nulle à tous les paliers (§ 4) ; convention usuelle d'un sol enneigé | `coeur`, saisons comparables, médiane des jours enneigés nord : 99 j en basse, 121 en moyenne et haute (sur 122) ; à 30 cm : 57, 120, 121 |
+| `SEUIL_LIMITE_M` | 1800 m | le plancher de la tranche `moyenne` (`tranches.py`) : sous ce seuil, toute la tranche moyenne est enneigée en continu ; [`disponibilite.md`](disponibilite.md) § 7 ne publie pas de distribution de limite | durée médiane de la période nord : 135,5 j ; 71,5 à 1500 m, 164 à 2000 m |
+| `TROU_TOLERE_JOURS` | 3 jours | 844 des 910 trous du relevé du jour durent 1 à 3 jours, les autres 5 à 50 | à 0 (règle des épisodes de risque), 251 débuts sur 784 changent ; à 7, aucun |
+| `SEUIL_CHUTE_CM` | 20 cm | p95 de `cumul_max_cm` historique moderne ([`disponibilite.md`](disponibilite.md) § 7 : p50 0, p75 3, p90 10, p95 20, p99 40, max 120 cm) ; au p90, un jour sur dix serait une chute | `coeur`, saisons comparables : médiane de 6 jours de chute par massif-saison avant 2024, 8 depuis ; 1 103 et 696 épisodes |
+| `MIN_SAISONS_NORMALE` | 5 | repris du bloc risque (§ 9) | normale publiée sur 208 094 paliers-jours sur 230 400 |
+| `DECALAGE_HISTORIQUE_MODERNE_JOURS` | 1 | voir le recalage ci-dessus | 31 254 paires sur 31 254 |
+
+### Palier retenu
+
+Huit massifs ont deux paliers dans la tranche `basse` (1000 et 1500 m), un en avait jusqu'en
+2021 (1200 et 1500 m), cinq en avaient deux dans la tranche `moyenne` (1800 et 2100 m). Une
+métrique par tranche lit un seul palier : **le plus haut de la tranche** (`palier_retenu`).
+Il donne à chaque tranche une altitude homogène — 1500 m en `basse` pour tous les massifs,
+2100 puis 2000 m en `moyenne` — et `enneigement_saison` publie `altitude_min_m` /
+`altitude_max_m` pour qu'un changement de palier en cours de série se voie. L'autre palier
+n'est pas écarté : il reste dans `enneigement_palier` (21 337 lignes `palier_retenu = false`),
+avec sa propre normale.
+
+### Enneigement continu
+
+« Premier jour à partir duquel la limite reste sous un seuil » se lit ici comme le début de la
+**plus longue période** où la limite reste sous `seuil_limite_m`, par versant. État d'un jour :
+
+- **sous** : limite < seuil ;
+- **au-dessus** : limite ≥ seuil, **ou** `sans_enneigement_continu` vrai — une limite nulle sur
+  un relevé fait n'est pas une lacune, c'est l'absence d'enneigement continu ;
+- **inconnu** : relevé non fait, ou indicateur nul. Le jour n'entre pas dans la suite.
+
+Seul un jour au-dessus rompt une période, ou un trou de plus de `trou_tolere_jours` jours sans
+état connu. Les jours non observés intérieurs sont publiés (`jours_non_observes_periode`) ;
+`periodes` dit en combien de morceaux la saison se découpe. À égalité de durée, la période la
+plus précoce l'emporte.
+
+### Écart à la normale
+
+`ecart_normale_nord_cm = epaisseur_nord_cm − normale_nord_cm` (et `_sud`), où la normale est la
+médiane de l'épaisseur **au même jour du calendrier**, pour le même massif et le **même palier**,
+sur les saisons comparables. Les choix du bloc risque (§ 9), à deux différences près :
+
+- **même palier, pas même tranche** : cinq massifs passent de 2100 à 2000 m dans la tranche
+  moyenne en 2021 ; une normale par tranche mêlerait deux altitudes ;
+- **toute la saison, pas `coeur`** : la fenêtre corrige la sentinelle `RISQUE1=-1`, qui ne
+  touche pas l'enneigement. Le seuil de saisons suffit à écarter les dates trop peu couvertes.
+
+Une saison non comparable reçoit une normale mais pas d'écart ; `saisons_normale_*` est toujours
+publié. Sur les 36 massifs : 208 094 paliers-jours ont une normale, 190 328 un écart.
+
+### Rupture de série de la neige fraîche
+
+Avant 2024, `cumul_max_cm` est le plus fort de un ou deux secteurs nommés ; depuis, la borne
+haute d'une fourchette sur le massif (§ 5). La rupture voyage avec le chiffre :
+
+- chaque ligne de `neige_fraiche_jour`, `neige_fraiche_episode` et `neige_fraiche_saison`
+  porte `lecture_cumul` ; `neige_fraiche_saison` y ajoute `rupture_de_serie`, vrai si la ligne
+  mêle les deux (impossible à l'intérieur d'une saison : 2023-2024 est entièrement moderne) ;
+- `cumul_neige_fraiche()` **refuse** une période à cheval sur l'hiver 2023-2024 et lève
+  `RuptureDeSerie` au lieu de sommer deux grandeurs différentes.
+
+L'écart se voit dans les distributions dédupliquées : p95 de 16 cm avant 2024, 20 cm depuis ;
+médiane de 6 jours ≥ 20 cm par massif-saison sur `coeur` avant, 8 depuis. Ce n'est pas un
+signal nivologique tant que la lecture change en même temps — et les 15 à 21 % de jours non
+observés d'avant 2024 tirent les cumuls anciens vers le bas.
+
+### Comparaisons
+
+`enneigement_saison` et `neige_fraiche_saison` portent `comparable` et `motif_exclusion` :
+vrai sur une **fenêtre nommée** (`coeur` ou `commune`) hors saisons écartées, jamais sur la
+saison entière, dont les bornes brutes ne se comparent pas. À la différence du risque,
+`commune` est admise : elle ne corrige pas le `-1`, mais le `-1` ne touche pas l'enneigement,
+et la durée d'enneigement est une « durée de saison », l'usage même de `commune` (§ 8). La
+règle est déclarée une fois, par fenêtre, dans `fenetres.py` (`comparable_enneigement`), et le
+SQL du bloc la lit. Pour la
+neige fraîche, `comparable` ne lève pas la rupture de 2023-2024 : `lecture_cumul` le dit.

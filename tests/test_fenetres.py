@@ -231,3 +231,13 @@ def test_motifs_d_exclusion_rediges_pour_l_affichage() -> None:
 
     assert "Pyrénées" in SAISONS_NON_COMPARABLES["2019-2020"]
     assert "démarre" in SAISONS_NON_COMPARABLES["2015-2016"]
+
+
+def test_comparabilite_de_l_enneigement_declaree_par_fenetre() -> None:
+    """Le `-1` qui rend `commune` non comparable porte sur le risque, pas sur
+    l'enneigement : chaque fenetre declare les deux, une seule fois."""
+    from bra_analytics.fenetres import COEUR, COMMUNE
+
+    assert COMMUNE.comparable_entre_saisons is False
+    assert COMMUNE.comparable_enneigement is True
+    assert COEUR.comparable_enneigement is True

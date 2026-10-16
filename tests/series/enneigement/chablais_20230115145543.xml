@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="bra.xslt" type="text/xsl"?>
+<Bulletins nombre="2">
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="1" MASSIF="CHABLAIS" PRODUCTEUR="CDM381" DATEBULLETIN="2023-01-15T16:00:00" DATEECHEANCE="2023-01-16T18:00:00" DATEVALIDITE="2023-01-16T18:00:00" DATEDIFFUSION="2023-01-15T14:55:43" AMENDEMENT="false">
+  <DateValidite>2023-01-16T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="3" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="3" COMMENTAIRE="Risque marqu&#233;."/>
+    <PENTE NE="true" E="true" SE="true" S="false" SW="false" W="false" NW="true" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL>Plaques form&#233;es par le vent de sud-ouest.</ACCIDENTEL>
+    <NATUREL>avalanches de neige poudreuse.</NATUREL>
+    <RESUME>D&#233;parts spontan&#233;s : avalanches de neige poudreuse.
+D&#233;clenchements skieurs : Plaques form&#233;es par le vent de sud-ouest.</RESUME>
+    <AVIS/>
+    <VIGILANCE/>
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Situations avalancheuses typiques : neige vent&#233;e, neige fra&#238;che.
+D&#233;clenchements accidentels : des plaques faciles &#224; d&#233;clencher, m&#234;me par un randonneur isol&#233;, ont &#233;t&#233; form&#233;es r&#233;cemment par le vent de sud-ouest &#224; ouest et d'autres sont en cours de formation. D'apr&#232;s les observations faites ce dimanche, elles sont g&#233;n&#233;ralement friables, d'ampleur modeste (taille 1 &#224; 2) avec des cassures voisines de 40/50 cm d'&#233;paisseur. On a observ&#233; plus rarement des d&#233;clenchements de plaques plus volumineux avec des cassures de 70/80 cm contenant quelques blocs dans les zones de d&#233;p&#244;t. Lundi, on attend environ 20 cm de neige l&#233;g&#232;re, associ&#233;e de nouveau &#224; un tr&#232;s fort vent de sud-ouest. L'instabilit&#233; de surface du manteau neigeux sera donc en hausse. 
+D&#233;parts spontan&#233;s : risque en hausse au fur et &#224; mesure des chutes de neige attendues lundi. Dans les couloirs suffisamment raides, il s'agira de coul&#233;es de poudreuse ou d'avalanches de taille moyenne, plus rarement d'avalanches de grande taille. Ponctuellement, une accumulation charg&#233;e par le vent de sud-ouest pourrait c&#233;der spontan&#233;ment.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>Enneigement encore d&#233;ficitaire, surtout en dessous de 2000 m. On peut chausser vers 1400/1700 m.
+Qualit&#233; : petite couche de neige fra&#238;che, soit poudreuse soit fortement souffl&#233;e, reposant sur un manteau neigeux h&#233;t&#233;rog&#232;ne. Grosses corniches parfois pr&#233;sentes sur les cr&#234;tes.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2023-01-15T00:00:00" LimiteSud="1300" LimiteNord="1000">
+    <NIVEAU ALTI="1000" N="0" S="0"/>
+    <NIVEAU ALTI="1500" N="15" S="10"/>
+    <NIVEAU ALTI="2000" N="70" S="60"/>
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2023-01-11T00:00:00" SS241="10" SS242="-1"/>
+    <NEIGE24H DATE="2023-01-12T00:00:00" SS241="2" SS242="-1"/>
+    <NEIGE24H DATE="2023-01-13T00:00:00" SS241="5" SS242="-1"/>
+    <NEIGE24H DATE="2023-01-14T00:00:00" SS241="-2" SS242="-1"/>
+    <NEIGE24H DATE="2023-01-15T00:00:00" SS241="20" SS242="-1"/>
+    <NEIGE24H DATE="2023-01-16T00:00:00" SS241="20" SS242="-1"/>
+  </NEIGEFRAICHE>
+  <BSH>
+    <ENNEIGEMENTS>
+      <ENNEIGEMENT DATE="2023-01-09T00:00:00" LimiteSud="1200" LimiteNord="1200">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="5" S="5"/>
+        <NIVEAU ALTI="2000" N="70" S="60"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-01-10T00:00:00" LimiteSud="800" LimiteNord="800">
+        <NIVEAU ALTI="1000" N="5" S="5"/>
+        <NIVEAU ALTI="1500" N="20" S="20"/>
+        <NIVEAU ALTI="2000" N="80" S="70"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-01-11T00:00:00" LimiteSud="1100" LimiteNord="900">
+        <NIVEAU ALTI="1000" N="3" S="0"/>
+        <NIVEAU ALTI="1500" N="15" S="10"/>
+        <NIVEAU ALTI="2000" N="70" S="60"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-01-12T00:00:00" LimiteSud="1300" LimiteNord="1000">
+        <NIVEAU ALTI="1000" N="2" S="0"/>
+        <NIVEAU ALTI="1500" N="10" S="5"/>
+        <NIVEAU ALTI="2000" N="70" S="60"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-01-13T00:00:00" LimiteSud="1300" LimiteNord="1000">
+        <NIVEAU ALTI="1000" N="2" S="0"/>
+        <NIVEAU ALTI="1500" N="10" S="5"/>
+        <NIVEAU ALTI="2000" N="70" S="60"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-01-14T00:00:00" LimiteSud="1300" LimiteNord="1000">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="15" S="10"/>
+        <NIVEAU ALTI="2000" N="70" S="60"/>
+      </ENNEIGEMENT>
+      <ENNEIGEMENT DATE="2023-01-15T00:00:00" LimiteSud="1300" LimiteNord="1000">
+        <NIVEAU ALTI="1000" N="0" S="0"/>
+        <NIVEAU ALTI="1500" N="15" S="10"/>
+        <NIVEAU ALTI="2000" N="70" S="60"/>
+      </ENNEIGEMENT>
+    </ENNEIGEMENTS>
+    <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+      <NEIGE24H DATE="2023-01-09T00:00:00" SS241="25" SS242="-1"/>
+      <NEIGE24H DATE="2023-01-10T00:00:00" SS241="0" SS242="-1"/>
+      <NEIGE24H DATE="2023-01-11T00:00:00" SS241="10" SS242="-1"/>
+      <NEIGE24H DATE="2023-01-12T00:00:00" SS241="2" SS242="-1"/>
+      <NEIGE24H DATE="2023-01-13T00:00:00" SS241="5" SS242="-1"/>
+      <NEIGE24H DATE="2023-01-14T00:00:00" SS241="-2" SS242="-1"/>
+    </NEIGEFRAICHE>
+    <AVALANCHES>
+      <AVALANCHE DATE="2023-01-09T00:00:00" SPONTANE="-1" PROVOQUER="2"/>
+      <AVALANCHE DATE="2023-01-10T00:00:00" SPONTANE="1" PROVOQUER="3"/>
+      <AVALANCHE DATE="2023-01-11T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+      <AVALANCHE DATE="2023-01-12T00:00:00" SPONTANE="0" PROVOQUER="0"/>
+      <AVALANCHE DATE="2023-01-13T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2023-01-14T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+      <AVALANCHE DATE="2023-01-15T00:00:00" SPONTANE="-1" PROVOQUER="-1"/>
+    </AVALANCHES>
+  </BSH>
+</BULLETINS_NEIGE_AVALANCHE>
+</Bulletins>

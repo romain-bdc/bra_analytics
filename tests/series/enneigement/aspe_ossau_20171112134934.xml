@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../webbra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="INA" ID="65" MASSIF="ASPE-OSSAU" PRODUCTEUR="CDM651-PREVI" DATEBULLETIN="2017-11-12T16:00:00" DATEECHEANCE="2017-11-13T18:00:00" DATEVALIDITE="2017-11-13T18:00:00" DATEDIFFUSION="2017-11-12T13:49:34" AMENDEMENT="false">
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="-1" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="/" COMMENTAIRE="Information neige et avalanche rédigée à partir d'informations réduites" />
+    <PENTE NE="false" E="false" SE="false" S="false" SW="false" W="false" NW="false" N="false" COMMENTAIRE="non renseigné" />
+    <ACCIDENTEL />
+    <NATUREL />
+    <RESUME>Avalanches de neige récente s'humidifiant</RESUME>
+    <AVIS />
+    <VIGILANCE />
+  </CARTOUCHERISQUE>
+  <STABILITE>
+    <TEXTE>Les chutes de neige qui ont lieu depuis mercredi ont rajouté globalement 40 à 50 cm supplémentaires. Cette neige est en cours de tassement, mais elle va également s'humidifier dans le courant de cette journée de vendredi, et jusqu'à dimanche, avec le redoux qui se met en place et les pluies attendues. A proximité des cols, des sommets et des plus hautes crêtes, le vent de Nord-Ouest à Nord a soufflé cette neige. Le temps plus calme avec éclaircies de la nuit va permettre à la neige déjà humidifiée de regeler. A noter qu'à partir de 1800m d'altitude, on trouve sous cette neige récente une amorce de sous-couche plus dense et légèrement plus stable. Retour d'un temps calme et froid à partir de lundi.
+On peut s'attendre avec ces cumuls de neige et le redoux progressif ce vendredi à des avalanches de neige récente humide dans les pentes raides, à basse altitude dans un premier temps, puis partant de plus haut au fil de la journée; ces avalanches, avec les purges qui se sont déjà faites lors des chutes, seront généralement de petit taille, rarement moyenne. Des plaques sont formées dans les secteurs raides près des cols et des crêtes.</TEXTE>
+  </STABILITE>
+  <QUALITE>
+    <TEXTE>Avec ce temps perturbé hivernal, les limites d'enneigement se sont nettement abaissées; les faibles épaisseurs de neige récente présente dès 800m d'altitude devraient rapidement disparaître avec le redoux au cours de cette journée de vendredi. On trouvera de la neige humide et persistante dès 1000m et jusqu'à 1500 à 1600m, ressaisie au petit matin, ramollissant vite ensuite au cours de la journée. Au-dessus, la neige récente s'humidifie également, un peu plus lentement toutefois, jusque 2300 à 2400m au cours de la journée. Au-delà de cette altitude, neige récente et meuble, travaillée par le vent près des crêtes et des sommets.</TEXTE>
+  </QUALITE>
+  <ENNEIGEMENT DATE="2017-11-12T00:00:00" LimiteSud="1500" LimiteNord="1300">
+    <NIVEAU ALTI="1500" N="15" S="10" />
+    <NIVEAU ALTI="1800" N="35" S="25" />
+    <NIVEAU ALTI="2400" N="65" S="50" />
+  </ENNEIGEMENT>
+  <NEIGEFRAICHE SECTEURSS1="massif" SECTEURSS2="" ALTITUDESS="1800">
+    <NEIGE24H DATE="2017-11-08T00:00:00" SS241="25" SS242="-1" />
+    <NEIGE24H DATE="2017-11-09T00:00:00" SS241="10" SS242="-1" />
+    <NEIGE24H DATE="2017-11-10T00:00:00" SS241="-2" SS242="-1" />
+    <NEIGE24H DATE="2017-11-11T00:00:00" SS241="-2" SS242="-1" />
+    <NEIGE24H DATE="2017-11-12T00:00:00" SS241="10" SS242="-1" />
+    <NEIGE24H DATE="2017-11-13T00:00:00" SS241="2" SS242="-1" />
+  </NEIGEFRAICHE>
+</BULLETINS_NEIGE_AVALANCHE>
