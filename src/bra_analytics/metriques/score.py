@@ -51,7 +51,7 @@ import polars as pl
 from ..fenetres import DEFAUT
 from .enneigement import SEUIL_CHUTE_CM
 from .meteo import SEUIL_VENT_FORT_KMH
-from .risque import SEUIL_EPISODE, _filtres, _frame
+from .risque import _filtres, _frame
 
 VUE = "score_saison"
 
@@ -73,7 +73,8 @@ ANCRES: dict[str, tuple[float, float]] = {
 }
 
 DEFINITIONS: dict[str, str] = {
-    "risque": f"jours risque_maxi >= {SEUIL_EPISODE} / jours avec indice",
+    # Le 3 est celui de `jours_3_plus` dans `risque_saison`, lu tel quel par la vue.
+    "risque": "jours risque_maxi >= 3 / jours avec indice",
     "neige": f"jours de chute >= {SEUIL_CHUTE_CM} cm / jours observes",
     "vent": f"jours de vent > {SEUIL_VENT_FORT_KMH} km/h / jours avec vent, tranche la plus exposee",
 }
