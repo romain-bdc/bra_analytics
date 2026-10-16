@@ -3,7 +3,9 @@
 Meme motif que `dashboard.py` : un payload JSON construit ici, insere dans le
 gabarit `templates/carte.html` par le marqueur `__DONNEES__`, et tout le reste
 cote client. La page dessine elle-meme les contours en SVG : pas de
-bibliotheque cartographique, pas de reseau.
+bibliotheque cartographique, et aucune donnee chargee du reseau (seules les
+polices le sont, comme pour le tableau de bord ; hors ligne, la page retombe
+sur les polices du systeme).
 
 Rien n'est recalcule ici. La valeur par defaut est la metrique d'accueil de T6,
 `moyenne_pluriannuelle()` -- moyenne de `risque_maxi` sur `coeur`, saisons
@@ -82,11 +84,15 @@ METRIQUES: tuple[dict, ...] = (
         "echelle": "continue",
         "disponible": True,
     },
+    # Rapporte aux saisons diffusees, pas en compte brut : le Haut-Var (diffuse
+    # depuis novembre 2018) et Andorre (absente en 2025-2026) ont moins de
+    # saisons comparables que les autres, et un compte brut les ferait paraitre
+    # moins exposes qu'ils ne le sont. Le compte brut reste au survol.
     {
-        "cle": "jours_3_plus",
-        "libelle": "Jours à risque 3 ou plus",
-        "description": "nombre de jours couverts à un indice de 3, 4 ou 5",
-        "echelle": "compte",
+        "cle": "jours_3_plus_par_saison",
+        "libelle": "Jours à risque 3 ou plus, par saison",
+        "description": "nombre moyen de jours à un indice de 3, 4 ou 5 par saison diffusée",
+        "echelle": "continue",
         "disponible": True,
     },
     {
@@ -191,6 +197,9 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
             "jours_avec_indice": mp["jours_avec_indice"] if avec else 0,
             "risque_moyen": mp["risque_moyen"] if avec else None,
             "jours_3_plus": mp["jours_3_plus"] if avec else None,
+            "jours_3_plus_par_saison": (
+                round(mp["jours_3_plus"] / mp["saisons"], 1) if avec and mp["saisons"] else None
+            ),
             "jours_4_plus": mp["jours_4_plus"] if avec else None,
             "jours_5": mp["jours_5"] if avec else None,
             "risque_max": mx.get("risque_max"),

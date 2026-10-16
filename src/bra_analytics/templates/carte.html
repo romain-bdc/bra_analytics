@@ -157,6 +157,10 @@ const NB_COMP = D.saisons_comparables.length;
 /* ---------- utilitaires ---------- */
 const el = (t, at = {}) => { const e = document.createElementNS(NS, t); for (const k in at) e.setAttribute(k, at[k]); return e; };
 const nb = n => n == null ? "—" : n.toLocaleString("fr-FR");
+// Tout texte venu du payload passe par `esc` avant `innerHTML` : les noms et
+// motifs sont des constantes du repo aujourd'hui, mais un `<` ou un `&` dans
+// un libelle futur casserait la page sans prevenir.
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const dec = (v, d = 2) => v == null ? "—" : v.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (a, b) => b ? (100 * a / b).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " %" : "—";
 const dateFr = iso => iso ? new Date(iso + "T00:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "—";
@@ -217,6 +221,7 @@ function valeurTexte(m, cle) {
   if (v == null) return "aucune donnée";
   if (cle === "risque_moyen") return dec(v);
   if (cle === "risque_max") return `${v} — ${NIVEAUX[v - 1]}`;
+  if (cle === "jours_3_plus_par_saison") return `${dec(v, 1)} jours par saison`;
   return nb(v) + " jours";
 }
 
@@ -226,7 +231,7 @@ function valeurTexte(m, cle) {
 const tip = document.getElementById("tip");
 function contenu(m) {
   const cle = metrique, def = defMetrique();
-  let h = `<b>${m.nom}</b> <span class="z">· ${zoneFr(m.zone)}</span><br>`;
+  let h = `<b>${esc(m.nom)}</b> <span class="z">· ${zoneFr(m.zone)}</span><br>`;
   if (m.diffusion === "absente") {
     return h + `Aucun jour couvert sur la période : massif non diffusé sur ${D.libelle_saisons}.`;
   }
@@ -236,6 +241,9 @@ function contenu(m) {
         (<span class="num">${pct(m.jours_couverts, m.jours_periode)}</span>)<br>
         <span class="num">${nb(m.jours_4_plus)}</span> jours à risque 4 ou 5`;
   if (m.jours_5) h += ` <span class="z">(dont <span class="num">${nb(m.jours_5)}</span> à 5)</span>`;
+  if (cle === "jours_3_plus_par_saison" && m.jours_3_plus != null) {
+    h += `<span class="num">${nb(m.jours_3_plus)}</span> jours à 3 ou plus sur <span class="num">${m.saisons}</span> saison${m.saisons > 1 ? "s" : ""}<br>`;
+  }
   if (cle === "risque_max" && m.risque_max != null) {
     h += `<br>atteint <span class="num">${nb(m.jours_au_max)}</span> jour${m.jours_au_max > 1 ? "s" : ""}, la première fois le ${dateFr(m.date_max)}`;
   }
@@ -243,8 +251,8 @@ function contenu(m) {
   if (sansIndice > 0) h += `<br><span class="num">${nb(sansIndice)}</span> jour${sansIndice > 1 ? "s" : ""} sans indice, hors moyenne`;
   h += `<br><span class="num">${m.saisons_presentes.length}</span> saison${m.saisons_presentes.length > 1 ? "s" : ""} sur <span class="num">${NB_COMP}</span> comparables`;
   if (m.diffusion === "partielle") {
-    h += `<span class="alerte"><b>Diffusion partielle</b> — pas de bulletin sur : ${m.saisons_manquantes.join(", ")}.`;
-    if (def.echelle === "compte") h += " Le compte porte sur moins de saisons que les autres massifs.";
+    h += `<span class="alerte"><b>Diffusion partielle</b> — pas de bulletin sur : ${esc(m.saisons_manquantes.join(", "))}.`;
+    if (cle === "jours_3_plus_par_saison") h += " La moyenne par saison porte sur les seules saisons diffusées.";
     h += `</span>`;
   }
   return h;
@@ -353,8 +361,8 @@ function legende(sc) {
   const cle = metrique;
   if (cle === "risque_moyen") {
     e.textContent = `Classes réparties sur l'étendue observée (${dec(sc.lo)} à ${dec(sc.hi)}) : deux teintes voisines peuvent ne différer que de quelques centièmes. L'échelle européenne va de 1 à 5 ; une moyenne d'indices ordinaux se lit avec ses jours, au survol.`;
-  } else if (cle === "jours_3_plus") {
-    e.textContent = `Classes réparties sur l'étendue observée (${nb(sc.lo)} à ${nb(sc.hi)} jours). Un compte dépend du nombre de saisons diffusées : les massifs hachurés en ont moins que les autres. Zéro jour est une valeur, colorée comme telle ; l'absence de donnée est hachurée à part.`;
+  } else if (cle === "jours_3_plus_par_saison") {
+    e.textContent = `Classes réparties sur l'étendue observée (${dec(sc.lo, 1)} à ${dec(sc.hi, 1)} jours par saison). Le compte est rapporté aux saisons diffusées, pour que les massifs hachurés, diffusés moins longtemps, se comparent aux autres ; le compte brut est au survol. Zéro jour est une valeur, colorée comme telle ; l'absence de donnée est hachurée à part.`;
   } else {
     e.textContent = "Indice le plus haut publié sur la période, sur l'échelle européenne. Le survol donne le nombre de jours où il a été atteint.";
   }
@@ -386,9 +394,9 @@ function table() {
     : m.diffusion === "partielle" ? `partielle — manque ${m.saisons_manquantes.join(", ")}` : "aucune donnée";
   const t = document.getElementById("table");
   t.innerHTML = `<caption>${defMetrique().libelle} par massif · ${D.libelle_saisons}</caption>
-    <thead><tr>${["Massif", "Zone", "Indice moyen", "Jours ≥ 3", "Maximum", "Jours couverts", "Jours à 4 ou 5", "Saisons", "Diffusion"].map(h => `<th scope="col">${h}</th>`).join("")}</tr></thead>
-    <tbody>${lignes.map(m => `<tr><th scope="row">${m.nom}</th><td class="g">${zoneFr(m.zone)}</td><td>${dec(m.risque_moyen)}</td>
-      <td>${nb(m.jours_3_plus)}</td><td>${m.risque_max ?? "—"}</td><td>${nb(m.jours_couverts)}</td><td>${nb(m.jours_4_plus)}</td>
+    <thead><tr>${["Massif", "Zone", "Indice moyen", "Jours ≥ 3 par saison", "Jours ≥ 3", "Maximum", "Jours couverts", "Jours à 4 ou 5", "Saisons", "Diffusion"].map(h => `<th scope="col">${h}</th>`).join("")}</tr></thead>
+    <tbody>${lignes.map(m => `<tr><th scope="row">${esc(m.nom)}</th><td class="g">${zoneFr(m.zone)}</td><td>${dec(m.risque_moyen)}</td>
+      <td>${dec(m.jours_3_plus_par_saison, 1)}</td><td>${nb(m.jours_3_plus)}</td><td>${m.risque_max ?? "—"}</td><td>${nb(m.jours_couverts)}</td><td>${nb(m.jours_4_plus)}</td>
       <td>${m.saisons_presentes.length} / ${NB_COMP}</td><td class="g">${statut(m)}</td></tr>`).join("")}</tbody>`;
 }
 
@@ -399,7 +407,7 @@ function textes() {
   const ecartees = Object.entries(D.saisons_ecartees).map(([s, motif]) => `${s} (${motif})`).join(" ; ");
   document.getElementById("sous").innerHTML =
     `${def.description[0].toUpperCase() + def.description.slice(1)}, sur la fenêtre <b>${F.nom}</b> (${fenetreTexte}) de chaque saison,
-     toutes saisons comparables confondues — une valeur par massif. Saisons écartées : ${ecartees || "aucune"}.`;
+     toutes saisons comparables confondues — une valeur par massif. Saisons écartées : ${esc(ecartees) || "aucune"}.`;
 }
 
 /* ---------- assemblage ---------- */
@@ -411,13 +419,13 @@ const indispo = METRIQUES.filter(m => !m.disponible);
 
 document.getElementById("lede").innerHTML =
   `Par défaut, chaque massif est coloré par son indice de risque moyen sur <b>${D.libelle_saisons}</b>, mesuré sur la fenêtre
-   <b>${F.nom}</b> (${fenetreTexte}), la seule où les saisons se comparent : avant juin 2021, les journées sans enneigement
-   ne recevaient pas d'indice et sortaient des moyennes. Survolez un massif pour lire ses jours couverts et ses jours à risque 4 ou 5.`
-  + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${m.libelle} : ${m.motif}.`).join(" ")}</span>` : "");
+   <b>${F.nom}</b> (${fenetreTexte}), la seule où les saisons se comparent : avant juin 2021, les journées à manteau insuffisant
+   (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Survolez un massif pour lire ses jours couverts et ses jours à risque 4 ou 5.`
+  + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${esc(m.libelle)} : ${esc(m.motif)}.`).join(" ")}</span>` : "");
 
 const archive = dateFr(D.archive_jusqu_au);
 document.getElementById("attrib").innerHTML =
-  `${D.attribution.donnees}, archive arrêtée au ${archive}. ${D.attribution.contours}.`;
+  `${esc(D.attribution.donnees)}, archive arrêtée au ${archive}. ${esc(D.attribution.contours)}.`;
 document.getElementById("gen").textContent = `Archive arrêtée au ${archive} · page générée le ${dateFr(D.genere)}`;
 
 function dessine() { textes(); carte(); table(); }

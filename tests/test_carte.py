@@ -147,7 +147,7 @@ def test_fenetre_vient_de_fenetres_py(data) -> None:
 
 def test_metriques_proposees(data) -> None:
     cles = {m["cle"]: m for m in data["metriques"]}
-    assert set(cles) == {"risque_moyen", "jours_3_plus", "risque_max", "duree_enneigement"}
+    assert set(cles) == {"risque_moyen", "jours_3_plus_par_saison", "risque_max", "duree_enneigement"}
     # La duree d'enneigement depend de T7 : annoncee, pas inventee.
     assert cles["duree_enneigement"]["disponible"] is False
     assert cles["duree_enneigement"]["motif"]
@@ -201,3 +201,16 @@ def test_bra_carte_ecrit_une_page_autonome(db, tmp_path, capsys) -> None:
     data = json.loads(blob.replace("<\\/", "</"))
     assert len(data["massifs"]) == 36
     assert "carte" in capsys.readouterr().out
+
+
+def test_jours_3_plus_rapportes_aux_saisons_diffusees(data) -> None:
+    """Un compte brut penalise les massifs diffuses moins longtemps (Haut-Var
+    depuis novembre 2018, Andorre absente en 2025-2026) : la carte affiche le
+    nombre moyen de jours >= 3 par saison diffusee, le compte brut restant
+    dans le payload pour le survol."""
+    for m in data["massifs"]:
+        if m["jours_3_plus"] is None:
+            assert m["jours_3_plus_par_saison"] is None
+            continue
+        assert m["saisons"] > 0
+        assert m["jours_3_plus_par_saison"] == round(m["jours_3_plus"] / m["saisons"], 1)

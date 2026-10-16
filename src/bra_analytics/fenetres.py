@@ -154,15 +154,17 @@ SAISON_COMPLETE = "saison_complete"
 # Saisons ecartees des comparaisons inter-saisons. Elles restent dans
 # l'entrepot et dans les vues : c'est le libelle qui les ecarte, pas un filtre.
 # Une saison supprimee en silence est une saison qu'on redecouvre plus tard.
+# Les motifs sont du texte affiche (carte, tableau de bord, vue
+# `saison_fenetre`) : accentues, a la difference des commentaires.
 SAISONS_NON_COMPARABLES: dict[str, str] = {
     "2015-2016": (
-        "saison partielle : l'archive demarre le 10 mars 2016, soit apres "
-        "l'ouverture des deux fenetres"
+        "saison partielle : l'archive démarre le 10 mars 2016, soit après "
+        "l'ouverture des deux fenêtres"
     ),
     "2019-2020": (
-        "estimation interrompue fin mars 2020 (confinement) : Pyrenees et "
-        "Corse s'arretent (26 et 18 mars), les Alpes publient sans indice "
-        "jusqu'au 11 juin ; tronquee sur les deux fenetres"
+        "estimation interrompue fin mars 2020 (confinement) : Pyrénées et "
+        "Corse s'arrêtent (26 et 18 mars), les Alpes publient sans indice "
+        "jusqu'au 11 juin ; tronquée sur les deux fenêtres"
     ),
 }
 

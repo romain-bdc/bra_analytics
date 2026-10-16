@@ -39,6 +39,7 @@ uv run bra info                                            # résumé par saison
 uv run bra fenetres                                        # comparabilité saison par saison
 uv run bra audit                                           # disponibilité champ × saison -> docs/disponibilite.md
 uv run bra dashboard                                       # page statique
+uv run bra carte                                           # carte d'accueil des 36 massifs
 uv run bra contours                                        # raccordement + version web des contours
 uv run bra ui                                              # interface web DuckDB
 uv run pytest
