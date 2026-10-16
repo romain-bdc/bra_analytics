@@ -18,7 +18,7 @@ from bra_analytics.build import (
 )
 from bra_analytics.parser import parse_file
 
-from .conftest import FIXTURES, fixture
+from .conftest import FIXTURES, SERIES, fixture
 
 ALL_FIXTURES = [
     "v1_2016_aspe_ossau.xml",
@@ -76,6 +76,27 @@ def test_deduplication_reportee_sur_les_tables_filles() -> None:
     # 3 previsions + 21 historiques, une seule fois malgre les deux fichiers.
     assert frames["meteo"].height == 24
     assert frames["historique_risque"].height == 7
+
+
+def test_tables_filles_lues_dans_la_version_retenue() -> None:
+    """Cinto Rotondo, 06/04/2026 : deux fichiers sous le meme DATEBULLETIN.
+
+    La version de 16 h 00 prevoit le 7 avril, la reedition de 16 h 21 le 6
+    (`DATEECHEANCE` et echeances meteo deplacees d'un jour, RISQUEMAXI 1 -> 2).
+    La table mere retient la diffusion la plus tardive ; les tables filles
+    doivent venir du *meme* fichier, et non du premier lu dans l'ordre des
+    chemins -- sinon le risque d'un jour et sa meteo viennent de deux versions.
+    """
+    noms = ["cinto_rotondo_20260406160000.xml", "cinto_rotondo_20260406162100.xml"]
+    for ordre in (noms, noms[::-1]):
+        parsed = [p for n in ordre for p in parse_file(SERIES / "meteo" / n)]
+        frames = to_frames(parsed)
+        b = frames["bulletins"]
+        assert b.height == 1
+        assert b["fichier_source"][0] == "cinto_rotondo_20260406162100.xml"
+        prev = frames["meteo"].filter(pl.col("origine") == "prevision").sort("echeance")
+        assert prev["echeance"][0].isoformat() == "2026-04-06T06:00:00"
+        assert prev["vent_bas_vitesse_kmh"][0] == 20
 
 
 def test_amendement_ne_sert_pas_de_discriminant() -> None:
