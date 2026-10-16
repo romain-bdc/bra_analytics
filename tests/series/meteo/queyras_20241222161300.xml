@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="17" MASSIF="Queyras" DATEBULLETIN="2024-12-22T16:00:00" DATEECHEANCE="2024-12-23T18:00:00" DATEVALIDITE="2024-12-23T18:00:00" DATEDIFFUSION="2024-12-22T16:13:00" AMENDEMENT="false">
+  <DateValidite>2024-12-23T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="3" EVOLURISQUE1="" LOC1="" ALTITUDE="" RISQUE2="" EVOLURISQUE2="" LOC2="" RISQUEMAXI="3" COMMENTAIRE="Indice de risque marqué." RISQUEMAXIJ2="3" DATE_RISQUE_J2="2024-12-24T00:00:00"/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE=""/>
+    <ACCIDENTEL><![CDATA[instabilité marquée dans la neige fraiche]]></ACCIDENTEL>
+    <NATUREL><![CDATA[possibles avalanches de neige fraiche/récente]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : possibles avalanches de neige fraiche/récente
+Déclenchements skieurs : instabilité marquée dans la neige fraiche]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque marqué]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Risque stable. 
+Temps froid, sec, redevenant ensoleillé en altitude ( mer de nuages). Manteau neigeux encore peu stabilisé + transport de neige avec le maintien d'un fort vent de nord à nord-est.]]></CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+    <ImageRisque>montagne_risques_17.png</ImageRisque>
+    <ImagePente>rose_pentes_17.png</ImagePente>
+  </CARTOUCHERISQUE>
+  <METEO ALTITUDEVENT1="2000" ALTITUDEVENT2="3000">
+    <COMMENTAIRE>Froid et fortement venté. Souvent nuageux, encore quelques flocons en lundi en journée.</COMMENTAIRE>
+    <ECHEANCE DATE="2024-12-23T06:00:00" FF1="40" DD1="NO" FF2="90" DD2="NO" ISO0="900" PLUIENEIGE="500" TEMPSSENSIBLE="61" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-23T12:00:00" FF1="50" DD1="NO" FF2="80" DD2="N" ISO0="1000" PLUIENEIGE="500" TEMPSSENSIBLE="80" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-23T18:00:00" FF1="55" DD1="NO" FF2="90" DD2="N" ISO0="1200" PLUIENEIGE="500" TEMPSSENSIBLE="80" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-24T00:00:00" FF1="55" DD1="NO" FF2="70" DD2="N" ISO0="1000" PLUIENEIGE="-1" TEMPSSENSIBLE="3" MERNUAGES="-1"/>
+    <ImageMeteo>apercu_meteo_17.png</ImageMeteo>
+  </METEO>
+</BULLETINS_NEIGE_AVALANCHE>

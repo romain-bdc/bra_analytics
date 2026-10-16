@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2023-12-05T16:00:00" DATEECHEANCE="2023-12-06T18:00:00" DATEVALIDITE="2023-12-06T18:00:00" DATEDIFFUSION="2023-12-05T16:24:15" AMENDEMENT="false">
+  <DateValidite>2023-12-06T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="2" EVOLURISQUE1="" LOC1="&lt;2100" ALTITUDE="2100" RISQUE2="3" EVOLURISQUE2="" LOC2="&gt;2100" RISQUEMAXI="3" COMMENTAIRE="Au-dessus de 2100m risque marqué, plus bas risque limité." RISQUEMAXIJ2="2" DATE_RISQUE_J2="2023-12-07T00:00:00"/>
+    <PENTE NE="true" E="true" SE="true" S="true" SW="true" W="true" NW="true" N="true" COMMENTAIRE="Plaques ventées."/>
+    <ACCIDENTEL>Plaques à vent.</ACCIDENTEL>
+    <NATUREL>Avalanche de neige non transformée.</NATUREL>
+    <RESUME>Départs spontanés : Avalanche de neige non transformée.
+Déclenchements skieurs : Plaques à vent.</RESUME>
+    <RisqueJ2>risque limité</RisqueJ2>
+    <CommentaireRisqueJ2>Risque en diminution jeudi avec la douceur, par humidification.</CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+    <ImageRisque>montagne_risques_65.png</ImageRisque>
+    <ImagePente>rose_pentes_65.png</ImagePente>
+  </CARTOUCHERISQUE>
+  <METEO ALTITUDEVENT1="1500" ALTITUDEVENT2="3000">
+    <COMMENTAIRE>Temps assez dégagé le matin puis se voilant en après-midi. Vent de Nord à Nord-Ouest faible puis modéré le soir. Nuit suivante voilée à couverte.</COMMENTAIRE>
+    <ECHEANCE DATE="2023-12-06T06:00:00" FF1="10" DD1="NE" FF2="45" DD2="N" ISO0="2300" PLUIENEIGE="-1" TEMPSSENSIBLE="6" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2023-12-06T12:00:00" FF1="" DD1="Mq" FF2="" DD2="Mq" ISO0="" PLUIENEIGE="-1" TEMPSSENSIBLE="" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2023-12-06T18:00:00" FF1="" DD1="Mq" FF2="" DD2="Mq" ISO0="" PLUIENEIGE="-1" TEMPSSENSIBLE="" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2023-12-07T00:00:00" FF1="" DD1="Mq" FF2="" DD2="Mq" ISO0="" PLUIENEIGE="-1" TEMPSSENSIBLE="" MERNUAGES="-1"/>
+    <ImageMeteo>apercu_meteo_65.png</ImageMeteo>
+  </METEO>
+</BULLETINS_NEIGE_AVALANCHE>

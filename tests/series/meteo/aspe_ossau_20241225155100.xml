@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<?xml-stylesheet type="text/xsl" href="../web/bra.xslt"?>
+<BULLETINS_NEIGE_AVALANCHE xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" TYPEBULLETIN="BRA" ID="65" MASSIF="Aspe Ossau" DATEBULLETIN="2024-12-25T16:00:00" DATEECHEANCE="2024-12-26T18:00:00" DATEVALIDITE="2024-12-26T18:00:00" DATEDIFFUSION="2024-12-25T15:51:00" AMENDEMENT="false">
+  <DateValidite>2024-12-26T18:00:00</DateValidite>
+  <CARTOUCHERISQUE>
+    <RISQUE RISQUE1="1" EVOLURISQUE1="2" LOC1="&lt;2600" ALTITUDE="2600" RISQUE2="2" EVOLURISQUE2="" LOC2="&gt;2600" RISQUEMAXI="2" COMMENTAIRE="Au-dessus de 2600m indice de risque limité, plus bas indice faible évoluant en limité." RISQUEMAXIJ2="2" DATE_RISQUE_J2="2024-12-27T00:00:00"/>
+    <PENTE NE="false" E="true" SE="true" S="true" SW="true" W="false" NW="false" N="false" COMMENTAIRE=""/>
+    <ACCIDENTEL><![CDATA[Rare plaque dure épaisse à haute altitude]]></ACCIDENTEL>
+    <NATUREL><![CDATA[Petites avalanches de fontes l'après-midi dans les pentes les plus chaudes]]></NATUREL>
+    <RESUME><![CDATA[Départs spontanés : Petites avalanches de fontes l'après-midi dans les pentes les plus chaudes
+Déclenchements skieurs : Rare plaque dure épaisse à haute altitude]]></RESUME>
+    <RisqueJ2><![CDATA[Indice de risque limité]]></RisqueJ2>
+    <CommentaireRisqueJ2><![CDATA[Persistance du beau temps, risque en baisse avec des conditions qui s'améliorent  de jour en jour en Sud et une croute inamovible en Nord. ]]></CommentaireRisqueJ2>
+    <AVIS/>
+    <VIGILANCE/>
+    <ImageRisque>montagne_risques_65.png</ImageRisque>
+    <ImagePente>rose_pentes_65.png</ImagePente>
+  </CARTOUCHERISQUE>
+  <METEO ALTITUDEVENT1="1500" ALTITUDEVENT2="3000">
+    <COMMENTAIRE>Temps clair, douceur marquée en journée en versant Sud, alors que les versants ombragés restent frais à cette saison même avec un iso 0°C élevé o </COMMENTAIRE>
+    <ECHEANCE DATE="2024-12-26T06:00:00" FF1="5" DD1="N" FF2="25" DD2="NE" ISO0="3500" PLUIENEIGE="-1" TEMPSSENSIBLE="0" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-26T12:00:00" FF1="5" DD1="N" FF2="20" DD2="NE" ISO0="3500" PLUIENEIGE="-1" TEMPSSENSIBLE="0" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-26T18:00:00" FF1="0" DD1="SO" FF2="10" DD2="E" ISO0="3400" PLUIENEIGE="-1" TEMPSSENSIBLE="0" MERNUAGES="-1"/>
+    <ECHEANCE DATE="2024-12-27T00:00:00" FF1="5" DD1="S" FF2="5" DD2="E" ISO0="3400" PLUIENEIGE="-1" TEMPSSENSIBLE="0" MERNUAGES="-1"/>
+    <ImageMeteo>apercu_meteo_65.png</ImageMeteo>
+  </METEO>
+</BULLETINS_NEIGE_AVALANCHE>
