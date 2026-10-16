@@ -2,7 +2,9 @@
 
 Meme motif que `dashboard.py` et `carte.py` : un payload JSON construit ici,
 insere dans `templates/fiche.html` par le marqueur `__DONNEES__`, tout le
-filtrage cote client. Aucun framework, aucune donnee chargee du reseau.
+filtrage cote client. Aucun framework, aucune donnee chargee du reseau : seules les
+polices viennent de Google Fonts, comme dans `dashboard.html` et `carte.html`, avec repli
+sur les polices systeme hors ligne.
 
 Rien n'est recalcule ici : les series viennent des vues de `metriques/`
 (`serie_jour`, `paliers`, `vent_tranche_jour`), les indicateurs de leurs
@@ -124,9 +126,13 @@ def _iso(v):
 
 def _lignes(df: pl.DataFrame, champs: tuple[str, ...]) -> dict[tuple, dict]:
     """Indexe un DataFrame metrique par (massif, saison[, tranche]) en ne gardant que `champs`."""
+    # Une colonne renommee par une metrique doit casser ici, pas disparaitre de la page.
+    manquantes = [c for c in champs if c not in df.columns]
+    if manquantes:
+        raise ValueError(f"colonnes absentes de la metrique : {manquantes}")
     cles = [c for c in ("massif_id", "saison", "tranche", "versant") if c in df.columns]
     return {
-        tuple(r[c] for c in cles): {c: _iso(r[c]) for c in champs if c in r}
+        tuple(r[c] for c in cles): {c: _iso(r[c]) for c in champs}
         for r in df.iter_rows(named=True)
     }
 
@@ -271,6 +277,11 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "rang": _tableau(_bandes(jours, "jour_de_saison"), "jour_de_saison", list(range(1, rang_max + 1))),
     }
 
+    # Dernier bulletin integre, massif par massif : le massif 71 s'arrete avant l'archive.
+    derniers = {
+        r["massif_id"]: r["d"].isoformat()
+        for r in jours.group_by("massif_id").agg(pl.col("jour_validite").max().alias("d")).iter_rows(named=True)
+    }
     referentiel = {m.id: m for m in MASSIFS}
     massifs = []
     for mid in sorted(series):
@@ -283,6 +294,7 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
             "zone": meta.zone if meta else "",
             "departement": meta.departement if meta else "",
             "saisons": sorted(series[mid]),
+            "dernier_bulletin": derniers.get(mid),
             # Repere de la fiche : la moyenne d'accueil du massif (T6, T12), avec ses jours.
             "repere": None if repere is None else {
                 "risque_moyen": repere["risque_moyen"],
@@ -306,6 +318,7 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         ],
         "massifs": massifs,
         "fenetre_defaut": DEFAUT.nom,
+        "saison_complete": SAISON_COMPLETE,
         "fenetres": [
             {
                 "nom": f.nom,

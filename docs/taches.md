@@ -234,7 +234,7 @@ visible sur chaque graphe ; la page reste autonome, sans serveur.
 
 **Dépend de** : T6, T7, T8.
 
-**Réalisée par** `bra fiche` (`fiche.py`, `templates/fiche.html`).
+**Réalisée par** `bra fiche` (`fiche.py`, `templates/fiche.html`). Critères vérifiés : lecture de bout en bout par sélecteurs, bascule calendaire / `jour_de_saison`, couverture sous chaque graphe, page autonome (seules les polices viennent de Google Fonts, comme les autres pages).
 
 ### T12. Carte d'accueil
 

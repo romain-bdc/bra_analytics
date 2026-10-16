@@ -162,6 +162,11 @@ const nombres = s => s == null ? [] : s.split(",").map(v => v === "" ? null : +v
 
 /* ---------- etat, porte par l'URL ---------- */
 const etat = { m: null, s: null, a: "cal", t: "moyenne", f: D.fenetre_defaut, o: true };
+/* Premiere tranche qui porte du vent pour ce massif (Aspe n'a que basse et haute). */
+function trancheDefaut(m) {
+  const t = D.tranches.find(t => Object.values(D.series[m]).some(e => e.vent?.[t.nom]));
+  return t ? t.nom : D.tranches[0].nom;
+}
 function lireUrl() {
   const p = new URLSearchParams(location.hash.slice(1));
   const m = +p.get("m");
@@ -169,7 +174,7 @@ function lireUrl() {
   const saisons = MASSIF.get(etat.m).saisons;
   etat.s = saisons.includes(p.get("s")) ? p.get("s") : saisons[saisons.length - 1];
   etat.a = p.get("a") === "rang" ? "rang" : "cal";
-  etat.t = D.tranches.some(t => t.nom === p.get("t")) ? p.get("t") : "moyenne";
+  etat.t = D.tranches.some(t => t.nom === p.get("t")) ? p.get("t") : trancheDefaut(etat.m);
   etat.f = FEN.has(p.get("f")) ? p.get("f") : D.fenetre_defaut;
   etat.o = p.get("o") !== "0";
 }
@@ -289,6 +294,12 @@ function legendeCov(id, c, extra) {
 }
 
 /* ---------- lecture des series de la saison ---------- */
+/* Periode d'un bloc : etendue du risque elargie a celle des valeurs du bloc, pour ne rien tronquer. */
+function etendueBloc(e, valeurs) {
+  let [a, z] = etendueRisque(e);
+  valeurs.forEach((v, i) => { if (v != null) { if (a < 0 || i < a) a = i; if (i > z) z = i; } });
+  return [a, z];
+}
 function etendueRisque(e) {
   let a = -1, b = -1;
   for (let i = 0; i < e.risque.length; i++) if (e.risque[i] !== ".") { if (a < 0) a = i; b = i; }
@@ -378,7 +389,8 @@ function grapheRisque() {
   legendeCov("cov-risque", c, sans ? `${sans} jour${sans > 1 ? "s" : ""} publié${sans > 1 ? "s" : ""} sans indice (cercles sur l'axe)` : "");
   $("sous-risque").innerHTML = `Saison <b>${esc(etat.s)}</b>${SAISON.get(etat.s).comparable ? "" : " (non comparable)"} en bleu ; bande grise : médiane et intervalle interquartile `
     + `de l'indice, <b>fenêtre ${esc(D.fenetre_defaut)}</b> (${esc(fenetreTexte)}), ${nBande ? `sur les saisons comparables, une case n'étant tracée qu'à partir de ${D.min_saisons_bande} saisons` : "<b>non calculable</b> pour ce massif (moins de " + D.min_saisons_bande + " saisons comparables)"}`
-    + ` — la saison lue y entre quand elle est comparable. Fond bleuté : la fenêtre ${esc(D.fenetre_defaut)} de la saison lue.`;
+    + ` — la saison lue y entre quand elle est comparable. Fond bleuté : la fenêtre ${esc(D.fenetre_defaut)} de la saison lue.`
+    + (etat.f === D.saison_complete ? ` Les indicateurs portent sur la saison entière, mais la bande et les autres saisons restent sur la fenêtre ${esc(D.fenetre_defaut)} : hors de celle-ci, les indices ne se comparent pas.` : "");
   $("lg-risque").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>saison lue</span>`
     + `<span><i class="sw" style="background:var(--band)"></i>médiane</span><span><i class="sw box" style="background:var(--band);opacity:.35"></i>quartiles</span>`
     + (etat.o ? `<span><i class="sw" style="background:var(--ink-muted);opacity:.5;height:1px"></i>autres saisons comparables (fenêtre ${esc(D.fenetre_defaut)} seulement)</span>` : "");
@@ -415,12 +427,14 @@ function grapheNeige() {
   const nord = nombres(n?.nord), sud = nombres(n?.sud);
   if (n) for (const [vals, col] of [[nord, "var(--s1)"], [sud, "var(--s2)"]])
     el("path", { d: chemin(vals.map((y, i) => y == null ? null : [g.px(abscisse(e, i)), g.py(y)])), fill: "none", stroke: col, "stroke-width": 1.8, "stroke-linejoin": "round" }, g.svg);
-  const [a, z] = etendueRisque(e);
-  const c = couverture(g, e, nord.map((v, i) => v ?? sud[i] ?? null), a, z);
+  const vals = nord.map((v, i) => v ?? sud[i] ?? null);
+  const [a, z] = etendueBloc(e, vals);
+  const c = couverture(g, e, vals, a, z);
+  const parVersant = v => nombres(n?.[v]).filter(x => x != null).length;
   const alt = e.altitudes_neige?.[tr]?.join(" / ");
-  legendeCov("cov-neige", c, n ? "" : "aucun palier d'enneigement dans cette tranche pour cette saison");
+  legendeCov("cov-neige", c, n ? `un jour compte dès qu'un versant est relevé (nord ${parVersant("nord")} j, sud ${parVersant("sud")} j)` : "aucun palier d'enneigement dans cette tranche pour cette saison");
   $("sous-neige").innerHTML = `Épaisseur du manteau au palier le plus haut de la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (<b>${alt} m</b> cette saison ; le palier change d'époque)` : ""}, `
-    + `versants nord et sud. Valeur indicative rattachée à l'altitude de référence, pas une mesure. Indexée sur la date que décrit le relevé (<code>jour</code>).`;
+    + `versants nord et sud. Valeur indicative rattachée à l'altitude de référence, pas une mesure. Indexée sur la date que décrit le relevé (<code>jour</code>). Traits fins : autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`;
   $("lg-neige").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>versant nord</span><span><i class="sw" style="background:var(--s2)"></i>versant sud</span>`
     + (etat.o ? `<span><i class="sw" style="height:1px;opacity:.4;background:var(--ink-muted)"></i>autres saisons comparables (traits fins)</span>` : "");
   curseur(g, "g-neige", x => {
@@ -455,15 +469,15 @@ function grapheIso0() {
   ferme();
   el("path", { d: chemin(moy.map((y, i) => y == null ? null : [g.px(abscisse(e, i)), g.py(y)])), fill: "none", stroke: "var(--s1)", "stroke-width": 1.6 }, g.svg);
   const seuil = D.indicateurs[etat.m]?.[etat.s]?.[D.fenetre_defaut]?.meteo?.seuil_iso0_m
-    ?? D.indicateurs[etat.m]?.[etat.s]?.saison_complete?.meteo?.seuil_iso0_m;
+    ?? D.indicateurs[etat.m]?.[etat.s]?.[D.saison_complete]?.meteo?.seuil_iso0_m;
   if (seuil != null) {
     el("line", { x1: L, x2: W - R, y1: g.py(seuil), y2: g.py(seuil), stroke: "var(--s2)", "stroke-dasharray": "5 4" }, g.svg);
     el("text", { x: W - R - 4, y: g.py(seuil) - 4, "text-anchor": "end", class: "tick" }, g.svg).textContent = `seuil ${seuil} m`;
   }
-  const [a, z] = etendueRisque(e);
+  const [a, z] = etendueBloc(e, moy);
   const c = couverture(g, e, moy, a, z);
   legendeCov("cov-iso0", c, iso ? "" : "aucune prévision d'isotherme pour cette saison");
-  $("sous-iso0").innerHTML = `Isotherme 0 °C <b>prévu</b> par le bulletin pour le jour de validité : moyenne des échéances 06 h et 12 h (trait) et amplitude min–max (aire). Prévision, pas observation.`;
+  $("sous-iso0").innerHTML = `Isotherme 0 °C <b>prévu</b> par le bulletin pour le jour de validité : moyenne des échéances 06 h et 12 h (trait) et amplitude min–max (aire). Prévision, pas observation. Trait fin : moyenne des autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`;
   $("lg-iso0").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>moyenne du jour</span><span><i class="sw box" style="background:var(--s1);opacity:.3"></i>min–max</span>`
     + `<span><i class="sw" style="background:var(--s2)"></i>seuil de redoux</span>` + (etat.o ? `<span><i class="sw" style="height:1px;opacity:.5;background:var(--ink-muted)"></i>moyenne des autres saisons comparables</span>` : "");
   curseur(g, "g-iso0", x => {
@@ -487,12 +501,12 @@ function grapheVent() {
   });
   el("line", { x1: L, x2: W - R, y1: g.py(D.seuil_vent_fort_kmh), y2: g.py(D.seuil_vent_fort_kmh), stroke: "var(--s2)", "stroke-dasharray": "5 4" }, g.svg);
   el("text", { x: W - R - 4, y: g.py(D.seuil_vent_fort_kmh) - 4, "text-anchor": "end", class: "tick" }, g.svg).textContent = `${D.seuil_vent_fort_kmh} km/h`;
-  const [a, z] = etendueRisque(e);
+  const [a, z] = etendueBloc(e, v);
   const c = couverture(g, e, v, a, z);
   const alt = e.altitudes_vent?.[tr]?.join(" / ");
   legendeCov("cov-vent", c, e.vent?.[tr] ? "" : "aucun vent prévu dans cette tranche pour cette saison");
   $("sous-vent").innerHTML = `Vitesse <b>prévue</b> la plus forte du jour (échéances 06 h et 12 h) dans la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (altitude${alt.includes("/") ? "s" : ""} de vent : <b>${alt} m</b>)` : ""}. `
-    + `Les vents relèvent de leur altitude, jamais de leur rang « bas / haut » dans le bulletin.`;
+    + `Les vents relèvent de leur altitude, jamais de leur rang « bas / haut » dans le bulletin. Pas de fond de comparaison sur ce graphe.`;
   $("lg-vent").innerHTML = `<span><i class="sw box" style="background:var(--s1)"></i>vitesse</span><span><i class="sw box" style="background:var(--s2)"></i>au-dessus de ${D.seuil_vent_fort_kmh} km/h</span>`;
   curseur(g, "g-vent", x => {
     const i = decalageInverse(e, x);
@@ -565,8 +579,8 @@ function notes() {
 function remplirSelecteurs() {
   $("sm").innerHTML = D.massifs.map(m => `<option value="${m.id}">${esc(m.nom)}${m.departement ? " (" + esc(m.departement) + ")" : ""}</option>`).join("");
   $("st").innerHTML = D.tranches.map(t => `<option value="${t.nom}">${esc(t.nom)} · ${esc(t.libelle)}</option>`).join("");
-  $("sf").innerHTML = D.fenetres.filter(f => f.nom === D.fenetre_defaut || f.nom === "saison_complete")
-    .map(f => `<option value="${f.nom}">${esc(f.nom === "saison_complete" ? "saison entière" : f.nom + " · " + fenetreTexte)}</option>`).join("");
+  $("sf").innerHTML = D.fenetres.filter(f => f.nom === D.fenetre_defaut || f.nom === D.saison_complete)
+    .map(f => `<option value="${f.nom}">${esc(f.nom === D.saison_complete ? "saison entière" : f.nom + " · " + fenetreTexte)}</option>`).join("");
 }
 function remplirSaisons() {
   $("ss").innerHTML = MASSIF.get(etat.m).saisons.map(s => `<option value="${s}">${s}${SAISON.get(s).comparable ? "" : " (non comparable)"}</option>`).join("");
@@ -578,6 +592,8 @@ function dessine() {
   $("ax-rang").setAttribute("aria-pressed", etat.a === "rang");
   const m = MASSIF.get(etat.m);
   $("titre").innerHTML = `${esc(m.nom)}<small>saison ${esc(etat.s)} · axe ${etat.a === "cal" ? "calendaire" : "en jours de saison"}</small>`;
+  $("attrib").textContent = `${D.attribution}, archive arrêtée au ${dateFr(D.archive_jusqu_au)}`
+    + (m.dernier_bulletin && m.dernier_bulletin !== D.archive_jusqu_au ? ` · dernier bulletin de ${m.nom} : ${dateFr(m.dernier_bulletin)}` : "");
   document.title = `${m.nom} ${etat.s} — fiche massif-saison`;
   alerte(); indicateurs();
   grapheRisque(); grapheNeige(); grapheIso0(); grapheVent();
@@ -585,7 +601,10 @@ function dessine() {
 }
 function change(cle, valeur) {
   etat[cle] = valeur;
-  if (cle === "m") { const s = MASSIF.get(etat.m).saisons; if (!s.includes(etat.s)) etat.s = s[s.length - 1]; }
+  if (cle === "m") {
+    const s = MASSIF.get(etat.m).saisons; if (!s.includes(etat.s)) etat.s = s[s.length - 1];
+    etat.t = trancheDefaut(etat.m);
+  }
   dessine();
 }
 $("sm").addEventListener("change", e => change("m", +e.target.value));
@@ -597,7 +616,6 @@ $("ax-rang").addEventListener("click", () => change("a", "rang"));
 $("ck-autres").addEventListener("change", e => change("o", e.target.checked));
 addEventListener("hashchange", () => { lireUrl(); dessine(); });
 
-$("attrib").textContent = `${D.attribution}, archive arrêtée au ${dateFr(D.archive_jusqu_au)}`;
 $("gen").textContent = `Page générée le ${dateFr(D.genere)}`;
 remplirSelecteurs();
 lireUrl();
