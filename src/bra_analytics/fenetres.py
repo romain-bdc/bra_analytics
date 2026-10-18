@@ -30,6 +30,7 @@ fenetre, et `bra fenetres` qui republie la mesure depuis l'entrepot.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 
 MOIS_FR = (
     "janvier", "fevrier", "mars", "avril", "mai", "juin",
@@ -153,6 +154,10 @@ PAR_NOM: dict[str, Fenetre] = {f.nom: f for f in FENETRES}
 
 # Fenetre par defaut de toute comparaison inter-saisons.
 DEFAUT = COEUR
+
+# Dernier jour ou la sentinelle `RISQUE1=-1` apparait dans l'archive (11/06/2021) :
+# les ecrans en tirent leur mention "avant juin 2021" au lieu de la recopier.
+FIN_SENTINELLE = date(2021, 6, 11)
 
 # Nom conventionnel de la saison entiere, la ou une fenetre est attendue.
 SAISON_COMPLETE = "saison_complete"

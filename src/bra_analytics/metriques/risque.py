@@ -439,7 +439,7 @@ def _portee(fenetre: str) -> str:
     return fenetre
 
 
-def _fenetre_comparable(fenetre: str) -> Fenetre:
+def fenetre_comparable(fenetre: str) -> Fenetre:
     """La fenetre, si elle autorise une comparaison inter-saisons ; sinon refus.
 
     Refuser plutot que renvoyer un chiffre : sur `commune` ou la saison
@@ -457,11 +457,6 @@ def _fenetre_comparable(fenetre: str) -> Fenetre:
             "fait ressortir les saisons anciennes plus haut a nivologie egale."
         )
     return f
-
-
-# Nom public : les ecrans qui classent des saisons (T13) y demandent la meme
-# decision que les metriques, au lieu de la reecrire.
-fenetre_comparable = _fenetre_comparable
 
 
 def _filtres(
@@ -560,7 +555,7 @@ def comparer_saisons(
     dans le resultat, etiquetees (`comparable`, `motif_exclusion`) : les
     retirer en silence les ferait redecouvrir plus tard.
     """
-    f = _fenetre_comparable(fenetre)
+    f = fenetre_comparable(fenetre)
     _assurer_vues(con)
     params: list[object] = []
     where = _filtres(massifs, None, [f"fenetre_{f.nom}"], params)
@@ -599,7 +594,7 @@ def moyenne_pluriannuelle(
     comparables seulement, accompagnee des jours couverts et des jours >= 4.
     Les saisons ecartees sont comptees (`saisons_ecartees`), pas tues.
     """
-    f = _fenetre_comparable(fenetre)
+    f = fenetre_comparable(fenetre)
     _assurer_vues(con)
     params: list[object] = []
     where = _filtres(massifs, None, [f"fenetre_{f.nom}"], params)

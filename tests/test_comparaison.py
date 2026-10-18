@@ -80,9 +80,30 @@ def test_saisons_non_comparables_etiquetees_pas_supprimees(data) -> None:
             assert par_nom[saison]["comparable"] is False
             assert par_nom[saison]["motif"] == motif
     assert par_nom["2023-2024"]["comparable"] is True
-    # Une saison ecartee garde ses series : elle est etiquetee, pas retiree.
-    assert {s for s in par_nom if not par_nom[s]["comparable"]} <= set(data["series"][ASPE]) | {
-        s for s in par_nom if s not in data["series"][ASPE]}
+    # Une saison ecartee garde ses series : etiquetee, jamais retiree de l'entrepot.
+    non_comparables = {n for n, x in par_nom.items() if not x["comparable"]}
+    assert non_comparables == set(SAISONS_NON_COMPARABLES) & set(par_nom)
+    assert non_comparables <= {s for per in data["series"].values() for s in per}
+
+
+def test_seuils_et_ordinalite_viennent_du_python(data) -> None:
+    assert data["seuil_haut"] == risque.SEUIL_EPISODE
+    assert data["fin_sentinelle"] == "juin 2021"
+    ordinaux = {m["cle"] for m in data["metriques"] if m["ordinal"]}
+    assert ordinaux == {"risque_moyen", "risque_max"}
+    assert str(risque.SEUIL_EPISODE) in next(
+        m for m in data["metriques"] if m["cle"] == "jours_3_plus")["libelle"]
+
+
+def test_periode_commune_ignore_les_saisons_non_comparables(synthetique) -> None:
+    """Sans navigateur : 2022-2023 (fin 31 mars) raccourcit, 2019-2020 (fin 20 mars, non comparable) non."""
+    d = synthetique
+    toutes = list(d["series"][ASPE])
+    assert comparaison.periode_commune(d, ASPE, toutes) == ("12-15", "03-31")
+    # Sans la saison a fermeture precoce, la fenetre coeur va jusqu'a sa borne.
+    assert comparaison.periode_commune(d, ASPE, ["2016-2017", "2018-2019"]) == ("12-15", "04-15")
+    # Une seule saison non comparable : faute de mieux, elle fixe la periode.
+    assert comparaison.periode_commune(d, ASPE, ["2019-2020"]) == ("12-15", "03-20")
 
 
 def test_bornes_de_fenetre_viennent_de_fenetres_py(data) -> None:
@@ -119,6 +140,7 @@ class _Dom(HTMLParser):
         self.attrs: dict[str, dict] = {}
         self.texte: dict[str, str] = {}
         self.lignes: list[dict] = []
+        self.traces: list[dict] = []
         self._pile: list[str | None] = []
 
     def handle_starttag(self, tag, attrs):
@@ -127,6 +149,8 @@ class _Dom(HTMLParser):
         if ident:
             self.attrs[ident] = a
             self.texte[ident] = ""
+        if "data-trace" in a:
+            self.traces.append(a)
         if tag in ("g", "tr") and ("data-saison" in a or "data-id" in a):
             self.lignes.append({"tag": tag, **a, "texte": ""})
         if tag not in ("br", "meta", "link", "input", "option", "line", "rect", "path", "circle"):
@@ -193,6 +217,9 @@ def test_troncature_a_periode_egale_par_defaut_et_annoncee(synthetique, tmp_path
         assert dom.attrs[ident]["data-tronque"] == "1"
         # 2022-2023 s'arrete le 31 mars : c'est elle qui raccourcit la periode commune.
         assert dom.attrs[ident]["data-periode"] == "12-15..03-31"
+        # Le gabarit et la fonction Python disent la meme periode.
+        attendue = comparaison.periode_commune(synthetique, ASPE, ["2016-2017", "2018-2019", "2019-2020", "2021-2022", "2022-2023"])
+        assert dom.attrs[ident]["data-periode"] == "..".join(attendue)
         assert "tronquée à période égale" in dom.texte[ident]
         assert "2022-2023 s'arrête le 31 mars" in dom.texte[ident]
     # 2019-2020 (non comparable, arretee le 20 mars) ne fixe pas la periode.
@@ -294,3 +321,45 @@ def test_tableau_egal_aux_metriques_sans_troncature(db, tmp_path) -> None:
         assert int(ligne["avec"]) == r["jours_avec_indice"]
         assert int(ligne["n3"]) == r["jours_3_plus"] and int(ligne["n4"]) == r["jours_4_plus"]
         assert float(ligne["moyenne"].replace(",", ".")) == pytest.approx(r["risque_moyen"], abs=0.005)
+
+
+@chromium
+def test_mode_saison_trace_les_non_comparables_en_pointille_etiquete(synthetique, tmp_path) -> None:
+    html = injecter(comparaison.TEMPLATE, synthetique)
+    dom = _dom(html, "x=saison&m=65&s=2021-2022", tmp_path)
+    par = {t["data-trace"]: t for t in dom.traces}
+    assert set(par) == {"2016-2017", "2018-2019", "2019-2020", "2021-2022", "2022-2023"}
+    assert par["2019-2020"]["data-comparable"] == "0"
+    assert par["2019-2020"]["stroke-dasharray"]
+    assert "stroke-dasharray" not in par["2018-2019"]
+    assert "non comparables" in dom.texte["lg-courbes"]
+    # Sa fermeture precoce (20 mars) ne raccourcit pas la periode commune.
+    assert dom.attrs["sous-courbes"]["data-periode"] == "12-15..03-31"
+
+
+@chromium
+def test_classement_ex_aequo_et_minimum_de_deux_saisons(synthetique, tmp_path) -> None:
+    html = injecter(comparaison.TEMPLATE, synthetique)
+    # Quatre saisons comparables a zero jour >= 3 : toutes premieres, a egalite.
+    dom = _dom(html, "x=saison&m=65&k=jours_3_plus&f=coeur&s=2021-2022", tmp_path)
+    assert dom.attrs["phrase"]["data-ex"] == "1" and dom.attrs["phrase"]["data-rang"] == "1"
+    assert "ex aequo" in dom.texte["phrase"]
+    # Mode 2 sous deux saisons : message clair, pas de « n'est pas classee ».
+    un = _dom(html, "x=choix&m=65&c=2021-2022", tmp_path)
+    assert "au moins 2 saisons" in un.texte["alerte"]
+    assert "au moins 2 saisons" in un.texte["phrase"] and "n'est pas classée" not in un.texte["phrase"]
+    # Mode 3 : le premier massif choisi est annonce comme celui classe.
+    trois = _dom(html, "x=massifs&m=65&s=2021-2022&n=65", tmp_path)
+    assert "au moins 2 massifs" in trois.texte["alerte"]
+    assert "premier massif choisi" in trois.texte["indic-classe"]
+
+
+@chromium
+def test_chaque_graphe_et_tableau_porte_sa_couverture(synthetique, tmp_path) -> None:
+    html = injecter(comparaison.TEMPLATE, synthetique)
+    dom = _dom(html, "x=saison&m=65&s=2021-2022", tmp_path)
+    for ident in ("cov-courbes", "cov-rang"):
+        assert dom.texte[ident].startswith("Couverture")
+        assert "jours" in dom.texte[ident]
+    # Le tableau porte sa couverture dans ses colonnes, une valeur par ligne.
+    assert "Jours couverts" in dom.texte["table"] and "Jours avec indice" in dom.texte["table"]

@@ -32,14 +32,14 @@ le monde.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import duckdb
 import polars as pl
 
 from .dashboard import injecter
-from .fenetres import DEFAUT, FENETRES, PAR_NOM, SAISON_COMPLETE
+from .fenetres import DEFAUT, FENETRES, FIN_SENTINELLE, MOIS_FR, PAR_NOM, SAISON_COMPLETE
 from .fiche import (
     _bandes,
     _series,
@@ -59,6 +59,14 @@ TEMPLATE = Path(__file__).parent / "templates" / "comparaison.html"
 # le plafond voyage dans le payload, le gabarit le lit.
 MAX_COURBES = 4
 
+# Seuils des deux metriques de comptage. Le premier est celui de `risque` (une
+# seule definition) ; le second est le "4" litteral des vues de `risque.py`.
+SEUIL_HAUT = risque.SEUIL_EPISODE
+SEUIL_TRES_HAUT = 4
+
+# En dessous, un rang ne dit rien : classer une saison contre elle seule.
+MIN_SAISONS_CLASSEMENT = 2
+
 # Blocs lus pour la comparaison : le risque et la neige. L'isotherme et le vent
 # n'ont pas de metrique de classement ici.
 BLOCS = ("neige",)
@@ -73,6 +81,9 @@ class Metrique:
     description: str
     indice: bool
     unite: str
+    # Echelle ordinale bornee 1..5 : l'axe du classement est gradue en niveaux,
+    # pas depuis zero. Dit ici une fois ; le gabarit ne teste aucune cle.
+    ordinal: bool = False
 
 
 METRIQUES: tuple[Metrique, ...] = (
@@ -80,19 +91,19 @@ METRIQUES: tuple[Metrique, ...] = (
         "risque_moyen", "Indice moyen",
         "moyenne de l'indice de risque sur les jours avec indice ; échelle ordinale, "
         "toujours lue avec son nombre de jours",
-        True, "",
+        True, "", ordinal=True,
     ),
     Metrique(
-        "jours_3_plus", "Jours à risque 3 ou plus",
-        "jours à un indice de 3, 4 ou 5 sur la période comparée", True, "j",
+        "jours_3_plus", f"Jours à risque {SEUIL_HAUT} ou plus",
+        f"jours à un indice d'au moins {SEUIL_HAUT} sur la période comparée", True, "j",
     ),
     Metrique(
-        "jours_4_plus", "Jours à risque 4 ou 5",
-        "jours à un indice de 4 ou 5 sur la période comparée", True, "j",
+        "jours_4_plus", f"Jours à risque {SEUIL_TRES_HAUT} ou plus",
+        f"jours à un indice d'au moins {SEUIL_TRES_HAUT} sur la période comparée", True, "j",
     ),
     Metrique(
         "risque_max", "Indice maximal",
-        "indice le plus haut publié sur la période comparée", True, "",
+        "indice le plus haut publié sur la période comparée", True, "", ordinal=True,
     ),
     Metrique(
         "epaisseur_max", "Épaisseur de neige maximale",
@@ -130,6 +141,43 @@ def verifier(cle: str, fenetre: str) -> None:
             f"classement refusé sur {fenetre!r} : les bornes de la saison entière varient "
             f"d'une saison à l'autre, seules les fenêtres nommées comparent des périodes égales"
         )
+
+
+def periode_commune(
+    data: dict, massif_id: int, saisons: list[str], fenetre: str = DEFAUT.nom
+) -> tuple[str, str] | None:
+    """Periode commune (premier, dernier jour calendaire `mm-jj`) des series comparees.
+
+    Meme regle que le gabarit, ecrite ici pour etre testable sans navigateur :
+    dans la fenetre, du dernier premier jour couvert au premier dernier jour
+    couvert, sur les seules saisons comparables (si aucune ne l'est, sur toutes).
+    `None` si les series n'ont aucun jour commun.
+    """
+    axe = data["axe"]
+    pos = {c: i for i, c in enumerate(axe)}
+    f = next(x for x in data["fenetres"] if x["nom"] == fenetre)
+    if f["debut"]:
+        w0, w1 = pos[f"{f['debut'][0]:02d}-{f['debut'][1]:02d}"], pos[f"{f['fin'][0]:02d}-{f['fin'][1]:02d}"]
+    else:
+        w0, w1 = 0, len(axe) - 1
+    comparable = {s["nom"]: s["comparable"] for s in data["saisons"]}
+    base = [s for s in saisons if comparable[s]] or list(saisons)
+    etendues = []
+    for saison in base:
+        e = data["series"][massif_id][saison]
+        origine = date.fromisoformat(e["origine"])
+        cases = [
+            pos[(origine + timedelta(days=i)).strftime("%m-%d")]
+            for i, c in enumerate(e["risque"]) if c != "."
+        ]
+        cases = [x for x in cases if w0 <= x <= w1]
+        if not cases:
+            return None
+        etendues.append((min(cases), max(cases)))
+    if not etendues:
+        return None
+    lo, hi = max(a for a, _ in etendues), min(b for _, b in etendues)
+    return (axe[lo], axe[hi]) if lo <= hi else None
 
 
 def _fenetres_payload() -> list[dict]:
@@ -188,9 +236,13 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "tranches": [{"nom": t.nom, "libelle": t.libelle} for t in TRANCHES],
         "min_saisons_bande": risque.MIN_SAISONS_NORMALE,
         "max_courbes": MAX_COURBES,
+        "seuil_haut": SEUIL_HAUT,
+        "seuil_tres_haut": SEUIL_TRES_HAUT,
+        "min_saisons_classement": MIN_SAISONS_CLASSEMENT,
+        "fin_sentinelle": f"{MOIS_FR[FIN_SENTINELLE.month - 1]} {FIN_SENTINELLE.year}",
         "metriques": [
             {"cle": m.cle, "libelle": m.libelle, "description": m.description,
-             "indice": m.indice, "unite": m.unite}
+             "indice": m.indice, "unite": m.unite, "ordinal": m.ordinal}
             for m in METRIQUES
         ],
         # metrique -> fenetre -> motif du refus (None = permis).
