@@ -29,6 +29,7 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
+from . import partage
 from .dashboard import ABSENT, SANS_INDICE, injecter
 from .fenetres import DEFAUT, FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES, comparable
 from .massifs import MASSIFS
@@ -376,7 +377,8 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "series": series,
         "bandes": bandes,
         "indicateurs": indicateurs,
-        "attribution": "Données Météo-France, Licence Ouverte 2.0",
+        "attribution": partage.ATTRIBUTION_DONNEES,
+        "partage": partage.bloc(archive.isoformat() if archive else None, date.today().isoformat()),
     }
 
 

@@ -402,3 +402,19 @@ vit dans l'URL (`comparaison.html#x=choix&m=65&c=2023-2024,2024-2025&k=jours_3_p
   commune des saisons comparables, jamais classée et ne fixant pas la période commune.
 - Les tests de la page (`tests/test_comparaison.py`) la rendent dans Chromium headless
   (`BRA_CHROMIUM` pour indiquer le binaire) ; ils sont sautés si aucun n'est trouvé.
+
+### 10. Exports, URL partageable et attribution (T15)
+
+Mécanisme commun à tous les écrans, défini une fois (`partage.py`, `templates/partage.js`) :
+
+- **Exports** : sous chaque graphe, « Exporter CSV » (les valeurs que la trace vient d'employer,
+  en format long, décimale au point ; trois lignes `#` d'en-tête portent l'attribution, la date
+  d'archive et le lien — `comment="#"` dans pandas/polars) et « Exporter PNG » (titre et
+  attribution ajoutés sous l'image).
+- **URL** : tout l'état d'un écran est dans le fragment (`m` massif, `s` saison, `f` fenêtre,
+  `t` tranche, `v` versant ; `mc` métrique de la carte). Chaque écran écrit ses clés sans effacer
+  celles des autres, et la barre de navigation reporte le fragment complet d'un écran à l'autre.
+- **Attribution** : « Données Météo-France, Licence Ouverte 2.0 », date de l'archive, date de
+  génération ; sur la carte, les contours en plus (sous la carte et en pied).
+- **Ajouter un écran** : voir l'en-tête de `partage.py`. `tests/test_partage.py` échoue tant qu'un
+  gabarit n'est pas dans `ECRANS` et branché sur `PARTAGE.demarrer`.

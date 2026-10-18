@@ -23,7 +23,7 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
-from . import geo
+from . import geo, partage
 from .dashboard import injecter
 from .fenetres import DEFAUT, SAISONS_NON_COMPARABLES, comparable
 from .massifs import MASSIFS
@@ -235,10 +235,14 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "massifs": massifs,
         "contours": contours,
         "attribution": {
-            "donnees": "Données Météo-France, Licence Ouverte 2.0",
-            "contours": (f"Contours des massifs : Météo-France, Licence Ouverte 2.0 "
-                         f"(version du {VERSION_CONTOURS})"),
+            "donnees": partage.ATTRIBUTION_DONNEES,
+            "contours": partage.attribution_contours(VERSION_CONTOURS),
         },
+        "partage": partage.bloc(
+            archive.isoformat() if archive else None,
+            date.today().isoformat(),
+            partage.attribution_contours(VERSION_CONTOURS),
+        ),
     }
 
 

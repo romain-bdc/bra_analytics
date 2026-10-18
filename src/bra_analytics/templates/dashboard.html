@@ -212,13 +212,15 @@ footer a{color:var(--ink-2)}
 </section>
 
 <footer>
-  <span id="gen"></span>
-  <span>Source : <a href="https://files.data.gouv.fr/meteofrance/data/BULLETIN/BRA/">files.data.gouv.fr — Météo-France</a>, <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence">Licence Ouverte 2.0</a></span>
+  <span id="attribution"></span>
   <span>Page générée par <code>bra dashboard</code></span>
 </footer>
 </div>
 <div id="tip"></div>
 
+<script>
+__PARTAGE__
+</script>
 <script>
 const D = __DONNEES__;
 const NS = "http://www.w3.org/2000/svg";
@@ -354,11 +356,24 @@ function couvertureHtml(saison) {
   return html;
 }
 
+/* ---------- exports : memes valeurs que la trace, non formatees ---------- */
+const contexte = () => `${+sel.value < 0 ? "tous les massifs" : D.massifs[+sel.value].nom}, fenêtre ${fenCourante().nom}`;
+function exporter(svgId, nom, titre, colonnes, lignes) {
+  PARTAGE.enregistrer(svgId, { nom: `${nom}-${+sel.value < 0 ? "tous" : D.massifs[+sel.value].id}-${fenCourante().nom}`, titre: `${titre} — ${contexte()}`, colonnes, lignes });
+}
+
 /* ---------- panneau 1 : indice moyen par saison ---------- */
 function p1(A) {
   const svg = document.getElementById("p1"); svg.textContent = "";
   const W = 900, H = 320, L = 52, R = 22, T = 20, B = 58;
   const vals = A.par.map(p => (p.n ? p.somme / p.n : null));
+  exporter("p1", "indice-moyen-saison", "Indice moyen par saison",
+    ["saison", "indice_moyen", "jours_estimes", "jours_sans_indice", "jours_4_plus", "massifs_actifs", "couverture_pct", "comparable", "motif"],
+    seasons.map((s, i) => {
+      const st = statSaison(s);
+      return [s, vals[i], A.par[i].n, A.par[i].sans, A.par[i].lv[3] + A.par[i].lv[4], st ? st.massifs_actifs : null,
+        st ? st.couverture : null, exclue(s) ? 0 : 1, exclue(s) ? motifExclusion(s) : ""];
+    }));
   const finis = vals.filter(v => v != null);
   if (!finis.length) return;
   const lo = Math.max(1, Math.floor(Math.min(...finis) * 4 - 1) / 4);
@@ -429,6 +444,9 @@ function p1(A) {
 /* ---------- panneau 2 : repartition des indices ---------- */
 function p2(A) {
   const svg = document.getElementById("p2"); svg.textContent = "";
+  exporter("p2", "repartition-indices", "Répartition des indices par saison (jours)",
+    ["saison", ...NIVEAUX.map((n, k) => `indice_${k + 1}`), "sans_indice", "jours"],
+    seasons.map((s, i) => [s, ...A.par[i].lv, A.par[i].sans, A.par[i].jours]));
   const W = 900, H = 330, L = 52, R = 22, T = 16, B = 58;
   const pas = (W - L - R) / nS, larg = Math.min(46, pas - 14);
   const y = f => H - B - (H - B - T) * f;
@@ -464,6 +482,9 @@ function p3(pick) {
   const W = 900, L = 168, R = 16, T = 34, B = 34;
   const cw = (W - L - R) / nS, ch = 28, H = T + nM * ch + B;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  exporter("p3", "massif-saison", "Indice moyen par massif et par saison",
+    ["massif_id", "massif", "saison", "indice_moyen"],
+    D.massifs.flatMap((m, i) => seasons.map((s, j) => [m.id, m.nom, s, MATRICE[i][j]])));
   const plats = MATRICE.flat().filter(v => v != null);
   const lo = Math.min(...plats), hi = Math.max(...plats);
   const bin = v => Math.min(4, Math.max(0, Math.floor((v - lo) / ((hi - lo) || 1) * 5)));
@@ -504,6 +525,9 @@ function p4(A) {
   const Q0 = 4, Q1 = 19, nQ = Q1 - Q0 + 1, SEUIL = 20;
   const serie = src => Array.from({ length: nQ }, (_, k) => { const q = src[Q0 + k]; return q[1] >= SEUIL ? q[0] / q[1] : null; });
   const moy = serie(A.quinz), derniere = serie(A.quinzDerniere);
+  exporter("p4", "profil-quinzaine", "Indice moyen par quinzaine",
+    ["quinzaine", "toutes_saisons", seasons[nS - 1], "jours_massifs"],
+    Array.from({ length: nQ }, (_, k) => [(k % 2 ? "16 " : "1 ") + ["nov.", "déc.", "janv.", "févr.", "mars", "avr.", "mai", "juin"][Math.floor(k / 2)], moy[k], derniere[k], A.quinz[Q0 + k][1]]));
   const finis = [...moy, ...derniere].filter(v => v != null);
   if (!finis.length) return;
   const lo = Math.max(0, Math.floor(Math.min(...finis) * 2 - .5) / 2), hi = Math.min(5, Math.ceil(Math.max(...finis) * 2 + .5) / 2);
@@ -559,6 +583,10 @@ function p5(A, nSel) {
     t.textContent = MOIS[k]; svg.appendChild(t);
     svg.appendChild(el("line", { x1: L + d * rw, x2: L + d * rw, y1: T - 6, y2: H - B + 2, stroke: "var(--grid)", "stroke-width": 1 }));
   });
+  exporter("p5", "couverture", "Couverture : massifs pourvus d'un bulletin, par jour",
+    ["saison", "jour", "massifs_pourvus", "massifs_selectionnes"],
+    A.couv.flatMap((jours, s) => Array.from(jours, (c, d) => [s, d, c]).filter(x => x[2])
+      .map(([s2, d, c]) => [seasons[s2], new Date(Date.UTC(+seasons[s2].slice(0, 4), 8, 1) + d * DAY).toISOString().slice(0, 10), c, nSel])));
   A.couv.forEach((jours, s) => {
     const yy = T + s * (rh + gap);
     const lab = el("text", { x: L - 12, y: yy + rh / 2 + 4, "text-anchor": "end", class: "tick" });
@@ -639,7 +667,26 @@ function noteFenetre() {
     : `<b>Non comparable entre saisons.</b> ${f.usage}. ${f.justification}`;
 }
 
+/* Etat dans l'URL : m = massif_id (absent = tous), f = fenetre, d = 1 quand les tableaux sont ouverts.
+   Un `m` etranger a cette zone (venu d'un autre ecran) est conserve tel quel. */
+function lireUrl() {
+  const p = PARTAGE.lire();
+  const i = D.massifs.findIndex(m => m.id === +p.get("m"));
+  sel.value = i;
+  kFen = FEN_INDEX.get(p.get("f")) ?? Math.max(0, FEN_INDEX.get(D.fenetre_defaut) ?? 0);
+  fen.value = kFen;
+  donnees(p.get("d") === "1");
+}
+function ecrireUrl() {
+  const v = +sel.value;
+  const m = v >= 0 ? D.massifs[v].id : (D.massifs.some(x => x.id === +PARTAGE.lire().get("m")) ? null : undefined);
+  const etat = { f: fenCourante().nom, d: bouton.getAttribute("aria-pressed") === "true" ? 1 : null };
+  if (m !== undefined) etat.m = m;
+  PARTAGE.ecrire(etat);
+}
+
 function dessine() {
+  ecrireUrl();
   const v = +sel.value;
   const pick = v < 0 ? D.massifs.map((_, i) => i) : [v];
   const A = aggregate(pick, kFen);
@@ -655,19 +702,20 @@ sel.addEventListener("change", dessine);
 fen.addEventListener("change", () => { kFen = +fen.value; dessine(); });
 
 const bouton = document.getElementById("tbl");
-bouton.addEventListener("click", () => {
-  const on = bouton.getAttribute("aria-pressed") !== "true";
+function donnees(on) {
   bouton.setAttribute("aria-pressed", String(on));
   bouton.textContent = on ? "Masquer les données" : "Voir les données";
   document.querySelectorAll(".tables").forEach(t => { t.hidden = !on; });
-});
+}
+bouton.addEventListener("click", () => { donnees(bouton.getAttribute("aria-pressed") !== "true"); ecrireUrl(); });
+addEventListener("hashchange", () => { lireUrl(); dessine(); });
 
 document.getElementById("lede").innerHTML =
   `Du <b>${dateFr(jour0)}</b> au <b>${dateFr(jour0 + (span - 1) * DAY)}</b>, tous les bulletins d'estimation du risque
    d'avalanche publiés par Météo-France pour les Pyrénées, ramenés des six variantes du format XML source à un schéma unique.
    Un bulletin est rédigé la veille pour le lendemain : tout ce qui suit est indexé sur la journée couverte, jamais sur la date de rédaction.`;
-document.getElementById("gen").textContent = "Archive arrêtée au " + dateFr(Date.parse(D.jourN + "T00:00:00Z")) + " · page générée le " + dateFr(Date.parse(D.genere + "T00:00:00Z"));
-
+PARTAGE.demarrer({ ecran: "dashboard", ...D.partage });
+lireUrl();
 dessine();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", dessine);
 new MutationObserver(dessine).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });

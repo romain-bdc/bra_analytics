@@ -12,10 +12,12 @@ import json
 from datetime import date, timedelta
 from pathlib import Path
 
+from . import partage
 from .fenetres import DEFAUT, FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES
 from .massifs import MASSIFS
 
 COMMUN = Path(__file__).parent / "templates" / "commun.js"
+PARTAGE = Path(__file__).parent / "templates" / "partage.js"
 TEMPLATE = Path(__file__).parent / "templates" / "dashboard.html"
 
 # Un caractere par jour, dans la chaine `serie` de chaque massif.
@@ -151,6 +153,9 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb", zone: str = "Pyrenees"
         "fenetre_defaut": DEFAUT.nom,
         "saisons_exclues": SAISONS_NON_COMPARABLES,
         "stats": stats,
+        "partage": partage.bloc(
+            (jour0 + timedelta(days=span - 1)).isoformat(), date.today().isoformat()
+        ),
     }
 
 
@@ -180,6 +185,12 @@ def injecter(gabarit: Path, data: dict, standalone: bool = True) -> str:
     # Les aides JavaScript partagees entre ecrans passent en premier : elles ne
     # contiennent pas `__DONNEES__`, et un `__COMMUN__` apparaissant dans une
     # donnee ne doit jamais etre remplace.
+    # Meme raison : `partage.js` ne porte que le marqueur `__ECRANS__`, remplace
+    # ici avant que le moindre payload entre dans la page.
+    if "__PARTAGE__" in html:
+        ecrans = json.dumps([e._asdict() for e in partage.ECRANS], ensure_ascii=False)
+        js = PARTAGE.read_text(encoding="utf-8").replace("__ECRANS__", ecrans)
+        html = html.replace("__PARTAGE__", js, 1)
     if "__COMMUN__" in html:
         html = html.replace("__COMMUN__", COMMUN.read_text(encoding="utf-8"), 1)
     page = html.replace("__DONNEES__", blob)
