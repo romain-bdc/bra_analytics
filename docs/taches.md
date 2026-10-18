@@ -274,6 +274,8 @@ situations typiques sont affichées avec leur restriction d'époque.
 
 **Dépend de** : T9, T11.
 
+**Réalisée par** `bra exploration` (`exploration.py`, `templates/exploration.html`). Critères vérifiés dans Chromium headless (`tests/test_exploration.py`) : étiquette « non localisée en altitude » sur chaque rose des pentes et chaque jeu de situations ; croisement vent × orientation lu une tranche à la fois ; saisons antérieures aux situations typiques annoncées avec leur restriction ; comparaison de saisons refusée hors `coeur`.
+
 ---
 
 ## Lot 4 — Finitions

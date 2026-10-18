@@ -241,6 +241,14 @@ def cmd_fiche(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_exploration(args: argparse.Namespace) -> int:
+    from .exploration import render
+
+    out = render(args.db, args.out, standalone=not args.fragment)
+    print(f"ecran d'exploration : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    return 0
+
+
 def cmd_comparaison(args: argparse.Namespace) -> int:
     from .comparaison import render
 
@@ -407,6 +415,13 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("--fragment", action="store_true",
                    help="omettre doctype et <html> (page destinee a etre hebergee)")
     c.set_defaults(func=cmd_comparaison)
+
+    e = sub.add_parser("exploration", help="generer l'ecran d'exploration orientations et vent (HTML statique)")
+    e.add_argument("--db", default="warehouse/bra.duckdb")
+    e.add_argument("--out", default="exploration.html", help="fichier de sortie")
+    e.add_argument("--fragment", action="store_true",
+                   help="omettre doctype et <html> (page destinee a etre hebergee)")
+    e.set_defaults(func=cmd_exploration)
 
     k = sub.add_parser("carte", help="generer la carte d'accueil des 36 massifs (HTML statique)")
     k.add_argument("--db", default="warehouse/bra.duckdb")
