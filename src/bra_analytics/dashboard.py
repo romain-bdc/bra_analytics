@@ -15,6 +15,7 @@ from pathlib import Path
 from .fenetres import DEFAUT, FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES
 from .massifs import MASSIFS
 
+COMMUN = Path(__file__).parent / "templates" / "commun.js"
 TEMPLATE = Path(__file__).parent / "templates" / "dashboard.html"
 
 # Un caractere par jour, dans la chaine `serie` de chaque massif.
@@ -176,6 +177,11 @@ def injecter(gabarit: Path, data: dict, standalone: bool = True) -> str:
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     # `</script>` dans une chaine JSON fermerait la balise hote.
     blob = blob.replace("</", "<\\/")
+    # Les aides JavaScript partagees entre ecrans passent en premier : elles ne
+    # contiennent pas `__DONNEES__`, et un `__COMMUN__` apparaissant dans une
+    # donnee ne doit jamais etre remplace.
+    if "__COMMUN__" in html:
+        html = html.replace("__COMMUN__", COMMUN.read_text(encoding="utf-8"), 1)
     page = html.replace("__DONNEES__", blob)
     if standalone:
         page = ENTETE + page + "</html>\n"

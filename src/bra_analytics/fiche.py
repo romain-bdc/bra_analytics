@@ -181,12 +181,25 @@ def _indicateurs(con: duckdb.DuckDBPyConnection) -> dict:
     return out
 
 
-def _series(con: duckdb.DuckDBPyConnection) -> tuple[dict[int, dict[str, dict]], pl.DataFrame]:
-    """massif -> saison -> series encodees, plus la serie de risque (pour les bandes)."""
+BLOCS = ("neige", "iso0", "vent")
+
+
+def _series(
+    con: duckdb.DuckDBPyConnection, blocs: tuple[str, ...] = BLOCS
+) -> tuple[dict[int, dict[str, dict]], pl.DataFrame]:
+    """massif -> saison -> series encodees, plus la serie de risque (pour les bandes).
+
+    Le risque est toujours lu : il ancre `decalage_rang`. `blocs` restreint les
+    autres : l'ecran de comparaison n'a besoin ni de l'isotherme ni du vent, et
+    ne les charge pas. `origine` se calcule sur les seuls blocs lus.
+    """
     jours = risque.serie_jour(con)
-    snow = enneigement.paliers(con).filter(pl.col("palier_retenu") & pl.col("tranche").is_not_null())
-    iso0 = meteo.serie_jour(con)
-    vent = meteo.vent_tranche_jour(con)
+    snow = (
+        enneigement.paliers(con).filter(pl.col("palier_retenu") & pl.col("tranche").is_not_null())
+        if "neige" in blocs else None
+    )
+    iso0 = meteo.serie_jour(con) if "iso0" in blocs else None
+    vent = meteo.vent_tranche_jour(con) if "vent" in blocs else None
 
     # Premier et dernier jour de chaque bloc, par massif et saison.
     def etendue(df: pl.DataFrame, col: str) -> pl.DataFrame:
@@ -194,13 +207,9 @@ def _series(con: duckdb.DuckDBPyConnection) -> tuple[dict[int, dict[str, dict]],
             pl.col(col).min().alias("d0"), pl.col(col).max().alias("d1")
         )
 
+    lus = [(jours, "jour_validite"), (snow, "jour"), (iso0, "jour_validite"), (vent, "jour_validite")]
     etendues = pl.concat(
-        [
-            etendue(jours, "jour_validite"),
-            etendue(snow, "jour"),
-            etendue(iso0, "jour_validite"),
-            etendue(vent, "jour_validite"),
-        ]
+        [etendue(df, col) for df, col in lus if df is not None]
     ).group_by(["massif_id", "saison"]).agg(pl.col("d0").min(), pl.col("d1").max())
     bornes = {(r["massif_id"], r["saison"]): (r["d0"], r["d1"]) for r in etendues.iter_rows(named=True)}
 
@@ -222,61 +231,51 @@ def _series(con: duckdb.DuckDBPyConnection) -> tuple[dict[int, dict[str, dict]],
         # jour_de_saison = 1 au premier jour du risque : la case d'indice `decalage_rang` du bloc.
         e["decalage_rang"] = (premier - e["origine"]).days
 
-    for (mid, saison, tranche), g in snow.group_by(["massif_id", "saison", "tranche"]):
-        e = entree(mid, saison)
-        for versant in VERSANTS:
-            e.setdefault("neige", {}).setdefault(tranche, {})[versant] = _chaine(
-                dict(zip(g["jour"], g[f"epaisseur_{versant}_cm"])), e["origine"], e["longueur"]
+    if snow is not None:
+        for (mid, saison, tranche), g in snow.group_by(["massif_id", "saison", "tranche"]):
+            e = entree(mid, saison)
+            for versant in VERSANTS:
+                e.setdefault("neige", {}).setdefault(tranche, {})[versant] = _chaine(
+                    dict(zip(g["jour"], g[f"epaisseur_{versant}_cm"])), e["origine"], e["longueur"]
+                )
+            # Altitude du palier lu : elle change d'epoque en epoque (2100 puis 2000 m en moyenne).
+            e.setdefault("altitudes_neige", {})[tranche] = sorted(set(g["altitude_m"]))
+
+    if iso0 is not None:
+        for (mid, saison), g in iso0.group_by(["massif_id", "saison"]):
+            e = entree(mid, saison)
+            e["iso0"] = {
+                nom: _chaine(dict(zip(g["jour_validite"], g[col])), e["origine"], e["longueur"])
+                for nom, col in (("min", "iso0_min_m"), ("max", "iso0_max_m"), ("moyen", "iso0_moyen_m"))
+            }
+
+    if vent is not None:
+        for (mid, saison, tranche), g in vent.group_by(["massif_id", "saison", "tranche"]):
+            e = entree(mid, saison)
+            e.setdefault("vent", {})[tranche] = _chaine(
+                dict(zip(g["jour_validite"], g["vitesse_kmh"])), e["origine"], e["longueur"]
             )
-        # Altitude du palier lu : elle change d'epoque en epoque (2100 puis 2000 m en moyenne).
-        e.setdefault("altitudes_neige", {})[tranche] = sorted(set(g["altitude_m"]))
-
-    for (mid, saison), g in iso0.group_by(["massif_id", "saison"]):
-        e = entree(mid, saison)
-        e["iso0"] = {
-            nom: _chaine(dict(zip(g["jour_validite"], g[col])), e["origine"], e["longueur"])
-            for nom, col in (("min", "iso0_min_m"), ("max", "iso0_max_m"), ("moyen", "iso0_moyen_m"))
-        }
-
-    for (mid, saison, tranche), g in vent.group_by(["massif_id", "saison", "tranche"]):
-        e = entree(mid, saison)
-        e.setdefault("vent", {})[tranche] = _chaine(
-            dict(zip(g["jour_validite"], g["vitesse_kmh"])), e["origine"], e["longueur"]
-        )
-        e.setdefault("altitudes_vent", {})[tranche] = sorted(
-            {a for a in g["altitudes_vent"] if a is not None}
-        )
+            e.setdefault("altitudes_vent", {})[tranche] = sorted(
+                {a for a in g["altitudes_vent"] if a is not None}
+            )
 
     return out, jours
 
 
-def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
-    db = Path(db_path)
-    if not db.exists():
-        raise SystemExit(f"base absente : {db} (lancer `bra build`)")
+def saisons_payload(toutes: list[str]) -> list[dict]:
+    """Chaque saison de l'entrepot, comparable ou non : une saison ecartee garde son motif."""
+    return [
+        {"nom": s, "comparable": comparable(s), "motif": SAISONS_NON_COMPARABLES.get(s)}
+        for s in toutes
+    ]
 
-    con = duckdb.connect(str(db), read_only=True)
-    try:
-        series, jours = _series(con)
-        indicateurs = _indicateurs(con)
-        moyennes = risque.moyenne_pluriannuelle(con, fenetre=DEFAUT.nom)
-        (archive,) = con.execute(
-            "SELECT max(jour_validite) FROM risque_journalier WHERE massif_coherent"
-        ).fetchone()
-        toutes = [r[0] for r in con.execute(
-            "SELECT DISTINCT saison FROM risque_journalier WHERE massif_coherent ORDER BY 1"
-        ).fetchall()]
-    finally:
-        con.close()
 
-    axe = axe_calendaire()
-    jours = jours.with_columns(pl.col("jour_validite").dt.strftime("%m-%d").alias("jour_annee"))
-    rang_max = int(jours["jour_de_saison"].max())
-    bandes = {
-        "calendaire": _tableau(_bandes(jours, "jour_annee"), "jour_annee", axe),
-        "rang": _tableau(_bandes(jours, "jour_de_saison"), "jour_de_saison", list(range(1, rang_max + 1))),
-    }
+def fiche_massifs(series: dict, jours: pl.DataFrame, moyennes: pl.DataFrame) -> list[dict]:
+    """Les massifs de la page : nom, saisons diffusees, dernier bulletin, repere d'accueil.
 
+    Partage avec l'ecran de comparaison, qui presente les memes massifs avec le
+    meme repere (la moyenne d'accueil de T6, jamais seule : elle porte ses jours).
+    """
     # Dernier bulletin integre, massif par massif : le massif 71 s'arrete avant l'archive.
     derniers = {
         r["massif_id"]: r["d"].isoformat()
@@ -302,6 +301,43 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
                 "saisons": repere["saisons"],
             },
         })
+    return massifs
+
+
+def archive_et_saisons(con: duckdb.DuckDBPyConnection) -> tuple[date | None, list[str]]:
+    """Dernier jour integre et saisons de l'entrepot (`massif_coherent` seulement)."""
+    (archive,) = con.execute(
+        "SELECT max(jour_validite) FROM risque_journalier WHERE massif_coherent"
+    ).fetchone()
+    toutes = [r[0] for r in con.execute(
+        "SELECT DISTINCT saison FROM risque_journalier WHERE massif_coherent ORDER BY 1"
+    ).fetchall()]
+    return archive, toutes
+
+
+def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
+    db = Path(db_path)
+    if not db.exists():
+        raise SystemExit(f"base absente : {db} (lancer `bra build`)")
+
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        series, jours = _series(con)
+        indicateurs = _indicateurs(con)
+        moyennes = risque.moyenne_pluriannuelle(con, fenetre=DEFAUT.nom)
+        archive, toutes = archive_et_saisons(con)
+    finally:
+        con.close()
+
+    axe = axe_calendaire()
+    jours = jours.with_columns(pl.col("jour_validite").dt.strftime("%m-%d").alias("jour_annee"))
+    rang_max = int(jours["jour_de_saison"].max())
+    bandes = {
+        "calendaire": _tableau(_bandes(jours, "jour_annee"), "jour_annee", axe),
+        "rang": _tableau(_bandes(jours, "jour_de_saison"), "jour_de_saison", list(range(1, rang_max + 1))),
+    }
+
+    massifs = fiche_massifs(series, jours, moyennes)
 
     for per_massif in series.values():
         for e in per_massif.values():
@@ -312,10 +348,7 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "archive_jusqu_au": archive.isoformat() if archive else None,
         "axe": axe,
         "rang_max": rang_max,
-        "saisons": [
-            {"nom": s, "comparable": comparable(s), "motif": SAISONS_NON_COMPARABLES.get(s)}
-            for s in toutes
-        ],
+        "saisons": saisons_payload(toutes),
         "massifs": massifs,
         "fenetre_defaut": DEFAUT.nom,
         "saison_complete": SAISON_COMPLETE,

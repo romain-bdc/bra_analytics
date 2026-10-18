@@ -378,3 +378,27 @@ bande médiane et interquartile (fenêtre `coeur`, saisons comparables, au moins
 épaisseur de neige, isotherme 0 °C, vent — et chacun affiche sa couverture : une cellule par jour,
 rouge quand la valeur manque. Une saison non comparable reste sélectionnable, avec son motif.
 
+
+### 9. `bra comparaison` — comparaison de saisons
+
+```bash
+uv run bra comparaison                # écrit comparaison.html à la racine (non versionné)
+```
+
+Page HTML autonome (environ 1,5 Mo : risque et neige de 36 massifs × 11 saisons). Trois modes — une
+saison contre les autres du même massif (bande médiane et interquartile de T11), deux à quatre
+saisons choisies, un à quatre massifs sur une même saison — avec courbes superposées (le sélecteur
+plafonne à quatre), tableau récapitulatif et classement des saisons en barres horizontales. L'état
+vit dans l'URL (`comparaison.html#x=choix&m=65&c=2023-2024,2024-2025&k=jours_3_plus`).
+
+- **Période égale** : par défaut, les séries comparables sont tronquées à leur période commune
+  (du dernier premier jour couvert au premier dernier jour couvert, dans la fenêtre), annoncée dans
+  le sous-titre de chaque bloc avec la série qui la raccourcit. Case décochée : chaque série garde
+  toute sa fenêtre, les jours couverts restent affichés.
+- **Classement** : une métrique d'indice (moyenne, jours ≥ 3, ≥ 4, maximum) est refusée hors de la
+  fenêtre `coeur`, l'épaisseur de neige l'est sur la saison entière ; la matrice des refus est
+  écrite une fois dans `comparaison.py` et voyage dans le payload.
+- **Saison non comparable** : affichée, étiquetée avec son motif, valeurs lues sur la période
+  commune des saisons comparables, jamais classée et ne fixant pas la période commune.
+- Les tests de la page (`tests/test_comparaison.py`) la rendent dans Chromium headless
+  (`BRA_CHROMIUM` pour indiquer le binaire) ; ils sont sautés si aucun n'est trouvé.
