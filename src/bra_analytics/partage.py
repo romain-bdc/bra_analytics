@@ -47,6 +47,7 @@ ECRANS: tuple[Ecran, ...] = (
     Ecran("carte", "carte.html", "Carte"),
     Ecran("fiche", "fiche.html", "Fiche massif-saison"),
     Ecran("comparaison", "comparaison.html", "Comparaison"),
+    Ecran("exploration", "exploration.html", "Exploration"),
     Ecran("dashboard", "dashboard.html", "Tableau de bord"),
 )
 

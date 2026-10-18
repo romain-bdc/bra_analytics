@@ -413,7 +413,7 @@ Page HTML autonome (environ 0,4 Mo : comptes en jours de 36 massifs × 11 saison
 Quatre blocs : rose des pentes, rose des vents, croisement vent × orientation et situations
 typiques, pour un à quatre massifs sur une saison ou une à quatre saisons d'un massif, en roses ou
 en barres par secteur — côte à côte, jamais superposées. L'état vit dans l'URL
-(`exploration.html#x=saisons&m=65&c=2023-2024,2024-2025&f=coeur&k=ge3&t=haute&d=barres`).
+(`exploration.html#x=saisons&m=65&c=2023-2024,2024-2025&f=coeur&q=ge3&t=haute&g=barres`).
 
 - **Altitude** : chaque rose des pentes et chaque jeu de situations porte l'étiquette « non
   localisée en altitude » (T9) ; il n'y a pas de matrice altitude × orientation. Le vent, lui, a
@@ -424,7 +424,8 @@ en barres par secteur — côte à côte, jamais superposées. L'état vit dans 
   `exploration.refus`, qui délègue à `risque.fenetre_comparable`. Une saison non comparable reste
   affichable, étiquetée avec son motif et en pointillé.
 - Chaque graphe se résume à des lignes {secteur, jours, jours couverts} : roses et barres les
-  dessinent, un export les reprendrait telles quelles.
+  dessinent, et l'export CSV de chaque graphe (T15) les reprend telles quelles. L'écran écrit `q` (condition
+sur le risque) et `g` (rose ou barres) : `k` et `d` ont un autre sens sur la comparaison et le tableau de bord.
 
 ### 11. Exports, URL partageable et attribution (T15)
 

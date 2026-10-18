@@ -159,12 +159,15 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
 <ul class="notes" id="notes"></ul>
 
 <footer>
+  <span id="attribution"></span>
   <span id="attrib"></span>
-  <span id="gen"></span>
   <span>Page générée par <code>bra exploration</code></span>
 </footer>
 </div>
 
+<script>
+__PARTAGE__
+</script>
 <script>
 __COMMUN__
 </script>
@@ -186,7 +189,7 @@ const comparables = m => MASSIF.get(m).saisons.filter(s => SAISON.get(s).compara
 /* ---------- etat, porte par l'URL ---------- */
 const etat = { x: "saisons", m: null, s: null, c: [], n: [], f: D.fenetre_defaut, k: "toutes", t: null, d: "rose" };
 function lireUrl() {
-  const p = new URLSearchParams(location.hash.slice(1));
+  const p = PARTAGE.lire();
   etat.x = p.get("x") === "massifs" ? "massifs" : "saisons";
   const m = +p.get("m");
   etat.m = MASSIF.has(m) ? m : (MASSIF.has(65) ? 65 : D.massifs[0].id);
@@ -197,9 +200,9 @@ function lireUrl() {
   const n = (p.get("n") || "").split(",").map(Number).filter(id => D.roses[id]?.[etat.s]);
   etat.n = (n.length ? n : defautMassifs()).slice(0, MAX);
   etat.f = FEN.has(p.get("f")) ? p.get("f") : D.fenetre_defaut;
-  etat.k = COND.has(p.get("k")) ? p.get("k") : "toutes";
+  etat.k = COND.has(p.get("q")) ? p.get("q") : "toutes";
   etat.t = TRANCHE.has(p.get("t")) ? p.get("t") : D.tranches[D.tranches.length - 1].nom;
-  etat.d = p.get("d") === "barres" ? "barres" : "rose";
+  etat.d = p.get("g") === "barres" ? "barres" : "rose";
 }
 /* Massifs de la meme zone que le massif lu et diffuses la saison lue : un point de depart lisible. */
 function defautMassifs() {
@@ -208,8 +211,8 @@ function defautMassifs() {
   return [etat.m, ...memes.filter(id => id !== etat.m)].filter(id => D.roses[id]?.[etat.s]).slice(0, 3);
 }
 function ecrireUrl() {
-  const p = new URLSearchParams({ x: etat.x, m: etat.m, s: etat.s, c: etat.c.join(","), n: etat.n.join(","), f: etat.f, k: etat.k, t: etat.t, d: etat.d });
-  history.replaceState(null, "", "#" + p);
+  // q (condition) et g (rose ou barres) : k et d ont deja un autre sens sur la comparaison et le tableau de bord.
+  PARTAGE.ecrire({ x: etat.x, m: etat.m, s: etat.s, c: etat.c.join(","), n: etat.n.join(","), f: etat.f, q: etat.k, t: etat.t, g: etat.d });
 }
 
 /* ---------- entites comparees ---------- */
@@ -307,10 +310,23 @@ function carte(en, donnees, { forme, vide, alt }) {
   }
   return div;
 }
+const COLONNES = ["entite", "massif_id", "saison", "secteur", "jours", "jours_couverts", "frequence", "remarque"];
 function grille(id, liste, lignes, opts) {
   const g = $(id);
   g.innerHTML = "";
-  for (const en of liste) g.appendChild(carte(en, lignes(en), opts));
+  for (const en of liste) {
+    const donnees = lignes(en);
+    const div = carte(en, donnees, opts);
+    g.appendChild(div);
+    const svg = div.querySelector("svg");
+    // Export : les lignes {secteur, jours, couverts} que la trace vient de dessiner.
+    if (svg && donnees) PARTAGE.enregistrer(svg, {
+      nom: `${id.slice(2)}-${en.mid}-${en.saison}-${etat.f}-${id === "g-pentes" ? etat.k : etat.t}`,
+      titre: `${id === "g-pentes" ? "Rose des pentes" : id === "g-vent" ? "Rose des vents" : "Croisement vent × orientation"} — ${en.nom}, fenêtre ${etat.f}`,
+      colonnes: COLONNES,
+      lignes: donnees.lignes.map(l => [en.nom, en.mid, en.saison, l.etiquette, l.jours, l.couverts, frac(l), en.comparable ? "" : "non comparable : " + en.motif]),
+    });
+  }
 }
 
 /* Situations : barres groupees, dominante puis secondaire, un code par ligne. */
@@ -344,6 +360,13 @@ function carteSituations(en) {
     });
   });
   div.appendChild(svg);
+  PARTAGE.enregistrer(svg, {
+    nom: `situations-${en.mid}-${en.saison}-${etat.f}`,
+    titre: `Situations avalancheuses typiques — ${en.nom}, fenêtre ${etat.f}`,
+    colonnes: ["entite", "massif_id", "saison", "code", "situation", "role", "jours", "jours_avec_situation", "remarque"],
+    lignes: codes.flatMap(code => [[1, "dominante"], [2, "secondaire"]].map(([rang, role]) =>
+      [en.nom, en.mid, en.saison, code, D.libelles_sat[code], role, jours(rang, code), c.c, en.comparable ? "" : "non comparable : " + en.motif])),
+  });
   div.insertAdjacentHTML("beforeend", `<p class="cov"><b>${c.c}</b> jours avec situation dominante · D dominante, S secondaire, parts de ces jours · * ${esc(D.libelles_sat[D.code_sans_mecanisme])} : pas un mécanisme d'avalanche</p>`);
   return div;
 }
@@ -391,6 +414,7 @@ function dessine() {
   puces("puces-massifs", etat.n, id => MASSIF.get(+id).nom, id => change("n", etat.n.filter(x => x !== +id)));
   ajout($("ajout-massif"), D.massifs.filter(m => D.roses[m.id]?.[etat.s]).map(m => ({ id: m.id, libelle: m.nom })), etat.n, id => change("n", [...etat.n, +id]));
 
+  ecrireUrl();
   const liste = entites();
   $("titre").innerHTML = etat.x === "massifs"
     ? `${esc(liste.map(en => en.nom).join(", "))}<small>saison ${esc(etat.s)}</small>`
@@ -425,10 +449,8 @@ function dessine() {
   }
   notes();
   const m = MASSIF.get(etat.x === "massifs" ? etat.n[0] : etat.m);
-  $("attrib").textContent = `${D.attribution}, archive arrêtée au ${dateFr(D.archive_jusqu_au)}`
-    + (m && m.dernier_bulletin && m.dernier_bulletin !== D.archive_jusqu_au ? ` · dernier bulletin de ${m.nom} : ${dateFr(m.dernier_bulletin)}` : "");
+  $("attrib").textContent = m && m.dernier_bulletin && m.dernier_bulletin !== D.archive_jusqu_au ? `Dernier bulletin de ${m.nom} : ${dateFr(m.dernier_bulletin)}` : "";
   document.title = `Exploration — ${m ? m.nom : ""}`;
-  ecrireUrl();
 }
 function notes() {
   const n = [
@@ -468,7 +490,7 @@ $("sf").addEventListener("change", e => change("f", e.target.value));
 $("st").addEventListener("change", e => change("t", e.target.value));
 addEventListener("hashchange", () => { lireUrl(); dessine(); });
 
-$("gen").textContent = `Page générée le ${dateFr(D.genere)}`;
+PARTAGE.demarrer({ ecran: "exploration", ...D.partage });
 remplirSelecteurs();
 lireUrl();
 dessine();

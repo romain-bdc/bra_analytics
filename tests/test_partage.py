@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from bra_analytics import carte, comparaison, dashboard, fiche, partage
+from bra_analytics import carte, comparaison, dashboard, exploration, fiche, partage
 from bra_analytics.build import build
 from bra_analytics.dashboard import injecter
 
@@ -49,6 +49,7 @@ def pages(db) -> dict[str, tuple[Path, dict]]:
         "carte": (carte.TEMPLATE, carte.payload(db)),
         "fiche": (fiche.TEMPLATE, fiche.payload(db)),
         "comparaison": (comparaison.TEMPLATE, comparaison.payload(db)),
+        "exploration": (exploration.TEMPLATE, exploration.payload(db)),
         "dashboard": (dashboard.TEMPLATE, dashboard.payload(db)),
     }
 
@@ -56,7 +57,7 @@ def pages(db) -> dict[str, tuple[Path, dict]]:
 # --- branchement : un ecran qui ne s'enregistre pas fait echouer ces tests ---------
 
 def test_chaque_gabarit_d_ecran_est_branche() -> None:
-    """T14 y passera : un nouvel ecran doit etre dans `ECRANS` et appeler `PARTAGE.demarrer`."""
+    """Un nouvel ecran doit etre dans `ECRANS` et appeler `PARTAGE.demarrer`."""
     ecrans = {e.id for e in partage.ECRANS}
     gabarits = {p.stem for p in TEMPLATES.glob("*.html")}
     assert gabarits == ecrans, f"gabarits {gabarits ^ ecrans} hors de partage.ECRANS (ou l'inverse)"
@@ -176,6 +177,7 @@ def rendus(pages, tmp_path_factory) -> dict[str, _Dom]:
         "carte": "mc=risque_moyen",
         "fiche": f"m={ASPE}&s={s}&t=moyenne&f=coeur&zz=garde",
         "comparaison": f"x=saison&m={ASPE}&s={s}&k=risque_moyen&f=coeur",
+        "exploration": f"x=saisons&m={ASPE}&c={s}&f=coeur&q=toutes&t=haute&g=barres&zz=garde",
         "dashboard": f"m={ASPE}&f=coeur",
     }
     del a_lire
@@ -209,9 +211,10 @@ def test_attribution_des_contours_sur_la_carte(rendus) -> None:
 
 @chromium
 def test_chaque_graphe_a_son_export_csv_et_png(rendus) -> None:
-    attendus = {"carte": 1, "fiche": 4, "comparaison": 2, "dashboard": 5}
+    attendus = {"carte": 1, "fiche": 4, "comparaison": 2, "exploration": None, "dashboard": 5}
     for ident, n in attendus.items():
-        assert len(rendus[ident].csv) == n, ident
+        # Exploration : une trace par entite et par bloc, selon les blocs publies ; au moins une.
+        assert (len(rendus[ident].csv) >= 1) if n is None else (len(rendus[ident].csv) == n), ident
         for a in rendus[ident].csv:
             assert a["download"].startswith(f"bra-{ident}-") and a["download"].endswith(".csv")
             assert int(a["data-lignes"]) >= 0
@@ -341,3 +344,14 @@ def test_export_png_produit_une_image(pages, tmp_path) -> None:
     dom = _rendre(injecter(gabarit, data), f"m={ASPE}&s={saisons[-1]}", tmp_path, script)
     assert dom.titre.startswith("PNG|data:image/png;base64,|"), dom.titre
     assert int(dom.titre.rsplit("|", 1)[1]) > 5000
+
+
+@chromium
+def test_csv_de_l_exploration_reprend_les_comptes_traces_et_garde_l_etat_etranger(rendus, pages) -> None:
+    dom = rendus["exploration"]
+    a = next(x for x in dom.csv if x["download"].startswith("bra-exploration-pentes-"))
+    _, colonnes, lignes = _csv(a)
+    assert colonnes[:6] == ["entite", "massif_id", "saison", "secteur", "jours", "jours_couverts"]
+    assert len(lignes) == len(pages["exploration"][1]["orientations"]) == 8
+    # Les liens de navigation reportent le fragment complet, cle etrangere comprise.
+    assert all("zz=garde" in h for h in dom.liens.values())

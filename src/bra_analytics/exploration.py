@@ -35,6 +35,7 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
+from . import partage
 from .comparaison import MAX_COURBES, SEUIL_HAUT, SEUIL_TRES_HAUT, _fenetres_payload
 from .dashboard import injecter
 from .fenetres import DEFAUT, FENETRES, FIN_SENTINELLE, MOIS_FR, SAISON_COMPLETE
@@ -145,7 +146,8 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
     return {
         "genere": date.today().isoformat(),
         "archive_jusqu_au": archive.isoformat() if archive else None,
-        "attribution": "Données Météo-France, Licence Ouverte 2.0",
+        "attribution": partage.ATTRIBUTION_DONNEES,
+        "partage": partage.bloc(archive.isoformat() if archive else None, date.today().isoformat()),
         "altitude": ALTITUDE_LIBELLE,
         "orientations": list(pentes.ORIENTATIONS),
         "fenetre_defaut": DEFAUT.nom,

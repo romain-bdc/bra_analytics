@@ -224,7 +224,7 @@ def _secteurs(dom: _Page, nom: str) -> list[tuple[str, int, int]]:
 def test_chaque_rose_des_pentes_et_chaque_situation_est_etiquetee_non_localisee(html, tmp_path) -> None:
     dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025,2023-2024&f=saison_complete", tmp_path)
     assert "Comparaison de saisons refusée" in dom.texte["alerte"]  # deux saisons hors coeur : rien n'est dessine
-    dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&k=toutes&t=haute", tmp_path)
+    dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&q=toutes&t=haute", tmp_path)
     for grille, forme in (("g-pentes", "rose"), ("g-croise", "croisement"), ("g-sit", "situations")):
         assert dom.texte[grille].count("non localisée en altitude") == 1, grille
     # La rose des vents a une altitude reelle : elle porte sa tranche, pas l'etiquette.
@@ -234,7 +234,7 @@ def test_chaque_rose_des_pentes_et_chaque_situation_est_etiquetee_non_localisee(
 
 @chromium
 def test_rose_dessinee_egale_la_serie_relue_a_la_main(html, tmp_path) -> None:
-    dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&k=toutes&t=haute", tmp_path)
+    dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&q=toutes&t=haute", tmp_path)
     # Premiere rose de la page : celle des pentes ; viennent ensuite les secteurs du vent.
     secteurs = _secteurs(dom, "wedge")
     assert secteurs[:8] == [
@@ -242,7 +242,7 @@ def test_rose_dessinee_egale_la_serie_relue_a_la_main(html, tmp_path) -> None:
     ]
     assert len(secteurs) == 16  # pentes + vent
     # Les jours ge3 : quatre jours, les huit secteurs.
-    dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&k=ge3&t=haute", tmp_path)
+    dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&q=ge3&t=haute", tmp_path)
     assert all((j, c) == (4, 4) for _, j, c in _secteurs(dom, "wedge")[:8])
 
 
@@ -293,8 +293,8 @@ def test_saison_non_comparable_etiquetee_avec_son_motif(html, data, tmp_path) ->
 
 @chromium
 def test_les_barres_donnent_les_memes_comptes_que_les_roses(html, tmp_path) -> None:
-    rose = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&d=rose", tmp_path)
-    barres = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&d=barres", tmp_path)
+    rose = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&g=rose", tmp_path)
+    barres = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&g=barres", tmp_path)
     # Barres : pentes, vent, croisement (24 secteurs) ; roses : pentes et vent (16) puis le croisement en barres.
     assert _secteurs(rose, "wedge") == _secteurs(barres, "barre")[:16]
     assert _secteurs(rose, "barre") == _secteurs(barres, "barre")[16:]
@@ -304,4 +304,4 @@ def test_les_barres_donnent_les_memes_comptes_que_les_roses(html, tmp_path) -> N
 @chromium
 def test_attribution_et_date_d_archive_sont_visibles(html, tmp_path) -> None:
     dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete", tmp_path)
-    assert "Licence Ouverte 2.0" in dom.texte["attrib"] and "archive arrêtée au" in dom.texte["attrib"]
+    assert "Licence Ouverte 2.0" in dom.texte["attribution"] and "archive arrêtée au" in dom.texte["attribution"]
