@@ -402,3 +402,26 @@ vit dans l'URL (`comparaison.html#x=choix&m=65&c=2023-2024,2024-2025&k=jours_3_p
   commune des saisons comparables, jamais classée et ne fixant pas la période commune.
 - Les tests de la page (`tests/test_comparaison.py`) la rendent dans Chromium headless
   (`BRA_CHROMIUM` pour indiquer le binaire) ; ils sont sautés si aucun n'est trouvé.
+
+### 10. `bra exploration` — orientations et vent
+
+```bash
+uv run bra exploration                # écrit exploration.html à la racine (non versionné)
+```
+
+Page HTML autonome (environ 0,4 Mo : comptes en jours de 36 massifs × 11 saisons × 3 fenêtres).
+Quatre blocs : rose des pentes, rose des vents, croisement vent × orientation et situations
+typiques, pour un à quatre massifs sur une saison ou une à quatre saisons d'un massif, en roses ou
+en barres par secteur — côte à côte, jamais superposées. L'état vit dans l'URL
+(`exploration.html#x=saisons&m=65&c=2023-2024,2024-2025&f=coeur&k=ge3&t=haute&d=barres`).
+
+- **Altitude** : chaque rose des pentes et chaque jeu de situations porte l'étiquette « non
+  localisée en altitude » (T9) ; il n'y a pas de matrice altitude × orientation. Le vent, lui, a
+  une altitude réelle : rose des vents et croisement se lisent par tranche, une à la fois.
+- **Situations** : seulement depuis la saison qui en porte ; une saison antérieure l'écrit au lieu
+  d'afficher un zéro.
+- **Comparer des saisons** n'est permis que sur la fenêtre `coeur` ; le refus vient de
+  `exploration.refus`, qui délègue à `risque.fenetre_comparable`. Une saison non comparable reste
+  affichable, étiquetée avec son motif et en pointillé.
+- Chaque graphe se résume à des lignes {secteur, jours, jours couverts} : roses et barres les
+  dessinent, un export les reprendrait telles quelles.

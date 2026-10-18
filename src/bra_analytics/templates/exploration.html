@@ -1,0 +1,475 @@
+<title>Exploration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --page:#eef0f3; --surface:#ffffff; --surface-2:#f6f8fa;
+  --ink:#10141a; --ink-2:#4d5765; --ink-muted:#828c9a;
+  --grid:#e4e7ec; --rule:#d7dce2;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1f9d7a; --s4:#8a5cc8;
+  --band:#9aa6b6; --hors:rgba(130,140,154,.16); --manque:#c2453a;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --page:#0b0e13; --surface:#161a21; --surface-2:#1c212a;
+    --ink:#f2f4f7; --ink-2:#aab4c2; --ink-muted:#7b8593;
+    --grid:#242a33; --rule:#2f3742;
+    --s1:#3987e5; --s2:#d95926; --s3:#2fb58f; --s4:#a47ae0;
+    --band:#5d6978; --hors:rgba(150,160,175,.14); --manque:#e0695e;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page:#0b0e13; --surface:#161a21; --surface-2:#1c212a;
+  --ink:#f2f4f7; --ink-2:#aab4c2; --ink-muted:#7b8593;
+  --grid:#242a33; --rule:#2f3742;
+  --s1:#3987e5; --s2:#d95926; --s3:#2fb58f; --s4:#a47ae0;
+  --band:#5d6978; --hors:rgba(150,160,175,.14); --manque:#e0695e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 72px}
+header{padding:36px 0 18px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 12px}
+h1{font-size:clamp(26px,4vw,40px);font-weight:600;letter-spacing:-.022em;line-height:1.1;margin:0}
+h1 small{display:block;font-size:.5em;font-weight:500;color:var(--ink-2);letter-spacing:0;margin-top:6px}
+.bar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px 0;margin-bottom:18px;background:var(--page);border-bottom:1px solid var(--rule)}
+.bar label,.lab{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted)}
+select,.toggle{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:7px 11px;cursor:pointer}
+.toggle[aria-pressed="true"]{background:var(--s1);border-color:var(--s1);color:#fff}
+:is(select,.toggle,.puce button):focus-visible{outline:2px solid var(--s1);outline-offset:2px}
+select:disabled{opacity:.5;cursor:not-allowed}
+option:disabled{color:var(--ink-muted)}
+.seg{display:inline-flex}
+.seg .toggle{border-radius:0;margin-left:-1px}
+.seg .toggle:first-child{border-radius:6px 0 0 6px;margin-left:0}
+.seg .toggle:last-child{border-radius:0 6px 6px 0}
+.spacer{flex:1 1 auto}
+.chk{font-size:13px;color:var(--ink-2);display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.puces{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}
+.puce{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);border-left-width:4px;border-radius:6px;background:var(--surface);padding:3px 4px 3px 9px;font-size:13px}
+.puce button{border:0;background:none;color:var(--ink-muted);cursor:pointer;font-size:16px;line-height:1;padding:2px 5px;border-radius:4px}
+.puce button:hover{color:var(--ink)}
+.plafond{font-size:12px;color:var(--ink-muted)}
+.alerte{border-left:3px solid var(--manque);padding:8px 0 8px 12px;background:var(--surface);margin:0 0 14px;font-size:13.5px;color:var(--ink-2)}
+.alerte b{color:var(--ink)}
+.alerte:empty{display:none}
+.panel{padding:18px 0 6px;border-top:1px solid var(--rule)}
+h2{font-size:17px;font-weight:600;letter-spacing:-.012em;margin:0}
+.sous{margin:2px 0 8px;color:var(--ink-2);font-size:13px;max-width:100ch}
+.sous b{color:var(--ink)}
+.phrase{margin:6px 0 10px;font-size:15px;max-width:100ch}
+.cov{margin:2px 0 0;font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+.cov b{color:var(--ink);font-weight:500}
+.cov .trou{color:var(--manque)}
+.plot svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--sans)}
+.tick{font-family:var(--mono);font-size:10.5px;fill:var(--ink-muted)}
+.etiq{font-size:12.5px;fill:var(--ink)}
+.etiq.nc{fill:var(--ink-muted)}
+.val{font-family:var(--mono);font-size:11.5px;fill:var(--ink-2)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0 0;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:16px;height:3px;border-radius:1px;display:inline-block}
+.sw.box{height:10px;border-radius:2px}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:8px 0 6px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+th,td{padding:7px 10px;border-bottom:1px solid var(--grid);text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-muted);font-weight:500;background:var(--surface-2)}
+tr.nc td{color:var(--ink-muted)}
+tr.sel td:first-child{box-shadow:inset 4px 0 0 var(--s1)}
+td small{display:block;color:var(--ink-muted);font-size:11.5px;text-align:left;white-space:normal;max-width:46ch}
+.badge{display:inline-block;font-family:var(--mono);font-size:10.5px;border:1px solid var(--manque);color:var(--manque);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:1px}
+.hint{font-size:12px;color:var(--ink-2)}
+.hint b{color:var(--ink)}
+.tablewrap{overflow-x:auto}
+#tip{position:fixed;z-index:60;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:7px;padding:8px 10px;font-size:12.5px;line-height:1.45;box-shadow:0 6px 22px rgba(0,0,0,.14);max-width:280px}
+footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:var(--ink-muted);font-size:12.5px;display:flex;flex-wrap:wrap;gap:6px 26px}
+.notes{font-size:12.5px;color:var(--ink-2);max-width:100ch;margin:22px 0 0}
+.notes li{margin:3px 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin:8px 0 6px}
+.carte{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:10px 12px 8px}
+.carte h3{font-size:14px;font-weight:600;margin:0 0 2px;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.carte svg{display:block;width:100%;height:auto}
+.carte .cov{margin-top:4px}
+.alt{display:inline-block;font-family:var(--mono);font-size:10.5px;border:1px solid var(--ink-muted);color:var(--ink-2);border-radius:4px;padding:0 5px;font-weight:400;vertical-align:2px}
+.carte.nc .wedge,.carte.nc .barre{stroke-dasharray:4 3}
+.vide{color:var(--ink-muted);font-size:13px;margin:18px 0}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Météo-France · Bulletins d'estimation du risque d'avalanche</p>
+  <h1 id="titre">Exploration</h1>
+</header>
+
+<div class="bar">
+  <label>Comparer</label>
+  <span class="seg" role="group" aria-label="Entités comparées">
+    <button class="toggle" id="mode-saisons">Des saisons</button>
+    <button class="toggle" id="mode-massifs">Des massifs</button>
+  </span>
+  <span id="zone-massif"><label for="sm">Massif</label> <select id="sm"></select></span>
+  <span id="zone-saison"><label for="ss">Saison</label> <select id="ss"></select></span>
+  <span id="zone-choix"><span class="lab">Saisons</span> <span class="puces" id="puces-saisons"></span> <select id="ajout-saison" aria-label="Ajouter une saison"></select></span>
+  <span id="zone-massifs"><span class="lab">Massifs</span> <span class="puces" id="puces-massifs"></span> <select id="ajout-massif" aria-label="Ajouter un massif"></select></span>
+  <span class="spacer"></span>
+  <label for="sf">Fenêtre</label><select id="sf"></select>
+  <label for="st">Tranche de vent</label><select id="st"></select>
+  <span class="seg" role="group" aria-label="Affichage">
+    <button class="toggle" id="aff-rose">Roses</button>
+    <button class="toggle" id="aff-barres">Barres</button>
+  </span>
+</div>
+
+<div class="alerte" id="alerte"></div>
+
+<section class="panel" id="p-pentes">
+  <h2>Rose des pentes <span class="alt" id="alt-pentes"></span></h2>
+  <p class="sous" id="sous-pentes"></p>
+  <div class="ctl"><label class="lab" for="sk">Jours retenus</label><select id="sk"></select></div>
+  <div class="grille" id="g-pentes"></div>
+</section>
+
+<section class="panel" id="p-vent">
+  <h2>Rose des vents</h2>
+  <p class="sous" id="sous-vent"></p>
+  <div class="grille" id="g-vent"></div>
+</section>
+
+<section class="panel" id="p-croise">
+  <h2>Vent × orientation des pentes</h2>
+  <p class="sous" id="sous-croise"></p>
+  <div class="grille" id="g-croise"></div>
+</section>
+
+<section class="panel" id="p-sit">
+  <h2>Situations avalancheuses typiques <span class="alt" id="alt-sit"></span></h2>
+  <p class="sous" id="sous-sit"></p>
+  <div class="grille" id="g-sit"></div>
+</section>
+
+<ul class="notes" id="notes"></ul>
+
+<footer>
+  <span id="attrib"></span>
+  <span id="gen"></span>
+  <span>Page générée par <code>bra exploration</code></span>
+</footer>
+</div>
+
+<script>
+__COMMUN__
+</script>
+<script>
+const D = __DONNEES__;
+
+const FEN = new Map(D.fenetres.map(f => [f.nom, f]));
+const SAISON = new Map(D.saisons.map(s => [s.nom, s]));
+const MASSIF = new Map(D.massifs.map(m => [m.id, m]));
+const TRANCHE = new Map(D.tranches.map(t => [t.nom, t]));
+const COND = new Map(D.conditions.map(c => [c.cle, c]));
+const COULEURS = ["var(--s1)", "var(--s2)", "var(--s3)", "var(--s4)"];
+const MAX = D.max_courbes;
+const O = D.orientations;
+const libFen = f => f.nom === D.saison_complete ? "saison entière" : f.nom;
+const pct = v => v == null ? "—" : Math.round(v * 100) + " %";
+const comparables = m => MASSIF.get(m).saisons.filter(s => SAISON.get(s).comparable);
+
+/* ---------- etat, porte par l'URL ---------- */
+const etat = { x: "saisons", m: null, s: null, c: [], n: [], f: D.fenetre_defaut, k: "toutes", t: null, d: "rose" };
+function lireUrl() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  etat.x = p.get("x") === "massifs" ? "massifs" : "saisons";
+  const m = +p.get("m");
+  etat.m = MASSIF.has(m) ? m : (MASSIF.has(65) ? 65 : D.massifs[0].id);
+  const saisons = MASSIF.get(etat.m).saisons;
+  etat.s = saisons.includes(p.get("s")) ? p.get("s") : (comparables(etat.m).slice(-1)[0] || saisons[saisons.length - 1]);
+  const c = (p.get("c") || "").split(",").filter(s => saisons.includes(s));
+  etat.c = (c.length ? c : comparables(etat.m).slice(-2)).slice(0, MAX);
+  const n = (p.get("n") || "").split(",").map(Number).filter(id => D.roses[id]?.[etat.s]);
+  etat.n = (n.length ? n : defautMassifs()).slice(0, MAX);
+  etat.f = FEN.has(p.get("f")) ? p.get("f") : D.fenetre_defaut;
+  etat.k = COND.has(p.get("k")) ? p.get("k") : "toutes";
+  etat.t = TRANCHE.has(p.get("t")) ? p.get("t") : D.tranches[D.tranches.length - 1].nom;
+  etat.d = p.get("d") === "barres" ? "barres" : "rose";
+}
+/* Massifs de la meme zone que le massif lu et diffuses la saison lue : un point de depart lisible. */
+function defautMassifs() {
+  const zone = MASSIF.get(etat.m).zone;
+  const memes = D.massifs.filter(x => x.zone === zone && D.roses[x.id]?.[etat.s]).map(x => x.id);
+  return [etat.m, ...memes.filter(id => id !== etat.m)].filter(id => D.roses[id]?.[etat.s]).slice(0, 3);
+}
+function ecrireUrl() {
+  const p = new URLSearchParams({ x: etat.x, m: etat.m, s: etat.s, c: etat.c.join(","), n: etat.n.join(","), f: etat.f, k: etat.k, t: etat.t, d: etat.d });
+  history.replaceState(null, "", "#" + p);
+}
+
+/* ---------- entites comparees ---------- */
+function entites() {
+  const liste = etat.x === "saisons"
+    ? etat.c.map(s => ({ mid: etat.m, saison: s, nom: s }))
+    : etat.n.map(id => ({ mid: id, saison: etat.s, nom: MASSIF.get(id).nom }));
+  return liste.map((en, k) => ({ ...en, couleur: COULEURS[k], comparable: SAISON.get(en.saison).comparable, motif: SAISON.get(en.saison).motif }));
+}
+const casier = (en, bloc) => D[bloc]?.[en.mid]?.[en.saison]?.[etat.f];
+
+/* ---------- lignes de donnees : une par secteur, en jours ----------
+   Chaque graphe se resume a des lignes {etiquette, jours, couverts} : c'est ce que dessinent
+   les roses ET les barres, et ce qu'un export reprendrait tel quel. */
+function lignesPentes(en) {
+  const c = casier(en, "roses");
+  if (!c) return null;
+  const suf = etat.k === "toutes" ? "" : etat.k.replace("ge", "");
+  const sig = c["s" + suf], couv = c["c" + suf];
+  return { couverts: couv, lignes: O.map((o, i) => ({ etiquette: o, jours: sig[i], couverts: couv })) };
+}
+function lignesVent(en) {
+  const c = casier(en, "vent")?.[etat.t];
+  if (!c) return null;
+  const total = c.reduce((a, x) => a + x[0], 0);
+  return { couverts: total, lignes: O.map((o, i) => ({ etiquette: o, jours: c[i][0], couverts: total })) };
+}
+function lignesCroisement(en) {
+  const c = casier(en, "vent")?.[etat.t];
+  if (!c) return null;
+  const total = c.reduce((a, x) => a + x[0], 0);
+  return { couverts: total, lignes: O.map((o, i) => ({ etiquette: o, jours: c[i][1], couverts: c[i][0] })) };
+}
+
+/* ---------- dessin ---------- */
+const frac = l => l.couverts ? l.jours / l.couverts : null;
+function roseSvg(lignes, couleur) {
+  const S = 240, cx = S / 2, cy = S / 2, R = 78;
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${S} ${S}`);
+  svg.setAttribute("role", "img");
+  const pt = (a, r) => [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+  for (const g of [0.25, 0.5, 0.75, 1]) {
+    el("circle", { cx, cy, r: R * g, fill: "none", stroke: "var(--grid)" }, svg);
+    if (g === 0.5 || g === 1) el("text", { x: cx + 3, y: cy - R * g + 10, class: "tick" }, svg).textContent = pct(g);
+  }
+  lignes.forEach((l, i) => {
+    const a = i * Math.PI / 4, w = Math.PI / 4 * 0.42;
+    const f = frac(l), r = R * (f ?? 0);
+    const [x1, y1] = pt(a - w, r), [x2, y2] = pt(a + w, r);
+    const p = el("path", {
+      d: `M${cx} ${cy}L${x1.toFixed(1)} ${y1.toFixed(1)}A${r.toFixed(1)} ${r.toFixed(1)} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}Z`,
+      fill: couleur, "fill-opacity": 0.5, stroke: couleur, "stroke-width": 1.5, class: "wedge",
+      "data-secteur": l.etiquette, "data-jours": l.jours, "data-couverts": l.couverts,
+    }, svg);
+    el("title", {}, p).textContent = `${l.etiquette} : ${l.jours} jours sur ${l.couverts} (${pct(f)})`;
+    const [tx, ty] = pt(a, R + 14);
+    el("text", { x: tx, y: ty + 4, "text-anchor": "middle", class: "etiq" }, svg).textContent = l.etiquette;
+  });
+  return svg;
+}
+function barresSvg(lignes, couleur) {
+  const LB = 62, LARG = 330, H = 22, W = 420;
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${lignes.length * H + 4}`);
+  svg.setAttribute("role", "img");
+  lignes.forEach((l, i) => {
+    const y = i * H + 2, f = frac(l);
+    el("text", { x: LB - 6, y: y + 14, "text-anchor": "end", class: "etiq" }, svg).textContent = l.etiquette;
+    el("rect", { x: LB, y: y + 3, width: LARG - LB, height: 14, fill: "var(--surface-2)" }, svg);
+    const b = el("rect", {
+      x: LB, y: y + 3, width: Math.max(0, (LARG - LB) * (f ?? 0)), height: 14, fill: couleur, "fill-opacity": 0.6,
+      stroke: couleur, class: "barre", "data-secteur": l.etiquette, "data-jours": l.jours, "data-couverts": l.couverts,
+    }, svg);
+    el("title", {}, b).textContent = `${l.etiquette} : ${l.jours} jours sur ${l.couverts} (${pct(f)})`;
+    el("text", { x: LARG + 6, y: y + 14, class: "val" }, svg).textContent = `${pct(f)} · ${l.jours}/${l.couverts}`;
+  });
+  return svg;
+}
+function enTete(en, alt) {
+  const div = document.createElement("div");
+  div.className = "carte" + (en.comparable ? "" : " nc");
+  div.dataset.entite = en.nom;
+  const badge = en.comparable ? "" : `<span class="badge" title="${esc(en.motif || "")}">non comparable</span>`;
+  div.innerHTML = `<h3 style="color:${en.couleur}"><span style="color:var(--ink)">${esc(en.nom)}</span>${badge}${alt ? `<span class="alt">${esc(D.altitude)}</span>` : ""}</h3>`;
+  return div;
+}
+function carte(en, donnees, { forme, vide, alt }) {
+  const div = enTete(en, alt);
+  if (!donnees || !donnees.couverts) {
+    div.insertAdjacentHTML("beforeend", `<p class="vide">${vide}</p>`);
+  } else {
+    div.appendChild(forme === "rose" ? roseSvg(donnees.lignes, en.couleur) : barresSvg(donnees.lignes, en.couleur));
+    div.insertAdjacentHTML("beforeend", `<p class="cov"><b>${donnees.couverts}</b> jours couverts${en.motif ? ` · ${esc(en.motif)}` : ""}</p>`);
+  }
+  return div;
+}
+function grille(id, liste, lignes, opts) {
+  const g = $(id);
+  g.innerHTML = "";
+  for (const en of liste) g.appendChild(carte(en, lignes(en), opts));
+}
+
+/* Situations : barres groupees, dominante puis secondaire, un code par ligne. */
+function carteSituations(en) {
+  const c = casier(en, "situations");
+  const div = enTete(en, true);
+  if (!c) {
+    const avant = D.situations_depuis && en.saison < D.situations_depuis;
+    div.insertAdjacentHTML("beforeend", `<p class="vide" data-restriction="${avant ? 1 : 0}">${avant
+      ? `Aucune situation typique publiée : elles n'existent qu'à partir de la saison ${esc(D.situations_depuis)}. Ce n'est pas un zéro.`
+      : "Aucun jour couvert avec situation typique."}</p>`);
+    return div;
+  }
+  const codes = Object.keys(D.libelles_sat).map(Number);
+  const jours = (rang, code) => c.l.filter(x => x[0] === rang && x[1] === code).reduce((a, x) => a + x[2], 0);
+  const LB = 215, LARG = 365, H = 36, W = 480;
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${codes.length * H + 4}`);
+  svg.setAttribute("role", "img");
+  codes.forEach((code, i) => {
+    const y = i * H + 2;
+    el("text", { x: LB - 6, y: y + 20, "text-anchor": "end", class: "etiq" }, svg).textContent = D.libelles_sat[code] + (code === D.code_sans_mecanisme ? " *" : "");
+    [[1, "dominante", 0.65], [2, "secondaire", 0.3]].forEach(([rang, role, opa], k) => {
+      const j = jours(rang, code), f = c.c ? j / c.c : 0;
+      const b = el("rect", {
+        x: LB, y: y + 3 + k * 15, width: Math.max(0, (LARG - LB) * f), height: 12, fill: en.couleur, "fill-opacity": opa, stroke: en.couleur, class: "barre",
+        "data-code": code, "data-role": role, "data-jours": j, "data-couverts": c.c,
+      }, svg);
+      el("title", {}, b).textContent = `${D.libelles_sat[code]}, ${role} : ${j} jours sur ${c.c} (${pct(f)})`;
+      el("text", { x: LARG + 6, y: y + 13 + k * 15, class: "val" }, svg).textContent = `${role === "dominante" ? "D" : "S"} ${pct(f)} · ${j}`;
+    });
+  });
+  div.appendChild(svg);
+  div.insertAdjacentHTML("beforeend", `<p class="cov"><b>${c.c}</b> jours avec situation dominante · D dominante, S secondaire, parts de ces jours · * ${esc(D.libelles_sat[D.code_sans_mecanisme])} : pas un mécanisme d'avalanche</p>`);
+  return div;
+}
+
+/* ---------- assemblage ---------- */
+function refusComparaison(liste) {
+  return etat.x === "saisons" && liste.length >= 2 ? D.refus[etat.f] : null;
+}
+function remplirSelecteurs() {
+  $("sm").innerHTML = D.massifs.map(m => `<option value="${m.id}">${esc(m.nom)}${m.departement ? " (" + esc(m.departement) + ")" : ""}</option>`).join("");
+  $("sk").innerHTML = D.conditions.map(c => `<option value="${c.cle}">${esc(c.libelle)}</option>`).join("");
+  // Une fenetre refusee reste offerte : le refus s'affiche, il ne se devine pas.
+  $("sf").innerHTML = D.fenetres.map(f => `<option value="${f.nom}">${esc(f.nom === D.saison_complete ? "saison entière" : f.nom + " · " + f.libelle)}</option>`).join("");
+  $("st").innerHTML = D.tranches.map(t => `<option value="${t.nom}">${esc(t.nom)} · ${esc(t.libelle)}</option>`).join("");
+}
+function puces(conteneur, ids, libelle, retirer) {
+  $(conteneur).innerHTML = ids.map((id, k) => `<span class="puce" style="border-left-color:${COULEURS[k]}">${esc(libelle(id))}<button type="button" data-id="${esc(id)}" aria-label="Retirer ${esc(libelle(id))}">×</button></span>`).join("");
+  $(conteneur).querySelectorAll("button").forEach(b => b.addEventListener("click", () => retirer(b.dataset.id)));
+}
+function ajout(select, options, pris, ajouter) {
+  const plein = pris.length >= MAX;
+  select.innerHTML = `<option value="">${plein ? `maximum ${MAX} entités` : "+ ajouter"}</option>`
+    + options.filter(o => !pris.map(String).includes(String(o.id))).map(o => `<option value="${esc(o.id)}">${esc(o.libelle)}</option>`).join("");
+  select.disabled = plein;
+  select.onchange = () => { if (select.value) ajouter(select.value); };
+}
+function dessine() {
+  const f = FEN.get(etat.f);
+  const saisons = MASSIF.get(etat.m).saisons;
+  $("sm").value = etat.m;
+  $("ss").innerHTML = (etat.x === "massifs" ? D.saisons.map(s => s.nom) : saisons)
+    .map(s => `<option value="${s}">${s}${SAISON.get(s).comparable ? "" : " (non comparable)"}</option>`).join("");
+  $("ss").value = etat.s;
+  $("sk").value = etat.k; $("sf").value = etat.f; $("st").value = etat.t;
+  $("mode-saisons").setAttribute("aria-pressed", etat.x === "saisons");
+  $("mode-massifs").setAttribute("aria-pressed", etat.x === "massifs");
+  $("aff-rose").setAttribute("aria-pressed", etat.d === "rose");
+  $("aff-barres").setAttribute("aria-pressed", etat.d === "barres");
+  $("zone-massif").style.display = etat.x === "massifs" ? "none" : "";
+  $("zone-saison").style.display = etat.x === "saisons" ? "none" : "";
+  $("zone-choix").style.display = etat.x === "saisons" ? "" : "none";
+  $("zone-massifs").style.display = etat.x === "massifs" ? "" : "none";
+  puces("puces-saisons", etat.c, s => s + (SAISON.get(s).comparable ? "" : " (non comparable)"), s => change("c", etat.c.filter(x => x !== s)));
+  ajout($("ajout-saison"), saisons.map(s => ({ id: s, libelle: s + (SAISON.get(s).comparable ? "" : " (non comparable)") })), etat.c, s => change("c", [...etat.c, s]));
+  puces("puces-massifs", etat.n, id => MASSIF.get(+id).nom, id => change("n", etat.n.filter(x => x !== +id)));
+  ajout($("ajout-massif"), D.massifs.filter(m => D.roses[m.id]?.[etat.s]).map(m => ({ id: m.id, libelle: m.nom })), etat.n, id => change("n", [...etat.n, +id]));
+
+  const liste = entites();
+  $("titre").innerHTML = etat.x === "massifs"
+    ? `${esc(liste.map(en => en.nom).join(", "))}<small>saison ${esc(etat.s)}</small>`
+    : `${esc(MASSIF.get(etat.m).nom)}<small>${esc(etat.c.join(" · "))}</small>`;
+  const refus = refusComparaison(liste);
+  $("alerte").innerHTML = refus ? `<b>Comparaison de saisons refusée sur la fenêtre ${esc(libFen(f))}.</b> ${esc(refus)} Choisissez la fenêtre <b>${esc(D.fenetre_defaut)}</b>, ou une seule saison.` : "";
+  const cond = COND.get(etat.k), tr = TRANCHE.get(etat.t);
+  const fenTxt = `fenêtre ${libFen(f)}${f.debut ? " (" + f.libelle + ")" : ""}`;
+  $("alt-pentes").textContent = D.altitude;
+  $("alt-sit").textContent = D.altitude;
+  $("sous-pentes").innerHTML = `Part des jours où chaque orientation est signalée dans la rose du bulletin — <b>${esc(D.altitude)}</b> : le bulletin ne dit pas à quelle altitude elle s'applique. `
+    + `${esc(cond.libelle)}, ${esc(fenTxt)}. Même échelle (0 à 100 %) pour toutes les entités, jamais superposées.`;
+  $("sous-vent").innerHTML = `Direction du vent ${esc(D.origine_vent)} le plus fort de la tranche <b>${esc(tr.nom)}</b> (${esc(tr.libelle)}), part des jours à vent directionnel ; les directions variables n'y figurent pas. ${esc(fenTxt)}.`;
+  $("sous-croise").innerHTML = `Pour chaque direction de vent de la tranche <b>${esc(tr.nom)}</b> (${esc(tr.libelle)}), part des jours où la pente qu'il charge — celle qui lui est opposée — est signalée dans la rose (<b>${esc(D.altitude)}</b>). `
+    + `Une seule tranche à la fois : le croisement n'est jamais lu toutes tranches confondues. ${esc(fenTxt)}.`;
+  $("sous-sit").innerHTML = `Situation dominante (D) et secondaire (S) du bulletin, en part des jours avec situation dominante — <b>${esc(D.altitude)}</b>. `
+    + `Disponibles <b>depuis la saison ${esc(D.situations_depuis)}</b> seulement ; libellés inférés du descriptif (glossaire 2.7). ${esc(fenTxt)}.`;
+
+  if (refus) {
+    for (const id of ["g-pentes", "g-vent", "g-croise", "g-sit"]) $(id).innerHTML = "";
+  } else {
+    const sansVent = `Aucun vent directionnel publié pour la tranche ${tr.nom} (${tr.libelle}).`;
+    grille("g-pentes", liste, lignesPentes, { forme: etat.d, alt: true, vide: "Aucun jour couvert sur cette fenêtre." });
+    if (D.vent) {
+      grille("g-vent", liste, lignesVent, { forme: etat.d, alt: false, vide: sansVent });
+      grille("g-croise", liste, lignesCroisement, { forme: "barres", alt: true, vide: sansVent });
+    } else {
+      for (const id of ["g-vent", "g-croise"]) $(id).innerHTML = `<p class="vide">Cet entrepôt n'a pas de bloc météo : vent indisponible.</p>`;
+    }
+    $("g-sit").innerHTML = "";
+    for (const en of liste) $("g-sit").appendChild(carteSituations(en));
+  }
+  notes();
+  const m = MASSIF.get(etat.x === "massifs" ? etat.n[0] : etat.m);
+  $("attrib").textContent = `${D.attribution}, archive arrêtée au ${dateFr(D.archive_jusqu_au)}`
+    + (m && m.dernier_bulletin && m.dernier_bulletin !== D.archive_jusqu_au ? ` · dernier bulletin de ${m.nom} : ${dateFr(m.dernier_bulletin)}` : "");
+  document.title = `Exploration — ${m ? m.nom : ""}`;
+  ecrireUrl();
+}
+function notes() {
+  const n = [
+    `Chaque fréquence est un nombre de jours rapporté aux jours couverts avec un indice de risque ; les deux nombres sont affichés. Une fréquence n'est pas une intensité.`,
+    `La rose du bulletin signale souvent beaucoup de secteurs à la fois : un secteur signalé presque tous les jours discrimine peu. Les roses se comparent côte à côte, jamais superposées.`,
+    `Comparer des saisons n'est permis que sur la fenêtre ${D.fenetre_defaut} : avant ${D.fin_sentinelle}, la sentinelle d'encodage des jours sans enneigement fait varier le dénominateur.`,
+    `Le vent est la prévision du bulletin (${D.origine_vent}) ; son altitude est réelle et se lit par tranche. Une tranche sans vent publié reste vide, elle n'est pas complétée.`,
+  ];
+  $("notes").innerHTML = n.map(t => `<li>${esc(t)}</li>`).join("");
+}
+function change(cle, valeur) {
+  etat[cle] = valeur;
+  if (cle === "m") {
+    const s = MASSIF.get(etat.m).saisons;
+    if (!s.includes(etat.s)) etat.s = comparables(etat.m).slice(-1)[0] || s[s.length - 1];
+    etat.c = etat.c.filter(x => s.includes(x));
+    if (!etat.c.length) etat.c = comparables(etat.m).slice(-2);
+  }
+  if (cle === "s") {
+    etat.n = etat.n.filter(id => D.roses[id]?.[etat.s]);
+    if (etat.x === "massifs" && !etat.n.length) etat.n = defautMassifs();
+  }
+  dessine();
+}
+$("mode-saisons").addEventListener("click", () => change("x", "saisons"));
+$("mode-massifs").addEventListener("click", () => {
+  if (!D.roses[etat.m]?.[etat.s]) etat.s = comparables(etat.m).slice(-1)[0];
+  if (!etat.n.length) etat.n = defautMassifs();
+  change("x", "massifs");
+});
+$("aff-rose").addEventListener("click", () => change("d", "rose"));
+$("aff-barres").addEventListener("click", () => change("d", "barres"));
+$("sm").addEventListener("change", e => change("m", +e.target.value));
+$("ss").addEventListener("change", e => change("s", e.target.value));
+$("sk").addEventListener("change", e => change("k", e.target.value));
+$("sf").addEventListener("change", e => change("f", e.target.value));
+$("st").addEventListener("change", e => change("t", e.target.value));
+addEventListener("hashchange", () => { lireUrl(); dessine(); });
+
+$("gen").textContent = `Page générée le ${dateFr(D.genere)}`;
+remplirSelecteurs();
+lireUrl();
+dessine();
+</script>
