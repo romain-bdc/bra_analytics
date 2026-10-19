@@ -275,7 +275,7 @@ function roseSvg(lignes, couleur) {
   return svg;
 }
 function barresSvg(lignes, couleur) {
-  const LB = 62, LARG = 330, H = 22, W = 420;
+  const LB = 62, LARG = 330, H = 22, W = 470;
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${lignes.length * H + 4}`);
   svg.setAttribute("role", "img");
@@ -300,12 +300,19 @@ function enTete(en, alt) {
   div.innerHTML = `<h3 style="color:${en.couleur}"><span style="color:var(--ink)">${esc(en.nom)}</span>${badge}${alt ? `<span class="alt">${esc(D.altitude)}</span>` : ""}</h3>`;
   return div;
 }
+/* Le graphe vit dans un .plot : la barre d'export s'insere apres lui, dans la carte, et non comme cellule de la grille. */
+function enveloppe(svg) {
+  const d = document.createElement("div");
+  d.className = "plot";
+  d.appendChild(svg);
+  return d;
+}
 function carte(en, donnees, { forme, vide, alt }) {
   const div = enTete(en, alt);
   if (!donnees || !donnees.couverts) {
     div.insertAdjacentHTML("beforeend", `<p class="vide">${vide}</p>`);
   } else {
-    div.appendChild(forme === "rose" ? roseSvg(donnees.lignes, en.couleur) : barresSvg(donnees.lignes, en.couleur));
+    div.appendChild(enveloppe(forme === "rose" ? roseSvg(donnees.lignes, en.couleur) : barresSvg(donnees.lignes, en.couleur)));
     div.insertAdjacentHTML("beforeend", `<p class="cov"><b>${donnees.couverts}</b> jours couverts${en.motif ? ` · ${esc(en.motif)}` : ""}</p>`);
   }
   return div;
@@ -359,7 +366,7 @@ function carteSituations(en) {
       el("text", { x: LARG + 6, y: y + 13 + k * 15, class: "val" }, svg).textContent = `${role === "dominante" ? "D" : "S"} ${pct(f)} · ${j}`;
     });
   });
-  div.appendChild(svg);
+  div.appendChild(enveloppe(svg));
   PARTAGE.enregistrer(svg, {
     nom: `situations-${en.mid}-${en.saison}-${etat.f}`,
     titre: `Situations avalancheuses typiques — ${en.nom}, fenêtre ${etat.f}`,
