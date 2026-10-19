@@ -38,7 +38,7 @@ import polars as pl
 from . import partage
 from .comparaison import MAX_COURBES, SEUIL_HAUT, SEUIL_TRES_HAUT, _fenetres_payload
 from .dashboard import injecter
-from .fenetres import DEFAUT, FENETRES, FIN_SENTINELLE, MOIS_FR, SAISON_COMPLETE
+from .fenetres import DEFAUT, FIN_SENTINELLE, MOIS_FR, SAISON_COMPLETE
 from .fiche import archive_et_saisons, fiche_massifs, saisons_payload
 from .metriques import pentes, risque
 from .metriques.risque import ComparaisonRefusee, _frame

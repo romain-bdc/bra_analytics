@@ -355,3 +355,14 @@ def test_csv_de_l_exploration_reprend_les_comptes_traces_et_garde_l_etat_etrange
     assert len(lignes) == len(pages["exploration"][1]["orientations"]) == 8
     # Les liens de navigation reportent le fragment complet, cle etrangere comprise.
     assert all("zz=garde" in h for h in dom.liens.values())
+
+
+@chromium
+def test_l_etat_de_la_carte_et_le_mode_de_comparaison_traversent_les_ecrans(pages, tmp_path) -> None:
+    """Revue T15 : `d=1` rouvre les tableaux de la carte ; `x=choix` survit a un passage par l'exploration."""
+    (tmp_path / "c").mkdir()
+    carte_dom = _rendre(injecter(pages["carte"][0], pages["carte"][1]), "mc=risque_moyen&d=1", tmp_path / "c")
+    assert "Masquer" in carte_dom.texte["tbl"]
+    (tmp_path / "e").mkdir()
+    expl = _rendre(injecter(pages["exploration"][0], pages["exploration"][1]), f"x=choix&m={ASPE}", tmp_path / "e")
+    assert "x=choix" in expl.liens["comparaison"]

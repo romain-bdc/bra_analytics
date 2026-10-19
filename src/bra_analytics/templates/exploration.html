@@ -187,10 +187,12 @@ const pct = v => v == null ? "—" : Math.round(v * 100) + " %";
 const comparables = m => MASSIF.get(m).saisons.filter(s => SAISON.get(s).comparable);
 
 /* ---------- etat, porte par l'URL ---------- */
+let xBrut = null;   // "saison" ou "choix" lu dans l'URL : rendu tel quel pour ne pas casser le mode de la comparaison
 const etat = { x: "saisons", m: null, s: null, c: [], n: [], f: D.fenetre_defaut, k: "toutes", t: null, d: "rose" };
 function lireUrl() {
   const p = PARTAGE.lire();
-  etat.x = p.get("x") === "massifs" ? "massifs" : "saisons";
+  xBrut = p.get("x");
+  etat.x = xBrut === "massifs" ? "massifs" : "saisons";
   const m = +p.get("m");
   etat.m = MASSIF.has(m) ? m : (MASSIF.has(65) ? 65 : D.massifs[0].id);
   const saisons = MASSIF.get(etat.m).saisons;
@@ -212,7 +214,7 @@ function defautMassifs() {
 }
 function ecrireUrl() {
   // q (condition) et g (rose ou barres) : k et d ont deja un autre sens sur la comparaison et le tableau de bord.
-  PARTAGE.ecrire({ x: etat.x, m: etat.m, s: etat.s, c: etat.c.join(","), n: etat.n.join(","), f: etat.f, q: etat.k, t: etat.t, g: etat.d });
+  PARTAGE.ecrire({ x: etat.x === "massifs" ? "massifs" : (xBrut === "choix" ? "choix" : "saison"), m: etat.m, s: etat.s, c: etat.c.join(","), n: etat.n.join(","), f: etat.f, q: etat.k, t: etat.t, g: etat.d });
 }
 
 /* ---------- entites comparees ---------- */

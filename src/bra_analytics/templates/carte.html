@@ -440,14 +440,20 @@ PARTAGE.demarrer({ ecran: "carte", ...D.partage });
 /* L'URL est ecrite avant la carte : l'en-tete de l'export cite le lien courant. */
 function dessine() { PARTAGE.ecrire({ mc: metrique }); textes(); carte(); table(); }
 sel.addEventListener("change", () => { metrique = sel.value; dessine(); });
-addEventListener("hashchange", () => { metrique = depuisUrl(); sel.value = metrique; dessine(); });
+addEventListener("hashchange", () => { metrique = depuisUrl(); sel.value = metrique; dessine(); tables(PARTAGE.lire().get("d") === "1"); });
 const bouton = document.getElementById("tbl");
-bouton.addEventListener("click", () => {
-  const on = bouton.getAttribute("aria-pressed") !== "true";
+/* Tableaux ouverts : cle `d=1`, comme sur le tableau de bord, pour qu'une URL collee rouvre le meme ecran. */
+function tables(on) {
   bouton.setAttribute("aria-pressed", String(on));
   bouton.textContent = on ? "Masquer les données" : "Voir les données";
   document.querySelectorAll(".tables").forEach(t => { t.hidden = !on; });
+}
+bouton.addEventListener("click", () => {
+  const on = bouton.getAttribute("aria-pressed") !== "true";
+  tables(on);
+  PARTAGE.ecrire({ d: on ? 1 : null });
 });
 tuiles();
 dessine();
+tables(PARTAGE.lire().get("d") === "1");
 </script>

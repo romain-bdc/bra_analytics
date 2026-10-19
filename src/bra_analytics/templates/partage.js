@@ -17,6 +17,7 @@
    pas, mais ne les efface pas) :
      m  massif_id           s  saison "2021-2022"        f  fenetre (nom, fenetres.py)
      t  tranche d'altitude  v  versant du vent (nord|sud)
+   x  mode de comparaison (saison|choix|massifs)   d  1 = tableaux de donnees ouverts
    Les cles propres a un ecran ne doivent pas reprendre une cle ci-dessus pour un
    autre sens. */
 const PARTAGE = (() => {
@@ -195,7 +196,7 @@ const PARTAGE = (() => {
       t.setAttribute("font-family", "system-ui, sans-serif"); t.setAttribute("opacity", op);
       t.textContent = s; ext.appendChild(t);
     };
-    texte(20, 15, (titre ? titre.textContent : (d && d.titre) || ""), 1);
+    texte(20, 15, ((d && d.titre) || (titre ? titre.textContent : "")), 1);
     ext.appendChild(copie);
     texte(H + 46, 11, pied, .7);
     if (attribution.contours) texte(H + 61, 11, attribution.contours, .7);
