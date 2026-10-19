@@ -293,6 +293,8 @@ présente sur les quatre écrans.
 
 **Dépend de** : T11 à T14.
 
+**Réalisée par** `partage.py` et `templates/partage.js` (marqueur `__PARTAGE__`, `dashboard.injecter`), branchés sur les cinq pages (carte, fiche, comparaison, exploration, tableau de bord Pyrénées). Critères vérifiés dans Chromium headless (`tests/test_partage.py`) : chaque graphe enregistre les valeurs qu'il vient de tracer pour son export CSV (trois lignes `#` d'attribution en tête) et PNG ; l'état vit dans le fragment d'URL, chaque écran conserve les clés des autres ; attribution et date d'archive sur chaque page, contours en plus sur la carte. Écarté pour l'instant : valeur par défaut de `t` propre à chaque écran, filtres de la fiche et de la carte (spec § 6), factorisation des payloads et des commandes CLI.
+
 ---
 
 ## Ce qui reste volontairement hors de cette liste
