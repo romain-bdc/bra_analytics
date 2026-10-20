@@ -199,7 +199,7 @@ SVG. Chaque massif porte **une valeur**, sans sélecteur de saison :
   hors de la rampe, pour ne jamais se lire comme un zéro.
 
 L'attribution des données (avec la date d'archive) et celle des contours (version du 15/02/2024)
-figurent sous la carte. `--fragment` omet doctype et `<html>`, comme pour `bra dashboard`.
+figurent sous la carte. `--fragment` omet doctype et `<html>`, comme pour les autres écrans.
 
 ## Sortie
 
@@ -410,14 +410,14 @@ uv run bra exploration                # écrit exploration.html à la racine (no
 ```
 
 Page HTML autonome (environ 0,4 Mo : comptes en jours de 36 massifs × 11 saisons × 3 fenêtres).
-Quatre blocs : rose des pentes, rose des vents, croisement vent × orientation et situations
-typiques, pour un à quatre massifs sur une saison ou une à quatre saisons d'un massif, en roses ou
+Trois blocs : rose des pentes, croisement vent × orientation et situations
+typiques (la rose des vents a été retirée), pour un à quatre massifs sur une saison ou une à quatre saisons d'un massif, en roses ou
 en barres par secteur — côte à côte, jamais superposées. L'état vit dans l'URL
 (`exploration.html#x=saisons&m=65&c=2023-2024,2024-2025&f=coeur&q=ge3&t=haute&g=barres`).
 
 - **Altitude** : chaque rose des pentes et chaque jeu de situations porte l'étiquette « non
   localisée en altitude » (T9) ; il n'y a pas de matrice altitude × orientation. Le vent, lui, a
-  une altitude réelle : rose des vents et croisement se lisent par tranche, une à la fois.
+  une altitude réelle : le croisement se lit par tranche, une à la fois.
 - **Situations** : seulement depuis la saison qui en porte ; une saison antérieure l'écrit au lieu
   d'afficher un zéro.
 - **Comparer des saisons** n'est permis que sur la fenêtre `coeur` ; le refus vient de
@@ -425,7 +425,7 @@ en barres par secteur — côte à côte, jamais superposées. L'état vit dans 
   affichable, étiquetée avec son motif et en pointillé.
 - Chaque graphe se résume à des lignes {secteur, jours, jours couverts} : roses et barres les
   dessinent, et l'export CSV de chaque graphe (T15) les reprend telles quelles. L'écran écrit `q` (condition
-sur le risque) et `g` (rose ou barres) : `k` et `d` ont un autre sens sur la comparaison et le tableau de bord.
+sur le risque) et `g` (rose ou barres) : `k` a un autre sens sur la comparaison, et `d=1` ouvre les tableaux de la carte.
 
 ### 11. Exports, URL partageable et attribution (T15)
 

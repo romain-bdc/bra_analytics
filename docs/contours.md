@@ -41,7 +41,7 @@ le montrer « non diffusé sur la période », pas l'effacer.
 - 2 710 → 1 983 sommets, 60 Ko → 36 Ko ;
 - seule la propriété `code` est conservée : les libellés viennent de `massifs.py`, qui fait foi.
 
-Ce fichier généré est **versionné, par exception** à la règle qui écarte `dashboard.html` :
+Ce fichier généré est **versionné, par exception** à la règle qui écarte les pages HTML générées :
 la page le charge sans réseau, et il ne dépend que du fichier d'origine — pas de l'entrepôt. Un
 test (`test_version_web_versionnee_a_jour`) vérifie qu'il reste exactement ce que
 `bra contours` produit : toute dérive fait échouer `pytest`.

@@ -62,7 +62,15 @@ const PARTAGE = (() => {
 .exports a,.exports button{font:inherit;color:var(--ink-2,#4d5765);background:none;border:1px solid var(--rule,#d7dce2);border-radius:5px;padding:1px 8px;text-decoration:none;cursor:pointer}
 .exports a:hover,.exports button:hover,.partage-nav a:hover,.partage-nav button:hover{color:var(--ink,#10141a)}
 :is(.exports a,.exports button,.partage-nav a,.partage-nav button):focus-visible{outline:2px solid var(--s1,#2a78d6);outline-offset:2px}
-.attribution a{color:inherit}`;
+.attribution a{color:inherit}
+details.plus{display:inline;font-size:inherit}
+details.plus>summary{display:inline;cursor:pointer;color:var(--ink-muted,#6b7480);font-size:.92em;margin-left:4px;list-style:none}
+details.plus>summary::-webkit-details-marker{display:none}
+details.plus>summary::before{content:"+ "}
+details.plus[open]>summary::before{content:"\u2212 "}
+details.plus[open]>.corps{display:block;margin-top:4px}
+details.plus.bloc{display:block}
+details.plus.bloc>summary{display:block;margin:0}`;
     document.head.appendChild(s);
   }
 
@@ -215,5 +223,11 @@ const PARTAGE = (() => {
     });
   }
 
-  return { demarrer, lire, ecrire, enregistrer, png, registre };
+  /* Texte replie : une phrase visible, le reste dans un « + details » (aucun texte supprime,
+     les exports et les tests le lisent toujours). `bloc` : le repli occupe sa propre ligne. */
+  function plus(detail, titre = "détails", bloc = false) {
+    return detail ? `<details class="plus${bloc ? " bloc" : ""}"><summary>${titre}</summary><span class="corps">${detail}</span></details>` : "";
+  }
+
+  return { demarrer, lire, ecrire, enregistrer, png, registre, plus };
 })();

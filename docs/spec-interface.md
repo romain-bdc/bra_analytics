@@ -32,7 +32,7 @@ cherche un chiffre ou un graphe partageable.
 | Méthodologie de comparaison inter-saisons | Fait, bornes mesurées | `fenetres.py`, glossaire § 8 |
 | Contrôles de cohérence | Fait, erreurs vs signaux | `bra check` |
 | Documentation des champs | Fait | `docs/glossaire.md` |
-| Page statique Pyrénées | Fait, 5 sections | `bra dashboard` |
+| Page statique Pyrénées | Retirée (remplacée par les quatre écrans) | — |
 | Couverture géographique complète | Fait : 36 massifs, 77 488 bulletins | `bra fetch`, T1 |
 | **Couche métriques** | **blocs risque (T6), enneigement (T7), météo (T8) et rose des pentes (T9) faits** ; score fait (T10) | `metriques/`, § 5 |
 | **Les quatre écrans** | **partiellement : la fiche existe en germe** | § 6 |
@@ -287,8 +287,8 @@ valeur par massif, sans sélecteur de saison. Le survol donne le nombre de jours
 nombre de jours de risque 4 ou 5. Un sélecteur permet de basculer sur une métrique simple
 (jours ≥ 3, maximum atteint, durée d'enneigement).
 
-**Fiche massif-saison.** La page centrale, et celle qui existe déjà en germe dans
-`bra dashboard` : ligne d'indicateurs clés en haut, série temporelle du risque sur fond des autres
+**Fiche massif-saison.** La page centrale, et celle qui prolongeait la
+première page statique Pyrénées (retirée) : ligne d'indicateurs clés en haut, série temporelle du risque sur fond des autres
 saisons avec bande médiane et interquartile, puis enneigement, ISO 0 et vent sur le même axe
 temporel aligné.
 
@@ -299,7 +299,7 @@ la vue partageable par excellence — celle qui produit la phrase « 2024-25 est
 la plus avalancheuse des dix dernières années en Haute-Bigorre ». Au-delà de quatre courbes
 superposées, c'est illisible : brider le sélecteur.
 
-**Exploration.** Rose des pentes (non localisée en altitude, § 5.4), rose des vents et croisement vent × orientation par tranche de vent. La matrice altitude × orientation n'existe pas : la rose n'a pas d'altitude.
+**Exploration.** Rose des pentes (non localisée en altitude, § 5.4) et croisement vent × orientation par tranche de vent. La matrice altitude × orientation n'existe pas : la rose n'a pas d'altitude.
 
 Tous reprennent le motif existant : un payload JSON construit en Python, inséré dans un gabarit
 via `__DONNEES__`, et tout le filtrage côté client. Pas de serveur, pas de framework.

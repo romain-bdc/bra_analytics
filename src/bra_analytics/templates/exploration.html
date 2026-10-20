@@ -150,7 +150,7 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
   <div class="grille" id="g-sit"></div>
 </section>
 
-<ul class="notes" id="notes"></ul>
+<div class="notes" id="notes"></div>
 
 <footer>
   <span id="attribution"></span>
@@ -422,12 +422,12 @@ function dessine() {
   const fenTxt = `fenêtre ${libFen(f)}${f.debut ? " (" + f.libelle + ")" : ""}`;
   $("alt-pentes").textContent = D.altitude;
   $("alt-sit").textContent = D.altitude;
-  $("sous-pentes").innerHTML = `Part des jours où chaque orientation est signalée dans la rose du bulletin — <b>${esc(D.altitude)}</b> : le bulletin ne dit pas à quelle altitude elle s'applique. `
-    + `${esc(cond.libelle)}, ${esc(fenTxt)}. Même échelle (0 à 100 %) pour toutes les entités, jamais superposées.`;
-  $("sous-croise").innerHTML = `Pour chaque direction de vent de la tranche <b>${esc(tr.nom)}</b> (${esc(tr.libelle)}), part des jours où la pente qu'il charge — celle qui lui est opposée — est signalée dans la rose (<b>${esc(D.altitude)}</b>). `
-    + `Une seule tranche à la fois : le croisement n'est jamais lu toutes tranches confondues. ${esc(fenTxt)}.`;
-  $("sous-sit").innerHTML = `Situation dominante (D) et secondaire (S) du bulletin, en part des jours avec situation dominante — <b>${esc(D.altitude)}</b>. `
-    + `Disponibles <b>depuis la saison ${esc(D.situations_depuis)}</b> seulement ; libellés inférés du descriptif (glossaire 2.7). ${esc(fenTxt)}.`;
+  $("sous-pentes").innerHTML = `Part des jours où chaque orientation est signalée dans la rose du bulletin (${esc(cond.libelle)}).`
+    + PARTAGE.plus(`<b>${esc(D.altitude)}</b> : le bulletin ne dit pas à quelle altitude la rose s'applique. ${esc(fenTxt)}. Même échelle (0 à 100 %) pour toutes les entités, jamais superposées.`);
+  $("sous-croise").innerHTML = `Pour chaque direction de vent de la tranche <b>${esc(tr.nom)}</b> (${esc(tr.libelle)}), part des jours où la pente qu'il charge est signalée dans la rose.`
+    + PARTAGE.plus(`La pente chargée est celle qui est opposée au vent (<b>${esc(D.altitude)}</b>). Une seule tranche à la fois : le croisement n'est jamais lu toutes tranches confondues. ${esc(fenTxt)}.`);
+  $("sous-sit").innerHTML = `Situation dominante (D) et secondaire (S) du bulletin, en part des jours avec situation dominante. Depuis la saison <b>${esc(D.situations_depuis)}</b> seulement.`
+    + PARTAGE.plus(`<b>${esc(D.altitude)}</b>. Libellés inférés du descriptif (glossaire 2.7). ${esc(fenTxt)}.`);
 
   if (refus) {
     for (const id of ["g-pentes", "g-croise", "g-sit"]) $(id).innerHTML = "";
@@ -454,7 +454,7 @@ function notes() {
     `Comparer des saisons n'est permis que sur la fenêtre ${D.fenetre_defaut} : avant ${D.fin_sentinelle}, la sentinelle d'encodage des jours sans enneigement fait varier le dénominateur.`,
     `Le vent est la prévision du bulletin (${D.origine_vent}) ; son altitude est réelle et se lit par tranche. Une tranche sans vent publié reste vide, elle n'est pas complétée.`,
   ];
-  $("notes").innerHTML = n.map(t => `<li>${esc(t)}</li>`).join("");
+  $("notes").innerHTML = `<details class="plus bloc"><summary>Notes de lecture</summary><ul>${n.map(t => `<li>${esc(t)}</li>`).join("")}</ul></details>`;
 }
 function change(cle, valeur) {
   etat[cle] = valeur;

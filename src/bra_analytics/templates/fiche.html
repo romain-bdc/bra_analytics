@@ -128,7 +128,7 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
   <div class="legend" id="lg-vent"></div>
 </section>
 
-<ul class="notes" id="notes"></ul>
+<div class="notes" id="notes"></div>
 
 <footer>
   <span id="attribution"></span>
@@ -382,10 +382,10 @@ function grapheRisque() {
   const c = couverture(g, e, niv.map((v, i) => e.risque[i] === "." ? null : 1), a, z);
   const sans = [...e.risque].filter(x => x === "0").length;
   legendeCov("cov-risque", c, sans ? `${sans} jour${sans > 1 ? "s" : ""} publié${sans > 1 ? "s" : ""} sans indice (cercles sur l'axe)` : "");
-  $("sous-risque").innerHTML = `Saison <b>${esc(etat.s)}</b>${SAISON.get(etat.s).comparable ? "" : " (non comparable)"} en bleu ; bande grise : médiane et intervalle interquartile `
-    + `de l'indice, <b>fenêtre ${esc(D.fenetre_defaut)}</b> (${esc(fenetreTexte)}), ${nBande ? `sur les saisons comparables, une case n'étant tracée qu'à partir de ${D.min_saisons_bande} saisons` : "<b>non calculable</b> pour ce massif (moins de " + D.min_saisons_bande + " saisons comparables)"}`
+  $("sous-risque").innerHTML = `Saison <b>${esc(etat.s)}</b>${SAISON.get(etat.s).comparable ? "" : " (non comparable)"} en bleu ; bande grise : médiane et quartiles de l'indice, <b>fenêtre ${esc(D.fenetre_defaut)}</b>.`
+    + PARTAGE.plus(`Fenêtre ${esc(fenetreTexte)}, ${nBande ? `sur les saisons comparables, une case n'étant tracée qu'à partir de ${D.min_saisons_bande} saisons` : "<b>non calculable</b> pour ce massif (moins de " + D.min_saisons_bande + " saisons comparables)"}`
     + ` — la saison lue y entre quand elle est comparable. Fond bleuté : la fenêtre ${esc(D.fenetre_defaut)} de la saison lue.`
-    + (etat.f === D.saison_complete ? ` Les indicateurs portent sur la saison entière, mais la bande et les autres saisons restent sur la fenêtre ${esc(D.fenetre_defaut)} : hors de celle-ci, les indices ne se comparent pas.` : "");
+    + (etat.f === D.saison_complete ? ` Les indicateurs portent sur la saison entière, mais la bande et les autres saisons restent sur la fenêtre ${esc(D.fenetre_defaut)} : hors de celle-ci, les indices ne se comparent pas.` : ""));
   $("lg-risque").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>saison lue</span>`
     + `<span><i class="sw" style="background:var(--band)"></i>médiane</span><span><i class="sw box" style="background:var(--band);opacity:.35"></i>quartiles</span>`
     + (etat.o ? `<span><i class="sw" style="background:var(--ink-muted);opacity:.5;height:1px"></i>autres saisons comparables (fenêtre ${esc(D.fenetre_defaut)} seulement)</span>` : "");
@@ -434,8 +434,8 @@ function grapheNeige() {
   const parVersant = v => nombres(n?.[v]).filter(x => x != null).length;
   const alt = e.altitudes_neige?.[tr]?.join(" / ");
   legendeCov("cov-neige", c, n ? `un jour compte dès qu'un versant est relevé (nord ${parVersant("nord")} j, sud ${parVersant("sud")} j)` : "aucun palier d'enneigement dans cette tranche pour cette saison");
-  $("sous-neige").innerHTML = `Épaisseur du manteau au palier le plus haut de la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (<b>${alt} m</b> cette saison ; le palier change d'époque)` : ""}, `
-    + `versants nord et sud. Valeur indicative rattachée à l'altitude de référence, pas une mesure. Indexée sur la date que décrit le relevé (<code>jour</code>). Traits fins : autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`;
+  $("sous-neige").innerHTML = `Épaisseur du manteau, palier le plus haut de la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (<b>${alt} m</b>)` : ""}, versants nord et sud. Valeur indicative, pas une mesure.`
+    + PARTAGE.plus(`${alt ? `Le palier est à ${alt} m cette saison et change d'époque. ` : ""}Valeur rattachée à l'altitude de référence. Indexée sur la date que décrit le relevé (<code>jour</code>). Traits fins : autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`);
   $("lg-neige").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>versant nord</span><span><i class="sw" style="background:var(--s2)"></i>versant sud</span>`
     + (etat.o ? `<span><i class="sw" style="height:1px;opacity:.4;background:var(--ink-muted)"></i>autres saisons comparables (traits fins)</span>` : "");
   curseur(g, "g-neige", x => {
@@ -484,7 +484,8 @@ function grapheIso0() {
   const [a, z] = etendueBloc(e, moy);
   const c = couverture(g, e, moy, a, z);
   legendeCov("cov-iso0", c, iso ? "" : "aucune prévision d'isotherme pour cette saison");
-  $("sous-iso0").innerHTML = `Isotherme 0 °C <b>prévu</b> par le bulletin pour le jour de validité : moyenne des échéances 06 h et 12 h (trait) et amplitude min–max (aire). Prévision, pas observation. Trait fin : moyenne des autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`;
+  $("sous-iso0").innerHTML = `Isotherme 0 °C <b>prévu</b> : moyenne des échéances 06 h et 12 h (trait), amplitude min–max (aire). Prévision, pas observation.`
+    + PARTAGE.plus(`Trait fin : moyenne des autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`);
   $("lg-iso0").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>moyenne du jour</span><span><i class="sw box" style="background:var(--s1);opacity:.3"></i>min–max</span>`
     + `<span><i class="sw" style="background:var(--s2)"></i>seuil de redoux</span>` + (etat.o ? `<span><i class="sw" style="height:1px;opacity:.5;background:var(--ink-muted)"></i>moyenne des autres saisons comparables</span>` : "");
   curseur(g, "g-iso0", x => {
@@ -514,8 +515,8 @@ function grapheVent() {
   const c = couverture(g, e, v, a, z);
   const alt = e.altitudes_vent?.[tr]?.join(" / ");
   legendeCov("cov-vent", c, e.vent?.[tr] ? "" : "aucun vent prévu dans cette tranche pour cette saison");
-  $("sous-vent").innerHTML = `Vitesse <b>prévue</b> la plus forte du jour (échéances 06 h et 12 h) dans la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (altitude${alt.includes("/") ? "s" : ""} de vent : <b>${alt} m</b>)` : ""}. `
-    + `Les vents relèvent de leur altitude, jamais de leur rang « bas / haut » dans le bulletin. Pas de fond de comparaison sur ce graphe.`;
+  $("sous-vent").innerHTML = `Vitesse <b>prévue</b> la plus forte du jour, tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (<b>${alt} m</b>)` : ""}.`
+    + PARTAGE.plus(`Échéances 06 h et 12 h${alt ? `, altitude${alt.includes("/") ? "s" : ""} de vent ${alt} m` : ""}. Les vents relèvent de leur altitude, jamais de leur rang « bas / haut » dans le bulletin. Pas de fond de comparaison sur ce graphe.`);
   $("lg-vent").innerHTML = `<span><i class="sw box" style="background:var(--s1)"></i>vitesse</span><span><i class="sw box" style="background:var(--s2)"></i>au-dessus de ${D.seuil_vent_fort_kmh} km/h</span>`;
   curseur(g, "g-vent", x => {
     const i = decalageInverse(e, x);
@@ -568,8 +569,8 @@ function indicateurs() {
 function alerte() {
   const s = SAISON.get(etat.s), f = FEN.get(etat.f);
   const a = [];
-  if (!s.comparable) a.push(`<b>${esc(etat.s)} n'est pas une saison comparable</b> : ${esc(s.motif)}. Elle reste affichée, mais ne se compare à aucune autre.`);
-  if (!f.comparable) a.push(`Indicateurs sur la <b>${esc(f.libelle)}</b> : lecture de cette saison isolément. L'indice moyen ne se compare pas à celui d'une autre saison hors de la fenêtre ${esc(D.fenetre_defaut)}, la sentinelle d'avant juin 2021 en altérant près de la moitié de l'écart.`);
+  if (!s.comparable) a.push(`<b>${esc(etat.s)} n'est pas une saison comparable</b> : ${esc(s.motif)}.${PARTAGE.plus("Elle reste affichée, mais ne se compare à aucune autre.", "suite")}`);
+  if (!f.comparable) a.push(`Indicateurs sur la <b>${esc(f.libelle)}</b> : lecture de cette saison isolément.${PARTAGE.plus(`L'indice moyen ne se compare pas à celui d'une autre saison hors de la fenêtre ${esc(D.fenetre_defaut)}, la sentinelle d'avant juin 2021 en altérant près de la moitié de l'écart.`, "pourquoi")}`);
   $("alerte").innerHTML = a.join("<br>");
 }
 function notes() {
@@ -581,7 +582,7 @@ function notes() {
     "Neige, isotherme et vent sont ceux du bulletin (valeurs indicatives et prévisions), non des mesures.",
   ];
   if (m.saisons.length < D.saisons.length) n.push(`Ce massif n'a des bulletins que sur ${m.saisons.length} des ${D.saisons.length} saisons de l'archive.`);
-  $("notes").innerHTML = n.map(x => `<li>${x}</li>`).join("");
+  $("notes").innerHTML = `<details class="plus bloc"><summary>Notes de lecture</summary><ul>${n.map(x => `<li>${x}</li>`).join("")}</ul></details>`;
 }
 
 /* ---------- assemblage ---------- */

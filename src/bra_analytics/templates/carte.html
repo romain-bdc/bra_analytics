@@ -392,7 +392,6 @@ function tuiles() {
     ["Indice moyen le plus bas", bas ? bas.nom : "—", bas ? decrit(bas) : ""],
     ["Diffusion partielle", nb(partiels.length) + " massif" + (partiels.length > 1 ? "s" : ""),
       partiels.map(m => `${m.nom} : ${m.saisons_presentes.length} saisons sur ${NB_COMP}`).join(" · ") || "tous diffusés sur toute la période"],
-    ["Période", D.libelle_saisons, `fenêtre ${F.nom}, ${fenetreTexte}`],
   ];
   document.getElementById("kpis").innerHTML = cases
     .map(([k, v, n]) => `<div class="kpi"><span class="k">${k}</span><span class="v">${v}</span><span class="n">${n}</span></div>`).join("");
@@ -418,8 +417,8 @@ function textes() {
   document.getElementById("h2").textContent = `${def.libelle}, ${D.libelle_saisons}`;
   const ecartees = Object.entries(D.saisons_ecartees).map(([s, motif]) => `${s} (${motif})`).join(" ; ");
   document.getElementById("sous").innerHTML =
-    `${def.description[0].toUpperCase() + def.description.slice(1)}, sur la fenêtre <b>${F.nom}</b> (${fenetreTexte}) de chaque saison,
-     toutes saisons comparables confondues — une valeur par massif. Saisons écartées : ${esc(ecartees) || "aucune"}.`;
+    `${def.description[0].toUpperCase() + def.description.slice(1)}, une valeur par massif.`
+    + PARTAGE.plus(`Fenêtre <b>${F.nom}</b> (${fenetreTexte}) de chaque saison, toutes saisons comparables confondues. Saisons écartées : ${esc(ecartees) || "aucune"}.`);
 }
 
 /* ---------- assemblage ---------- */
@@ -430,10 +429,10 @@ sel.innerHTML = METRIQUES.map(m => m.disponible
 const indispo = METRIQUES.filter(m => !m.disponible);
 
 document.getElementById("lede").innerHTML =
-  `Par défaut, chaque massif est coloré par son indice de risque moyen sur <b>${D.libelle_saisons}</b>, mesuré sur la fenêtre
-   <b>${F.nom}</b> (${fenetreTexte}), la seule où les saisons se comparent : avant juin 2021, les journées à manteau insuffisant
-   (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Survolez un massif pour lire ses jours couverts et ses jours à risque 4 ou 5.`
-  + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${esc(m.libelle)} : ${esc(m.motif)}.`).join(" ")}</span>` : "");
+  `Chaque massif est coloré par son indice de risque moyen sur <b>${D.libelle_saisons}</b>, fenêtre <b>${F.nom}</b>. Survolez un massif pour le détail.`
+  + PARTAGE.plus(`La fenêtre ${F.nom} (${fenetreTexte}) est la seule où les saisons se comparent : avant juin 2021, les journées à manteau insuffisant
+   (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Le survol donne les jours couverts et les jours à risque 4 ou 5.`
+  + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${esc(m.libelle)} : ${esc(m.motif)}.`).join(" ")}</span>` : ""));
 
 PARTAGE.demarrer({ ecran: "carte", ...D.partage });
 
