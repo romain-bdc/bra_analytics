@@ -221,18 +221,6 @@ def cmd_ui(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_dashboard(args: argparse.Namespace) -> int:
-    from .dashboard import render
-
-    out = render(args.db, args.out, args.zone, standalone=not args.fragment)
-    print(f"tableau de bord : {out} ({out.stat().st_size / 1024:.0f} Ko)")
-    if args.fragment:
-        print("fragment sans doctype : a inserer dans un hote qui fournit le squelette HTML.")
-    else:
-        print("page autonome : ouvrir directement dans un navigateur, aucun serveur requis.")
-    return 0
-
-
 def cmd_fiche(args: argparse.Namespace) -> int:
     from .fiche import render
 
@@ -393,14 +381,6 @@ def build_parser() -> argparse.ArgumentParser:
     u.add_argument("--port", type=int, default=4213, help="port d'ecoute (defaut: 4213)")
     u.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
     u.set_defaults(func=cmd_ui)
-
-    d = sub.add_parser("dashboard", help="generer le tableau de bord HTML statique")
-    d.add_argument("--db", default="warehouse/bra.duckdb")
-    d.add_argument("--out", default="dashboard.html", help="fichier de sortie")
-    d.add_argument("--zone", default="Pyrenees", help="zone a representer (defaut: Pyrenees)")
-    d.add_argument("--fragment", action="store_true",
-                   help="omettre doctype et <html> (page destinee a etre hebergee)")
-    d.set_defaults(func=cmd_dashboard)
 
     f = sub.add_parser("fiche", help="generer la fiche massif-saison (HTML statique)")
     f.add_argument("--db", default="warehouse/bra.duckdb")

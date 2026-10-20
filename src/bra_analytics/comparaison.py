@@ -39,7 +39,7 @@ import duckdb
 import polars as pl
 
 from . import partage
-from .dashboard import injecter
+from .gabarit import injecter
 from .fenetres import DEFAUT, FENETRES, FIN_SENTINELLE, MOIS_FR, PAR_NOM, SAISON_COMPLETE
 from .fiche import (
     _bandes,

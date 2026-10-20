@@ -12,8 +12,8 @@ Trois faits d'archive commandent l'ecran :
 - **La rose n'a pas d'altitude.** `<PENTE>` et `<SitAvalTyp>` n'en portent pas
   (T9, glossaire 12) : chaque rose et chaque jeu de situations est etiquete
   `ALTITUDE_LIBELLE`, et la matrice altitude x orientation n'existe pas. Seul
-  le vent a une altitude reelle : la rose des vents et le croisement vent x
-  orientation se lisent par tranche normee, jamais toutes tranches confondues.
+  le vent a une altitude reelle : le croisement vent x
+  orientation se lit par tranche normee, jamais toutes tranches confondues.
 - **Les situations typiques n'existent que depuis une saison.** `sat1` / `sat2`
   sont absents des formats anterieurs : une saison sans situation reste dans le
   selecteur et dit pourquoi (`situations_depuis`), elle n'affiche pas un zero.
@@ -37,7 +37,7 @@ import polars as pl
 
 from . import partage
 from .comparaison import MAX_COURBES, SEUIL_HAUT, SEUIL_TRES_HAUT, _fenetres_payload
-from .dashboard import injecter
+from .gabarit import injecter
 from .fenetres import DEFAUT, FIN_SENTINELLE, MOIS_FR, SAISON_COMPLETE
 from .fiche import archive_et_saisons, fiche_massifs, saisons_payload
 from .metriques import pentes, risque

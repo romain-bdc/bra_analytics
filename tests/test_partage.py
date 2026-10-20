@@ -20,13 +20,13 @@ from pathlib import Path
 
 import pytest
 
-from bra_analytics import carte, comparaison, dashboard, exploration, fiche, partage
+from bra_analytics import carte, comparaison, exploration, fiche, gabarit, partage
 from bra_analytics.build import build
-from bra_analytics.dashboard import injecter
+from bra_analytics.gabarit import injecter
 
 from .conftest import SERIES
 
-TEMPLATES = Path(dashboard.__file__).parent / "templates"
+TEMPLATES = Path(gabarit.__file__).parent / "templates"
 ASPE = 65
 DONNEES = "Données Météo-France, Licence Ouverte 2.0"
 
@@ -50,7 +50,6 @@ def pages(db) -> dict[str, tuple[Path, dict]]:
         "fiche": (fiche.TEMPLATE, fiche.payload(db)),
         "comparaison": (comparaison.TEMPLATE, comparaison.payload(db)),
         "exploration": (exploration.TEMPLATE, exploration.payload(db)),
-        "dashboard": (dashboard.TEMPLATE, dashboard.payload(db)),
     }
 
 
@@ -80,7 +79,7 @@ def test_ecrans_ont_des_fichiers_distincts_et_l_archive_dans_le_payload(pages) -
     assert pages["carte"][1]["partage"]["contours"].startswith("Contours des massifs")
     assert "15/02/2024" in pages["carte"][1]["partage"]["contours"]
     # Seule la carte porte les contours.
-    assert all(pages[i][1]["partage"]["contours"] is None for i in ("fiche", "comparaison", "dashboard"))
+    assert all(pages[i][1]["partage"]["contours"] is None for i in ("fiche", "comparaison", "exploration"))
 
 
 def test_les_marqueurs_sont_tous_remplaces(pages) -> None:
@@ -178,7 +177,6 @@ def rendus(pages, tmp_path_factory) -> dict[str, _Dom]:
         "fiche": f"m={ASPE}&s={s}&t=moyenne&f=coeur&zz=garde",
         "comparaison": f"x=saison&m={ASPE}&s={s}&k=risque_moyen&f=coeur",
         "exploration": f"x=saisons&m={ASPE}&c={s}&f=coeur&q=toutes&t=haute&g=barres&zz=garde",
-        "dashboard": f"m={ASPE}&f=coeur",
     }
     del a_lire
     out = {}
@@ -211,7 +209,7 @@ def test_attribution_des_contours_sur_la_carte(rendus) -> None:
 
 @chromium
 def test_chaque_graphe_a_son_export_csv_et_png(rendus) -> None:
-    attendus = {"carte": 1, "fiche": 4, "comparaison": 2, "exploration": None, "dashboard": 5}
+    attendus = {"carte": 1, "fiche": 4, "comparaison": 2, "exploration": None}
     for ident, n in attendus.items():
         # Exploration : une trace par entite et par bloc, selon les blocs publies ; au moins une.
         assert (len(rendus[ident].csv) >= 1) if n is None else (len(rendus[ident].csv) == n), ident
@@ -272,31 +270,14 @@ def test_csv_du_classement_garde_les_saisons_non_classees_et_leur_motif(rendus, 
 
 
 @chromium
-def test_csv_du_tableau_de_bord_est_celui_des_aggregats(rendus, pages) -> None:
-    data = pages["dashboard"][1]
-    a = next(x for x in rendus["dashboard"].csv if "repartition" in x["download"])
-    _, colonnes, lignes = _csv(a)
-    assert colonnes[0] == "saison" and colonnes[-2:] == ["sans_indice", "jours"]
-    for ligne in lignes:
-        c = ligne.split(",")
-        niveaux = list(map(int, c[1:7]))      # cinq indices + sans indice
-        assert sum(niveaux) == int(c[7])
-    couv = next(x for x in rendus["dashboard"].csv if "couverture" in x["download"])
-    _, cols, rows = _csv(couv)
-    assert cols == ["saison", "jour", "massifs_pourvus", "massifs_selectionnes"]
-    assert rows and all(int(r.split(",")[3]) == 1 for r in rows)   # massif 65 seul
-
-
-@chromium
 def test_le_hash_complet_voyage_d_un_ecran_a_l_autre(rendus) -> None:
     """Le lien vers un autre ecran porte l'etat courant, cles inconnues comprises."""
     lien = rendus["fiche"].liens["comparaison"]
     assert lien.startswith("comparaison.html#")
     p = urllib.parse.parse_qs(lien.split("#", 1)[1])
     assert p["m"] == [str(ASPE)] and p["zz"] == ["garde"] and p["f"] == ["coeur"]
-    # La carte ecrit sa cle sans effacer celles des autres ; le dashboard de meme.
+    # La carte ecrit sa cle sans effacer celles des autres.
     assert "mc" in urllib.parse.parse_qs(rendus["carte"].liens["fiche"].split("#", 1)[1])
-    assert urllib.parse.parse_qs(rendus["dashboard"].liens["fiche"].split("#", 1)[1])["m"] == [str(ASPE)]
 
 
 @chromium

@@ -1,6 +1,6 @@
 /* Mecanisme transverse aux ecrans (T15) : navigation, attribution, etat dans l'URL,
    exports CSV et PNG. Insere dans chaque page par le marqueur de gabarit
-   (dashboard.injecter) ; la liste des ecrans vient de partage.py.
+   (gabarit.injecter) ; la liste des ecrans vient de partage.py.
 
    Il n'expose qu'un nom global, `PARTAGE`, et n'en emprunte aucun aux ecrans :
    les uns definissent `$`, `el`, `esc`, les autres non.

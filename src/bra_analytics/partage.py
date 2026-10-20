@@ -6,7 +6,7 @@ ecran ne recopie rien :
 - le texte d'attribution (spec section 7) et la liste des ecrans, ici ;
 - le comportement cote client (barre de navigation, pied, URL, exports CSV et
   PNG), dans `templates/partage.js`, insere dans chaque page par le marqueur
-  `__PARTAGE__` (voir `dashboard.injecter`).
+  `__PARTAGE__` (voir `gabarit.injecter`).
 
 Pour brancher un ecran :
 
@@ -48,7 +48,6 @@ ECRANS: tuple[Ecran, ...] = (
     Ecran("fiche", "fiche.html", "Fiche massif-saison"),
     Ecran("comparaison", "comparaison.html", "Comparaison"),
     Ecran("exploration", "exploration.html", "Exploration"),
-    Ecran("dashboard", "dashboard.html", "Tableau de bord"),
 )
 
 

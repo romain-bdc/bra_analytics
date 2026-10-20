@@ -105,8 +105,8 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
 <div class="bar">
   <label>Mode</label>
   <span class="seg" role="group" aria-label="Mode de comparaison">
-    <button class="toggle" id="mode-saison">Une saison contre les autres</button>
     <button class="toggle" id="mode-choix">Saisons choisies</button>
+    <button class="toggle" id="mode-saison">Une saison contre les autres</button>
     <button class="toggle" id="mode-massifs">Massifs, une saison</button>
   </span>
   <span id="zone-massif"><label for="sm">Massif</label> <select id="sm"></select></span>
@@ -181,13 +181,13 @@ const rangLib = r => r === 1 ? "1re" : `${r}e`;
 const plur = (n, s, p) => `${n} ${n > 1 ? (p || s + "s") : s}`;
 
 /* ---------- etat, porte par l'URL ---------- */
-const etat = { x: "saison", m: null, s: null, c: [], n: [], p: true, k: D.metriques[0].cle, f: D.fenetre_defaut, t: null, v: "nord" };
+const etat = { x: "choix", m: null, s: null, c: [], n: [], p: true, k: D.metriques[0].cle, f: D.fenetre_defaut, t: null, v: "nord" };
 const MODES = ["saison", "choix", "massifs"];
 const comparables = m => MASSIF.get(m).saisons.filter(s => SAISON.get(s).comparable);
 function lireUrl() {
   const p = PARTAGE.lire();
-  // "saisons" : ecrit par l'exploration et par d'anciens liens, meme sens que "saison".
-  etat.x = MODES.includes(p.get("x")) ? p.get("x") : "saison";
+  // Defaut "choix" : une saison contre toutes les autres rend les courbes illisibles (choix du proprietaire).
+  etat.x = MODES.includes(p.get("x")) ? p.get("x") : "choix";
   const m = +p.get("m");
   etat.m = MASSIF.has(m) ? m : (MASSIF.has(65) ? 65 : D.massifs[0].id);
   const saisons = MASSIF.get(etat.m).saisons;

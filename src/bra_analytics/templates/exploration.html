@@ -138,12 +138,6 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
   <div class="grille" id="g-pentes"></div>
 </section>
 
-<section class="panel" id="p-vent">
-  <h2>Rose des vents</h2>
-  <p class="sous" id="sous-vent"></p>
-  <div class="grille" id="g-vent"></div>
-</section>
-
 <section class="panel" id="p-croise">
   <h2>Vent × orientation des pentes</h2>
   <p class="sous" id="sous-croise"></p>
@@ -214,7 +208,7 @@ function defautMassifs() {
 }
 function ecrireUrl() {
   // q (condition) et g (rose ou barres) : k et d ont deja un autre sens sur la comparaison et le tableau de bord.
-  PARTAGE.ecrire({ x: etat.x === "massifs" ? "massifs" : (xBrut === "choix" ? "choix" : "saison"), m: etat.m, s: etat.s, c: etat.c.join(","), n: etat.n.join(","), f: etat.f, q: etat.k, t: etat.t, g: etat.d });
+  PARTAGE.ecrire({ x: etat.x === "massifs" ? "massifs" : (xBrut === "choix" || xBrut === "saison" ? xBrut : null), m: etat.m, s: etat.s, c: etat.c.join(","), n: etat.n.join(","), f: etat.f, q: etat.k, t: etat.t, g: etat.d });
 }
 
 /* ---------- entites comparees ---------- */
@@ -235,12 +229,6 @@ function lignesPentes(en) {
   const suf = etat.k === "toutes" ? "" : etat.k.replace("ge", "");
   const sig = c["s" + suf], couv = c["c" + suf];
   return { couverts: couv, lignes: O.map((o, i) => ({ etiquette: o, jours: sig[i], couverts: couv })) };
-}
-function lignesVent(en) {
-  const c = casier(en, "vent")?.[etat.t];
-  if (!c) return null;
-  const total = c.reduce((a, x) => a + x[0], 0);
-  return { couverts: total, lignes: O.map((o, i) => ({ etiquette: o, jours: c[i][0], couverts: total })) };
 }
 function lignesCroisement(en) {
   const c = casier(en, "vent")?.[etat.t];
@@ -331,7 +319,7 @@ function grille(id, liste, lignes, opts) {
     // Export : les lignes {secteur, jours, couverts} que la trace vient de dessiner.
     if (svg && donnees) PARTAGE.enregistrer(svg, {
       nom: `${id.slice(2)}-${en.mid}-${en.saison}-${etat.f}-${id === "g-pentes" ? etat.k : etat.t}`,
-      titre: `${id === "g-pentes" ? "Rose des pentes" : id === "g-vent" ? "Rose des vents" : "Croisement vent × orientation"} — ${en.nom}, fenêtre ${etat.f}`,
+      titre: `${id === "g-pentes" ? "Rose des pentes" : "Croisement vent × orientation"} — ${en.nom}, fenêtre ${etat.f}`,
       colonnes: COLONNES,
       lignes: donnees.lignes.map(l => [en.nom, en.mid, en.saison, l.etiquette, l.jours, l.couverts, frac(l), en.comparable ? "" : "non comparable : " + en.motif]),
     });
@@ -436,22 +424,20 @@ function dessine() {
   $("alt-sit").textContent = D.altitude;
   $("sous-pentes").innerHTML = `Part des jours où chaque orientation est signalée dans la rose du bulletin — <b>${esc(D.altitude)}</b> : le bulletin ne dit pas à quelle altitude elle s'applique. `
     + `${esc(cond.libelle)}, ${esc(fenTxt)}. Même échelle (0 à 100 %) pour toutes les entités, jamais superposées.`;
-  $("sous-vent").innerHTML = `Direction du vent ${esc(D.origine_vent)} le plus fort de la tranche <b>${esc(tr.nom)}</b> (${esc(tr.libelle)}), part des jours à vent directionnel ; les directions variables n'y figurent pas. ${esc(fenTxt)}.`;
   $("sous-croise").innerHTML = `Pour chaque direction de vent de la tranche <b>${esc(tr.nom)}</b> (${esc(tr.libelle)}), part des jours où la pente qu'il charge — celle qui lui est opposée — est signalée dans la rose (<b>${esc(D.altitude)}</b>). `
     + `Une seule tranche à la fois : le croisement n'est jamais lu toutes tranches confondues. ${esc(fenTxt)}.`;
   $("sous-sit").innerHTML = `Situation dominante (D) et secondaire (S) du bulletin, en part des jours avec situation dominante — <b>${esc(D.altitude)}</b>. `
     + `Disponibles <b>depuis la saison ${esc(D.situations_depuis)}</b> seulement ; libellés inférés du descriptif (glossaire 2.7). ${esc(fenTxt)}.`;
 
   if (refus) {
-    for (const id of ["g-pentes", "g-vent", "g-croise", "g-sit"]) $(id).innerHTML = "";
+    for (const id of ["g-pentes", "g-croise", "g-sit"]) $(id).innerHTML = "";
   } else {
     const sansVent = `Aucun vent directionnel publié pour la tranche ${tr.nom} (${tr.libelle}).`;
     grille("g-pentes", liste, lignesPentes, { forme: etat.d, alt: true, vide: "Aucun jour couvert sur cette fenêtre." });
     if (D.vent) {
-      grille("g-vent", liste, lignesVent, { forme: etat.d, alt: false, vide: sansVent });
       grille("g-croise", liste, lignesCroisement, { forme: "barres", alt: true, vide: sansVent });
     } else {
-      for (const id of ["g-vent", "g-croise"]) $(id).innerHTML = `<p class="vide">Cet entrepôt n'a pas de bloc météo : vent indisponible.</p>`;
+      $("g-croise").innerHTML = `<p class="vide">Cet entrepôt n'a pas de bloc météo : vent indisponible.</p>`;
     }
     $("g-sit").innerHTML = "";
     for (const en of liste) $("g-sit").appendChild(carteSituations(en));

@@ -1,6 +1,6 @@
 """Carte d'accueil : les 36 massifs, une valeur par massif (spec section 6, T12).
 
-Meme motif que `dashboard.py` : un payload JSON construit ici, insere dans le
+Meme motif que `gabarit.py` : un payload JSON construit ici, insere dans le
 gabarit `templates/carte.html` par le marqueur `__DONNEES__`, et tout le reste
 cote client. La page dessine elle-meme les contours en SVG : pas de
 bibliotheque cartographique, et aucune donnee chargee du reseau (seules les
@@ -24,7 +24,7 @@ import duckdb
 import polars as pl
 
 from . import geo, partage
-from .dashboard import injecter
+from .gabarit import injecter
 from .fenetres import DEFAUT, SAISONS_NON_COMPARABLES, comparable
 from .massifs import MASSIFS
 from .metriques import risque

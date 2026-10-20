@@ -227,20 +227,18 @@ def test_chaque_rose_des_pentes_et_chaque_situation_est_etiquetee_non_localisee(
     dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&q=toutes&t=haute", tmp_path)
     for grille, forme in (("g-pentes", "rose"), ("g-croise", "croisement"), ("g-sit", "situations")):
         assert dom.texte[grille].count("non localisée en altitude") == 1, grille
-    # La rose des vents a une altitude reelle : elle porte sa tranche, pas l'etiquette.
-    assert "non localisée" not in dom.texte["g-vent"]
     assert "non localisée en altitude" in dom.texte["sous-pentes"]
 
 
 @chromium
 def test_rose_dessinee_egale_la_serie_relue_a_la_main(html, tmp_path) -> None:
     dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&q=toutes&t=haute", tmp_path)
-    # Premiere rose de la page : celle des pentes ; viennent ensuite les secteurs du vent.
+    # La seule rose de la page est celle des pentes (la rose des vents a ete retiree).
     secteurs = _secteurs(dom, "wedge")
     assert secteurs[:8] == [
         ("N", 9, 9), ("NE", 9, 9), ("E", 5, 9), ("SE", 5, 9), ("S", 4, 9), ("SW", 4, 9), ("W", 4, 9), ("NW", 4, 9),
     ]
-    assert len(secteurs) == 16  # pentes + vent
+    assert len(secteurs) == 8
     # Les jours ge3 : quatre jours, les huit secteurs.
     dom = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&q=ge3&t=haute", tmp_path)
     assert all((j, c) == (4, 4) for _, j, c in _secteurs(dom, "wedge")[:8])
@@ -295,9 +293,9 @@ def test_saison_non_comparable_etiquetee_avec_son_motif(html, data, tmp_path) ->
 def test_les_barres_donnent_les_memes_comptes_que_les_roses(html, tmp_path) -> None:
     rose = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&g=rose", tmp_path)
     barres = _rendre(html, f"x=saisons&m={ASPE}&c=2024-2025&f=saison_complete&g=barres", tmp_path)
-    # Barres : pentes, vent, croisement (24 secteurs) ; roses : pentes et vent (16) puis le croisement en barres.
-    assert _secteurs(rose, "wedge") == _secteurs(barres, "barre")[:16]
-    assert _secteurs(rose, "barre") == _secteurs(barres, "barre")[16:]
+    # Barres : pentes puis croisement (16 secteurs) ; roses : pentes (8) puis le croisement en barres.
+    assert _secteurs(rose, "wedge") == _secteurs(barres, "barre")[:8]
+    assert _secteurs(rose, "barre") == _secteurs(barres, "barre")[8:]
     assert not barres.classe("wedge")
 
 
