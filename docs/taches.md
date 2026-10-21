@@ -224,8 +224,7 @@ version.
 
 ### T11. Fiche massif-saison
 
-L'écran central, et celui qui existe déjà en germe dans `bra dashboard` : l'étendre plutôt que le
-réécrire. Indicateurs clés, série du risque sur fond des autres saisons avec bande médiane et
+L'écran central, (la première page statique Pyrénées, `bra dashboard`, a depuis été retirée). Indicateurs clés, série du risque sur fond des autres saisons avec bande médiane et
 interquartile, puis enneigement, ISO 0 et vent sur le même axe aligné.
 
 **Fait quand** : un massif et une saison se lisent de bout en bout sans requête manuelle ; le
@@ -262,17 +261,19 @@ comparable apparaît étiquetée et non supprimée.
 
 **Dépend de** : T6, T11.
 
-**Réalisée par** `bra comparaison` (`comparaison.py`, `templates/comparaison.html`). Critères vérifiés dans Chromium headless (`tests/test_comparaison.py`) : troncature à période égale par défaut et annoncée dans le sous-titre de chaque bloc ; classement refusant une métrique d'indice hors `coeur` ; saison non comparable étiquetée, non classée, non supprimée. Les aides JavaScript communes aux écrans à graphes sont dans `templates/commun.js` (marqueur `__COMMUN__`, `dashboard.injecter`).
+**Réalisée par** `bra comparaison` (`comparaison.py`, `templates/comparaison.html`). Critères vérifiés dans Chromium headless (`tests/test_comparaison.py`) : troncature à période égale par défaut et annoncée dans le sous-titre de chaque bloc ; classement refusant une métrique d'indice hors `coeur` ; saison non comparable étiquetée, non classée, non supprimée. Les aides JavaScript communes aux écrans à graphes sont dans `templates/commun.js` (marqueur `__COMMUN__`, `gabarit.injecter`).
 
 ### T14. Écran d'exploration
 
-Rose des pentes, rose des vents, matrice altitude × orientation. Comparaison par roses côte à
+Rose des pentes, ~~rose des vents~~ (retirée le 20 octobre 2026 : sans apport), matrice altitude × orientation. Comparaison par roses côte à
 côte ou barres par secteur, jamais par superposition.
 
 **Fait quand** : chaque rose est étiquetée « non localisée en altitude » ; le croisement vent × orientation est lisible par tranche de vent (à la place de la matrice 8 × 3, voir T9) ; les
 situations typiques sont affichées avec leur restriction d'époque.
 
 **Dépend de** : T9, T11.
+
+**Réalisée par** `bra exploration` (`exploration.py`, `templates/exploration.html`). Critères vérifiés dans Chromium headless (`tests/test_exploration.py`) : étiquette « non localisée en altitude » sur chaque rose des pentes et chaque jeu de situations ; croisement vent × orientation lu une tranche à la fois ; saisons antérieures aux situations typiques annoncées avec leur restriction ; comparaison de saisons refusée hors `coeur`.
 
 ---
 
@@ -290,6 +291,8 @@ chaque graphe exporte les données qui le composent, pas une reconstruction ; l'
 présente sur les quatre écrans.
 
 **Dépend de** : T11 à T14.
+
+**Réalisée par** `partage.py` et `templates/partage.js` (marqueur `__PARTAGE__`, `gabarit.injecter`), branchés sur les quatre écrans (carte, fiche, comparaison, exploration) ; le tableau de bord Pyrénées, ancien cinquième écran, a été retiré. Critères vérifiés dans Chromium headless (`tests/test_partage.py`) : chaque graphe enregistre les valeurs qu'il vient de tracer pour son export CSV (trois lignes `#` d'attribution en tête) et PNG ; l'état vit dans le fragment d'URL, chaque écran conserve les clés des autres ; attribution et date d'archive sur chaque page, contours en plus sur la carte. Écarté pour l'instant : valeur par défaut de `t` propre à chaque écran, filtres de la fiche et de la carte (spec § 6), factorisation des payloads et des commandes CLI.
 
 ---
 

@@ -128,16 +128,19 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
   <div class="legend" id="lg-vent"></div>
 </section>
 
-<ul class="notes" id="notes"></ul>
+<div class="notes" id="notes"></div>
 
 <footer>
+  <span id="attribution"></span>
   <span id="attrib"></span>
-  <span id="gen"></span>
   <span>Page générée par <code>bra fiche</code></span>
 </footer>
 </div>
 <div id="tip"></div>
 
+<script>
+__PARTAGE__
+</script>
 <script>
 __COMMUN__
 </script>
@@ -158,7 +161,7 @@ function trancheDefaut(m) {
   return t ? t.nom : D.tranches[0].nom;
 }
 function lireUrl() {
-  const p = new URLSearchParams(location.hash.slice(1));
+  const p = PARTAGE.lire();
   const m = +p.get("m");
   etat.m = MASSIF.has(m) ? m : (MASSIF.has(65) ? 65 : D.massifs[0].id);
   const saisons = MASSIF.get(etat.m).saisons;
@@ -169,8 +172,7 @@ function lireUrl() {
   etat.o = p.get("o") !== "0";
 }
 function ecrireUrl() {
-  const p = new URLSearchParams({ m: etat.m, s: etat.s, a: etat.a, t: etat.t, f: etat.f, o: etat.o ? 1 : 0 });
-  history.replaceState(null, "", "#" + p);
+  PARTAGE.ecrire({ m: etat.m, s: etat.s, a: etat.a, t: etat.t, f: etat.f, o: etat.o ? 1 : 0 });
 }
 
 /* ---------- axe : chaque jour d'une serie recoit une abscisse ----------
@@ -202,6 +204,19 @@ function bornesCoeur(saison, e) {
 function dansCoeur(saison, e, i) {
   const [i0, i1] = bornesCoeur(saison, e);
   return i >= i0 && i <= i1;
+}
+
+/* ---------- exports : les lignes sont accumulees par la trace elle-meme ----------
+   Une ligne par point trace, en format long : serie (saison lue, autre saison,
+   mediane...), saison, jour calendaire reel, abscisse de l'axe courant, valeur. */
+const jourIso = (e, i) => new Date(T0(e.origine) + i * DAY).toISOString().slice(0, 10);
+const abscisseLib = (e, i) => etat.a === "cal" ? D.axe[abscisse(e, i)] : abscisse(e, i);
+const COLONNES = ["serie", "saison", "jour", "abscisse", "valeur", "q1", "q3", "remarque"];
+const pointExport = (serie, saison, e, i, valeur, remarque = "") =>
+  [serie, saison, jourIso(e, i), abscisseLib(e, i), valeur, null, null, remarque];
+function exporter(svgId, nom, titre, lignes) {
+  const m = MASSIF.get(etat.m);
+  PARTAGE.enregistrer(svgId, { nom: `${nom}-${etat.m}-${etat.s}`, titre: `${titre} — ${m.nom}, saison ${etat.s}`, colonnes: COLONNES, lignes });
 }
 
 /* ---------- traces ---------- */
@@ -321,6 +336,7 @@ function grapheRisque() {
   // bande mediane / interquartile : fenetre coeur, saisons comparables, >= min_saisons
   const b = (D.bandes[etat.a === "cal" ? "calendaire" : "rang"] || {})[etat.m];
   let nBande = 0;
+  const lignes = [];
   if (b) {
     const cases = etat.a === "cal" ? D.axe.length : D.rang_max;
     const abs = k => etat.a === "cal" ? k : k + 1;
@@ -338,6 +354,7 @@ function grapheRisque() {
       haut.push([g.px(x), g.py(b.q3[k] + 0.5)]);   // un niveau s'etend sur +-0,5 : le quartile est un niveau, pas un point
       bas.push([g.px(x), g.py(b.q1[k] - 0.5)]);
       med.push([g.px(x), g.py(b.mediane[k])]);
+      lignes.push(["mediane", "", "", etat.a === "cal" ? D.axe[x] : x, b.mediane[k], b.q1[k], b.q3[k], "fenêtre " + D.fenetre_defaut]);
       nBande++;
     }
     ferme();
@@ -350,10 +367,13 @@ function grapheRisque() {
       const o = D.series[etat.m][s];
       const n = niveauxRisque(o);
       const pts = n.map((v, i) => v == null || !dansCoeur(s, o, i) ? null : [g.px(abscisse(o, i)), g.py(v)]);
+      n.forEach((v, i) => { if (v != null && dansCoeur(s, o, i)) lignes.push(pointExport("autre_saison", s, o, i, v)); });
       el("path", { d: chemin(pts), fill: "none", stroke: "var(--ink-muted)", "stroke-width": 0.8, opacity: 0.35 }, g.svg);
     }
   }
   // saison lue
+  [...e.risque].forEach((c, i) => { if (c !== ".") lignes.push(pointExport("saison_lue", etat.s, e, i, c === "0" ? null : +c, c === "0" ? "publié sans indice" : "")); });
+  exporter("g-risque", "risque", "Indice de risque", lignes);
   el("path", { d: chemin(niv.map((v, i) => v == null ? null : [g.px(abscisse(e, i)), g.py(v)])), fill: "none", stroke: "var(--s1)", "stroke-width": 1.8, "stroke-linejoin": "round" }, g.svg);
   // jours publies sans indice : marques sur l'axe, ni zero ni trou
   [...e.risque].forEach((c, i) => { if (c === "0") el("circle", { cx: g.px(abscisse(e, i)), cy: g.py(0.5), r: 2.2, fill: "none", stroke: "var(--ink-muted)" }, g.svg); });
@@ -362,10 +382,10 @@ function grapheRisque() {
   const c = couverture(g, e, niv.map((v, i) => e.risque[i] === "." ? null : 1), a, z);
   const sans = [...e.risque].filter(x => x === "0").length;
   legendeCov("cov-risque", c, sans ? `${sans} jour${sans > 1 ? "s" : ""} publié${sans > 1 ? "s" : ""} sans indice (cercles sur l'axe)` : "");
-  $("sous-risque").innerHTML = `Saison <b>${esc(etat.s)}</b>${SAISON.get(etat.s).comparable ? "" : " (non comparable)"} en bleu ; bande grise : médiane et intervalle interquartile `
-    + `de l'indice, <b>fenêtre ${esc(D.fenetre_defaut)}</b> (${esc(fenetreTexte)}), ${nBande ? `sur les saisons comparables, une case n'étant tracée qu'à partir de ${D.min_saisons_bande} saisons` : "<b>non calculable</b> pour ce massif (moins de " + D.min_saisons_bande + " saisons comparables)"}`
+  $("sous-risque").innerHTML = `Saison <b>${esc(etat.s)}</b>${SAISON.get(etat.s).comparable ? "" : " (non comparable)"} en bleu ; bande grise : médiane et quartiles de l'indice, <b>fenêtre ${esc(D.fenetre_defaut)}</b>.`
+    + PARTAGE.plus(`Fenêtre ${esc(fenetreTexte)}, ${nBande ? `sur les saisons comparables, une case n'étant tracée qu'à partir de ${D.min_saisons_bande} saisons` : "<b>non calculable</b> pour ce massif (moins de " + D.min_saisons_bande + " saisons comparables)"}`
     + ` — la saison lue y entre quand elle est comparable. Fond bleuté : la fenêtre ${esc(D.fenetre_defaut)} de la saison lue.`
-    + (etat.f === D.saison_complete ? ` Les indicateurs portent sur la saison entière, mais la bande et les autres saisons restent sur la fenêtre ${esc(D.fenetre_defaut)} : hors de celle-ci, les indices ne se comparent pas.` : "");
+    + (etat.f === D.saison_complete ? ` Les indicateurs portent sur la saison entière, mais la bande et les autres saisons restent sur la fenêtre ${esc(D.fenetre_defaut)} : hors de celle-ci, les indices ne se comparent pas.` : ""));
   $("lg-risque").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>saison lue</span>`
     + `<span><i class="sw" style="background:var(--band)"></i>médiane</span><span><i class="sw box" style="background:var(--band);opacity:.35"></i>quartiles</span>`
     + (etat.o ? `<span><i class="sw" style="background:var(--ink-muted);opacity:.5;height:1px"></i>autres saisons comparables (fenêtre ${esc(D.fenetre_defaut)} seulement)</span>` : "");
@@ -390,16 +410,22 @@ function grapheNeige() {
   }));
   const haut = Math.ceil(mx / 100) * 100;
   const g = cadre("g-neige", 150, [0, haut], [0, haut / 2, haut], "cm");
+  const lignes = [];
   if (etat.o) {
     for (const s of autresSaisons()) {
       const o = D.series[etat.m][s], n = o.neige?.[tr];
       if (!n) continue;
-      for (const [v, col] of [["nord", "var(--s1)"], ["sud", "var(--s2)"]])
+      for (const [v, col] of [["nord", "var(--s1)"], ["sud", "var(--s2)"]]) {
+        nombres(n[v]).forEach((y, i) => { if (y != null) lignes.push(pointExport("autre_saison_" + v, s, o, i, y)); });
         el("path", { d: chemin(nombres(n[v]).map((y, i) => y == null ? null : [g.px(abscisse(o, i)), g.py(y)])), fill: "none", stroke: col, "stroke-width": 0.8, opacity: 0.18 }, g.svg);
+      }
     }
   }
   const n = e.neige?.[tr];
   const nord = nombres(n?.nord), sud = nombres(n?.sud);
+  nord.forEach((y, i) => { if (y != null) lignes.push(pointExport("nord", etat.s, e, i, y)); });
+  sud.forEach((y, i) => { if (y != null) lignes.push(pointExport("sud", etat.s, e, i, y)); });
+  exporter("g-neige", "neige-" + tr, "Épaisseur de neige, tranche " + tr + " (cm)", lignes);
   if (n) for (const [vals, col] of [[nord, "var(--s1)"], [sud, "var(--s2)"]])
     el("path", { d: chemin(vals.map((y, i) => y == null ? null : [g.px(abscisse(e, i)), g.py(y)])), fill: "none", stroke: col, "stroke-width": 1.8, "stroke-linejoin": "round" }, g.svg);
   const vals = nord.map((v, i) => v ?? sud[i] ?? null);
@@ -408,8 +434,8 @@ function grapheNeige() {
   const parVersant = v => nombres(n?.[v]).filter(x => x != null).length;
   const alt = e.altitudes_neige?.[tr]?.join(" / ");
   legendeCov("cov-neige", c, n ? `un jour compte dès qu'un versant est relevé (nord ${parVersant("nord")} j, sud ${parVersant("sud")} j)` : "aucun palier d'enneigement dans cette tranche pour cette saison");
-  $("sous-neige").innerHTML = `Épaisseur du manteau au palier le plus haut de la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (<b>${alt} m</b> cette saison ; le palier change d'époque)` : ""}, `
-    + `versants nord et sud. Valeur indicative rattachée à l'altitude de référence, pas une mesure. Indexée sur la date que décrit le relevé (<code>jour</code>). Traits fins : autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`;
+  $("sous-neige").innerHTML = `Épaisseur du manteau, palier le plus haut de la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (<b>${alt} m</b>)` : ""}, versants nord et sud. Valeur indicative, pas une mesure.`
+    + PARTAGE.plus(`${alt ? `Le palier est à ${alt} m cette saison et change d'époque. ` : ""}Valeur rattachée à l'altitude de référence. Indexée sur la date que décrit le relevé (<code>jour</code>). Traits fins : autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`);
   $("lg-neige").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>versant nord</span><span><i class="sw" style="background:var(--s2)"></i>versant sud</span>`
     + (etat.o ? `<span><i class="sw" style="height:1px;opacity:.4;background:var(--ink-muted)"></i>autres saisons comparables (traits fins)</span>` : "");
   curseur(g, "g-neige", x => {
@@ -426,14 +452,20 @@ function grapheIso0() {
   const tous = [etat.s, ...autresSaisons()].flatMap(s => { const o = D.series[etat.m][s].iso0; return o ? [...nombres(o.min), ...nombres(o.max)].filter(v => v != null) : []; });
   const hi = Math.max(1000, Math.ceil(Math.max(0, ...tous) / 1000) * 1000);
   const g = cadre("g-iso0", 150, [0, hi], Array.from({ length: hi / 1000 + 1 }, (_, k) => k * 1000), "m");
+  const lignes = [];
   if (etat.o) {
     for (const s of autresSaisons()) {
       const o = D.series[etat.m][s];
       if (!o.iso0) continue;
+      nombres(o.iso0.moyen).forEach((y, i) => { if (y != null) lignes.push(pointExport("autre_saison_moyenne", s, o, i, y)); });
       el("path", { d: chemin(nombres(o.iso0.moyen).map((y, i) => y == null ? null : [g.px(abscisse(o, i)), g.py(y)])), fill: "none", stroke: "var(--ink-muted)", "stroke-width": 0.8, opacity: 0.3 }, g.svg);
     }
   }
   const mn = nombres(iso?.min), mxv = nombres(iso?.max), moy = nombres(iso?.moyen);
+  moy.forEach((y, i) => { if (y != null) lignes.push(pointExport("moyenne", etat.s, e, i, y)); });
+  mn.forEach((y, i) => { if (y != null) lignes.push(pointExport("min", etat.s, e, i, y)); });
+  mxv.forEach((y, i) => { if (y != null) lignes.push(pointExport("max", etat.s, e, i, y)); });
+  exporter("g-iso0", "iso0", "Isotherme 0 °C prévu (m)", lignes);
   // aire min-max, segment par segment : un trou ne se comble pas
   let h = [], b = [];
   const ferme = () => { if (h.length) el("path", { d: "M" + h.concat(b.reverse()).map(p => p.map(v => v.toFixed(1)).join(" ")).join("L") + "Z", fill: "var(--s1)", opacity: 0.22 }, g.svg); h = []; b = []; };
@@ -452,7 +484,8 @@ function grapheIso0() {
   const [a, z] = etendueBloc(e, moy);
   const c = couverture(g, e, moy, a, z);
   legendeCov("cov-iso0", c, iso ? "" : "aucune prévision d'isotherme pour cette saison");
-  $("sous-iso0").innerHTML = `Isotherme 0 °C <b>prévu</b> par le bulletin pour le jour de validité : moyenne des échéances 06 h et 12 h (trait) et amplitude min–max (aire). Prévision, pas observation. Trait fin : moyenne des autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`;
+  $("sous-iso0").innerHTML = `Isotherme 0 °C <b>prévu</b> : moyenne des échéances 06 h et 12 h (trait), amplitude min–max (aire). Prévision, pas observation.`
+    + PARTAGE.plus(`Trait fin : moyenne des autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`);
   $("lg-iso0").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>moyenne du jour</span><span><i class="sw box" style="background:var(--s1);opacity:.3"></i>min–max</span>`
     + `<span><i class="sw" style="background:var(--s2)"></i>seuil de redoux</span>` + (etat.o ? `<span><i class="sw" style="height:1px;opacity:.5;background:var(--ink-muted)"></i>moyenne des autres saisons comparables</span>` : "");
   curseur(g, "g-iso0", x => {
@@ -467,6 +500,8 @@ function grapheVent() {
   const e = D.series[etat.m][etat.s];
   const tr = etat.t;
   const v = nombres(e.vent?.[tr]);
+  exporter("g-vent", "vent-" + tr, "Vent prévu le plus fort du jour, tranche " + tr + " (km/h)",
+    v.flatMap((y, i) => y == null ? [] : [pointExport("vent", etat.s, e, i, y, y > D.seuil_vent_fort_kmh ? "au-dessus de " + D.seuil_vent_fort_kmh + " km/h" : "")]));
   const hi = Math.max(D.seuil_vent_fort_kmh + 20, Math.ceil(Math.max(0, ...v.filter(x => x != null)) / 20) * 20);
   const g = cadre("g-vent", 130, [0, hi], [0, 50, 100, 150].filter(t => t <= hi), "km/h");
   const larg = (W - L - R) / (g.x1 - g.x0 + 1);
@@ -480,8 +515,8 @@ function grapheVent() {
   const c = couverture(g, e, v, a, z);
   const alt = e.altitudes_vent?.[tr]?.join(" / ");
   legendeCov("cov-vent", c, e.vent?.[tr] ? "" : "aucun vent prévu dans cette tranche pour cette saison");
-  $("sous-vent").innerHTML = `Vitesse <b>prévue</b> la plus forte du jour (échéances 06 h et 12 h) dans la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (altitude${alt.includes("/") ? "s" : ""} de vent : <b>${alt} m</b>)` : ""}. `
-    + `Les vents relèvent de leur altitude, jamais de leur rang « bas / haut » dans le bulletin. Pas de fond de comparaison sur ce graphe.`;
+  $("sous-vent").innerHTML = `Vitesse <b>prévue</b> la plus forte du jour, tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (<b>${alt} m</b>)` : ""}.`
+    + PARTAGE.plus(`Échéances 06 h et 12 h${alt ? `, altitude${alt.includes("/") ? "s" : ""} de vent ${alt} m` : ""}. Les vents relèvent de leur altitude, jamais de leur rang « bas / haut » dans le bulletin. Pas de fond de comparaison sur ce graphe.`);
   $("lg-vent").innerHTML = `<span><i class="sw box" style="background:var(--s1)"></i>vitesse</span><span><i class="sw box" style="background:var(--s2)"></i>au-dessus de ${D.seuil_vent_fort_kmh} km/h</span>`;
   curseur(g, "g-vent", x => {
     const i = decalageInverse(e, x);
@@ -534,8 +569,8 @@ function indicateurs() {
 function alerte() {
   const s = SAISON.get(etat.s), f = FEN.get(etat.f);
   const a = [];
-  if (!s.comparable) a.push(`<b>${esc(etat.s)} n'est pas une saison comparable</b> : ${esc(s.motif)}. Elle reste affichée, mais ne se compare à aucune autre.`);
-  if (!f.comparable) a.push(`Indicateurs sur la <b>${esc(f.libelle)}</b> : lecture de cette saison isolément. L'indice moyen ne se compare pas à celui d'une autre saison hors de la fenêtre ${esc(D.fenetre_defaut)}, la sentinelle d'avant juin 2021 en altérant près de la moitié de l'écart.`);
+  if (!s.comparable) a.push(`<b>${esc(etat.s)} n'est pas une saison comparable</b> : ${esc(s.motif)}.${PARTAGE.plus("Elle reste affichée, mais ne se compare à aucune autre.", "suite")}`);
+  if (!f.comparable) a.push(`Indicateurs sur la <b>${esc(f.libelle)}</b> : lecture de cette saison isolément.${PARTAGE.plus(`L'indice moyen ne se compare pas à celui d'une autre saison hors de la fenêtre ${esc(D.fenetre_defaut)}, la sentinelle d'avant juin 2021 en altérant près de la moitié de l'écart.`, "pourquoi")}`);
   $("alerte").innerHTML = a.join("<br>");
 }
 function notes() {
@@ -547,7 +582,7 @@ function notes() {
     "Neige, isotherme et vent sont ceux du bulletin (valeurs indicatives et prévisions), non des mesures.",
   ];
   if (m.saisons.length < D.saisons.length) n.push(`Ce massif n'a des bulletins que sur ${m.saisons.length} des ${D.saisons.length} saisons de l'archive.`);
-  $("notes").innerHTML = n.map(x => `<li>${x}</li>`).join("");
+  $("notes").innerHTML = `<details class="plus bloc"><summary>Notes de lecture</summary><ul>${n.map(x => `<li>${x}</li>`).join("")}</ul></details>`;
 }
 
 /* ---------- assemblage ---------- */
@@ -567,12 +602,13 @@ function dessine() {
   $("ax-rang").setAttribute("aria-pressed", etat.a === "rang");
   const m = MASSIF.get(etat.m);
   $("titre").innerHTML = `${esc(m.nom)}<small>saison ${esc(etat.s)} · axe ${etat.a === "cal" ? "calendaire" : "en jours de saison"}</small>`;
-  $("attrib").textContent = `${D.attribution}, archive arrêtée au ${dateFr(D.archive_jusqu_au)}`
-    + (m.dernier_bulletin && m.dernier_bulletin !== D.archive_jusqu_au ? ` · dernier bulletin de ${m.nom} : ${dateFr(m.dernier_bulletin)}` : "");
+  /* L'URL est ecrite avant les traces : l'en-tete des exports cite le lien courant. */
+  ecrireUrl();
+  $("attrib").textContent = m.dernier_bulletin && m.dernier_bulletin !== D.archive_jusqu_au ? `Dernier bulletin de ${m.nom} : ${dateFr(m.dernier_bulletin)}` : "";
   document.title = `${m.nom} ${etat.s} — fiche massif-saison`;
   alerte(); indicateurs();
   grapheRisque(); grapheNeige(); grapheIso0(); grapheVent();
-  notes(); ecrireUrl();
+  notes();
 }
 function change(cle, valeur) {
   etat[cle] = valeur;
@@ -591,7 +627,7 @@ $("ax-rang").addEventListener("click", () => change("a", "rang"));
 $("ck-autres").addEventListener("change", e => change("o", e.target.checked));
 addEventListener("hashchange", () => { lireUrl(); dessine(); });
 
-$("gen").textContent = `Page générée le ${dateFr(D.genere)}`;
+PARTAGE.demarrer({ ecran: "fiche", ...D.partage });
 remplirSelecteurs();
 lireUrl();
 dessine();

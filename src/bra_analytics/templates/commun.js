@@ -1,5 +1,5 @@
 /* Aides partagees par les ecrans a graphes (fiche, comparaison) : pures, sans etat.
-   Inserees dans la page par le marqueur de gabarit (dashboard.injecter). */
+   Inserees dans la page par le marqueur de gabarit (gabarit.injecter). */
 const NS = "http://www.w3.org/2000/svg";
 const DAY = 86400000;
 const NIVEAUX = ["Faible", "Limité", "Marqué", "Fort", "Très fort"];

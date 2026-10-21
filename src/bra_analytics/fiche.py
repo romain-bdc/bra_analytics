@@ -1,9 +1,9 @@
 """Fiche massif-saison (spec section 6, T11).
 
-Meme motif que `dashboard.py` et `carte.py` : un payload JSON construit ici,
+Meme motif que `gabarit.py` et `carte.py` : un payload JSON construit ici,
 insere dans `templates/fiche.html` par le marqueur `__DONNEES__`, tout le
 filtrage cote client. Aucun framework, aucune donnee chargee du reseau : seules les
-polices viennent de Google Fonts, comme dans `dashboard.html` et `carte.html`, avec repli
+polices viennent de Google Fonts, comme dans `carte.html`, avec repli
 sur les polices systeme hors ligne.
 
 Rien n'est recalcule ici : les series viennent des vues de `metriques/`
@@ -29,7 +29,8 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
-from .dashboard import ABSENT, SANS_INDICE, injecter
+from . import partage
+from .gabarit import ABSENT, SANS_INDICE, injecter
 from .fenetres import DEFAUT, FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES, comparable
 from .massifs import MASSIFS
 from .metriques import enneigement, meteo, risque
@@ -50,7 +51,7 @@ VERSANTS = enneigement.VERSANTS
 
 # Fenetres offertes aux indicateurs : `coeur` pour ce qui se compare, la saison
 # entiere pour la lecture isolee. `commune` mesure ce que l'archive contient
-# (dashboard.py) et n'a pas d'usage ici ; la laisser doublerait le poids des
+# et n'a pas d'usage ici ; la laisser doublerait le poids des
 # indicateurs pour une fenetre que la fiche n'offre pas.
 FENETRES_FICHE = (DEFAUT.nom, SAISON_COMPLETE)
 
@@ -376,7 +377,8 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "series": series,
         "bandes": bandes,
         "indicateurs": indicateurs,
-        "attribution": "Données Météo-France, Licence Ouverte 2.0",
+        "attribution": partage.ATTRIBUTION_DONNEES,
+        "partage": partage.bloc(archive.isoformat() if archive else None, date.today().isoformat()),
     }
 
 

@@ -1,6 +1,6 @@
 """Carte d'accueil : les 36 massifs, une valeur par massif (spec section 6, T12).
 
-Meme motif que `dashboard.py` : un payload JSON construit ici, insere dans le
+Meme motif que `gabarit.py` : un payload JSON construit ici, insere dans le
 gabarit `templates/carte.html` par le marqueur `__DONNEES__`, et tout le reste
 cote client. La page dessine elle-meme les contours en SVG : pas de
 bibliotheque cartographique, et aucune donnee chargee du reseau (seules les
@@ -23,8 +23,8 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
-from . import geo
-from .dashboard import injecter
+from . import geo, partage
+from .gabarit import injecter
 from .fenetres import DEFAUT, SAISONS_NON_COMPARABLES, comparable
 from .massifs import MASSIFS
 from .metriques import risque
@@ -234,11 +234,17 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "metrique_defaut": METRIQUES[0]["cle"],
         "massifs": massifs,
         "contours": contours,
+        # Silhouette de fond, pour situer les massifs dans le pays : sans donnee, jamais coloree.
+        "france": geo.charger(geo.FRANCE_WEB),
         "attribution": {
-            "donnees": "Données Météo-France, Licence Ouverte 2.0",
-            "contours": (f"Contours des massifs : Météo-France, Licence Ouverte 2.0 "
-                         f"(version du {VERSION_CONTOURS})"),
+            "donnees": partage.ATTRIBUTION_DONNEES,
+            "contours": partage.attribution_contours(VERSION_CONTOURS),
         },
+        "partage": partage.bloc(
+            archive.isoformat() if archive else None,
+            date.today().isoformat(),
+            partage.attribution_contours(VERSION_CONTOURS),
+        ),
     }
 
 

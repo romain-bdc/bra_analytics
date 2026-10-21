@@ -221,23 +221,19 @@ def cmd_ui(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_dashboard(args: argparse.Namespace) -> int:
-    from .dashboard import render
-
-    out = render(args.db, args.out, args.zone, standalone=not args.fragment)
-    print(f"tableau de bord : {out} ({out.stat().st_size / 1024:.0f} Ko)")
-    if args.fragment:
-        print("fragment sans doctype : a inserer dans un hote qui fournit le squelette HTML.")
-    else:
-        print("page autonome : ouvrir directement dans un navigateur, aucun serveur requis.")
-    return 0
-
-
 def cmd_fiche(args: argparse.Namespace) -> int:
     from .fiche import render
 
     out = render(args.db, args.out, standalone=not args.fragment)
     print(f"fiche massif-saison : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    return 0
+
+
+def cmd_exploration(args: argparse.Namespace) -> int:
+    from .exploration import render
+
+    out = render(args.db, args.out, standalone=not args.fragment)
+    print(f"ecran d'exploration : {out} ({out.stat().st_size / 1024:.0f} Ko)")
     return 0
 
 
@@ -309,6 +305,10 @@ def cmd_contours(args: argparse.Namespace) -> int:
     out = Path(args.out)
     out.write_text(json.dumps(simple, separators=(",", ":")) + "\n", encoding="utf-8")
     print(f"version web : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    france = geo.version_web_france(geo.charger(args.france_source))
+    out_france = Path(args.france_out)
+    out_france.write_text(json.dumps(france, separators=(",", ":")) + "\n", encoding="utf-8")
+    print(f"contour de la France : {out_france} ({out_france.stat().st_size / 1024:.0f} Ko)")
     # Un ecart est signale par le code de sortie, pas seulement affiche.
     return 0 if r.complet else 1
 
@@ -386,14 +386,6 @@ def build_parser() -> argparse.ArgumentParser:
     u.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
     u.set_defaults(func=cmd_ui)
 
-    d = sub.add_parser("dashboard", help="generer le tableau de bord HTML statique")
-    d.add_argument("--db", default="warehouse/bra.duckdb")
-    d.add_argument("--out", default="dashboard.html", help="fichier de sortie")
-    d.add_argument("--zone", default="Pyrenees", help="zone a representer (defaut: Pyrenees)")
-    d.add_argument("--fragment", action="store_true",
-                   help="omettre doctype et <html> (page destinee a etre hebergee)")
-    d.set_defaults(func=cmd_dashboard)
-
     f = sub.add_parser("fiche", help="generer la fiche massif-saison (HTML statique)")
     f.add_argument("--db", default="warehouse/bra.duckdb")
     f.add_argument("--out", default="fiche.html", help="fichier de sortie")
@@ -408,6 +400,13 @@ def build_parser() -> argparse.ArgumentParser:
                    help="omettre doctype et <html> (page destinee a etre hebergee)")
     c.set_defaults(func=cmd_comparaison)
 
+    e = sub.add_parser("exploration", help="generer l'ecran d'exploration orientations et vent (HTML statique)")
+    e.add_argument("--db", default="warehouse/bra.duckdb")
+    e.add_argument("--out", default="exploration.html", help="fichier de sortie")
+    e.add_argument("--fragment", action="store_true",
+                   help="omettre doctype et <html> (page destinee a etre hebergee)")
+    e.set_defaults(func=cmd_exploration)
+
     k = sub.add_parser("carte", help="generer la carte d'accueil des 36 massifs (HTML statique)")
     k.add_argument("--db", default="warehouse/bra.duckdb")
     k.add_argument("--out", default="carte.html", help="fichier de sortie")
@@ -420,6 +419,8 @@ def build_parser() -> argparse.ArgumentParser:
     g = sub.add_parser("contours", help="raccorder et simplifier les contours des massifs")
     g.add_argument("--source", default=str(geo.SOURCE), help="GeoJSON d'origine")
     g.add_argument("--out", default=str(geo.WEB), help="GeoJSON simplifie")
+    g.add_argument("--france-source", default=str(geo.FRANCE_SOURCE), help="contour de la France d'origine")
+    g.add_argument("--france-out", default=str(geo.FRANCE_WEB), help="contour de la France simplifie")
     g.set_defaults(func=cmd_contours)
 
     a = sub.add_parser("audit", help="disponibilite des champs saison par saison")

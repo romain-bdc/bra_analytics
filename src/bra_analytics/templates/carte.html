@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Jetons repris du tableau de bord (templates/dashboard.html) : meme rampe
+/* Jetons communs aux ecrans : meme rampe
    bleue a cinq pas, validee en ordinal sur les deux surfaces. */
 :root{
   color-scheme:light;
@@ -72,10 +72,11 @@ select{min-width:230px;max-width:100%}
 .panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:22px 22px 18px}
 h2{font-size:19px;font-weight:600;letter-spacing:-.012em;margin:0}
 .sous{margin:4px 0 14px;color:var(--ink-2);font-size:13.5px;max-width:86ch}
-.carte svg{display:block;width:100%;height:auto}
+.carte svg{display:block;width:100%;height:auto;max-width:640px;margin:0 auto}
+.pays{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:.8;stroke-linejoin:round;pointer-events:none}
 .massif{stroke:var(--surface);stroke-width:1.1;stroke-linejoin:round;cursor:crosshair}
 .massif:hover,.massif:focus-visible{stroke:var(--ink);stroke-width:1.8;outline:none}
-.zonelab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;fill:var(--ink-muted)}
+.zonelab{font-family:var(--mono);font-size:15px;letter-spacing:.1em;text-transform:uppercase;fill:var(--ink-muted)}
 
 .legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2)}
 .legend span{display:inline-flex;align-items:center;gap:7px}
@@ -132,18 +133,20 @@ footer a{color:var(--ink-2)}
   <div class="carte"><svg id="carte" role="img" aria-labelledby="h2"></svg></div>
   <div class="legend" id="legende"></div>
   <p class="echelle" id="echelle"></p>
-  <p class="attrib" id="attrib"></p>
+  <p class="attrib" id="attribution-contours"></p>
   <div class="tables" hidden><div class="scroller"><table id="table"></table></div></div>
 </section>
 
 <footer>
-  <span id="gen"></span>
-  <span>Source : <a href="https://files.data.gouv.fr/meteofrance/data/BULLETIN/BRA/">files.data.gouv.fr — Météo-France</a>, <a href="https://www.etalab.gouv.fr/licence-ouverte-open-licence">Licence Ouverte 2.0</a></span>
+  <span id="attribution"></span>
   <span>Page générée par <code>bra carte</code></span>
 </footer>
 </div>
 <div id="tip" role="status" aria-live="polite"></div>
 
+<script>
+__PARTAGE__
+</script>
 <script>
 const D = __DONNEES__;
 const NS = "http://www.w3.org/2000/svg";
@@ -175,7 +178,8 @@ const fenetreTexte = `${F.debut[1]} ${MOIS[F.debut[0] - 1]} → ${F.fin[1]} ${MO
    tient en deux lignes sans bibliotheque cartographique. */
 const anneaux = f => f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
 let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-for (const f of D.contours.features) for (const poly of anneaux(f)) for (const r of poly) for (const [x, y] of r) {
+/* L'etendue est celle de la France entiere : les massifs s'y situent, ils ne remplissent pas la page. */
+for (const f of [...D.france.features, ...D.contours.features]) for (const poly of anneaux(f)) for (const r of poly) for (const [x, y] of r) {
   minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
 }
 const KX = Math.cos((minY + maxY) / 2 * Math.PI / 180);
@@ -192,9 +196,10 @@ const chemin = f => anneaux(f).map(poly => poly.map(r =>
    repartis en cinq classes egales sur l'etendue observee ; le maximum, deja
    ordinal, prend directement le pas de son niveau. */
 const METRIQUES = D.metriques;
-/* La metrique vit dans l'URL (spec section 6) : un etat de la page se partage par son lien. */
+/* La metrique vit dans l'URL (spec section 6) sous la cle `mc` : un etat de la page se
+   partage par son lien, et les cles des autres ecrans (massif, saison...) traversent la carte. */
 const depuisUrl = () => {
-  const h = decodeURIComponent(location.hash.slice(1));
+  const h = PARTAGE.lire().get("mc");
   return METRIQUES.some(m => m.cle === h && m.disponible) ? h : D.metrique_defaut;
 };
 let metrique = depuisUrl();
@@ -286,9 +291,13 @@ function carte() {
   motifs(svg);
   const sc = echelle(metrique);
   const zones = new Map();
+  /* Fond : silhouette de la France, sous les massifs et hors de toute interaction. */
+  for (const f of D.france.features) svg.appendChild(el("path", { d: chemin(f), class: "pays", "aria-hidden": "true" }));
+  const lignesExport = [];
   for (const f of D.contours.features) {
     const m = PAR_ID.get(f.properties.code);
     if (!m) continue;
+    lignesExport.push([m.id, m.nom, zoneFr(m.zone), metrique, m[metrique], m.jours_couverts, m.jours_periode, m.jours_4_plus, m.saisons_presentes.length, m.diffusion]);
     const d = chemin(f);
     const v = m[metrique];
     const fill = v == null ? "url(#absent)" : `var(${RAMPE[sc.pas(v)]})`;
@@ -317,6 +326,13 @@ function carte() {
     t.textContent = zoneFr(nom);
     svg.appendChild(t);
   }
+  /* Une ligne par massif colore : la valeur est celle qui a choisi la teinte. */
+  PARTAGE.enregistrer(svg, {
+    nom: `carte-${metrique}`,
+    titre: `${defMetrique().libelle}, ${D.libelle_saisons}`,
+    colonnes: ["massif_id", "massif", "zone", "metrique", "valeur", "jours_couverts", "jours_periode", "jours_4_plus", "saisons_presentes", "diffusion"],
+    lignes: lignesExport,
+  });
   legende(sc);
 }
 
@@ -380,7 +396,6 @@ function tuiles() {
     ["Indice moyen le plus bas", bas ? bas.nom : "—", bas ? decrit(bas) : ""],
     ["Diffusion partielle", nb(partiels.length) + " massif" + (partiels.length > 1 ? "s" : ""),
       partiels.map(m => `${m.nom} : ${m.saisons_presentes.length} saisons sur ${NB_COMP}`).join(" · ") || "tous diffusés sur toute la période"],
-    ["Période", D.libelle_saisons, `fenêtre ${F.nom}, ${fenetreTexte}`],
   ];
   document.getElementById("kpis").innerHTML = cases
     .map(([k, v, n]) => `<div class="kpi"><span class="k">${k}</span><span class="v">${v}</span><span class="n">${n}</span></div>`).join("");
@@ -406,8 +421,8 @@ function textes() {
   document.getElementById("h2").textContent = `${def.libelle}, ${D.libelle_saisons}`;
   const ecartees = Object.entries(D.saisons_ecartees).map(([s, motif]) => `${s} (${motif})`).join(" ; ");
   document.getElementById("sous").innerHTML =
-    `${def.description[0].toUpperCase() + def.description.slice(1)}, sur la fenêtre <b>${F.nom}</b> (${fenetreTexte}) de chaque saison,
-     toutes saisons comparables confondues — une valeur par massif. Saisons écartées : ${esc(ecartees) || "aucune"}.`;
+    `${def.description[0].toUpperCase() + def.description.slice(1)}, une valeur par massif.`
+    + PARTAGE.plus(`Fenêtre <b>${F.nom}</b> (${fenetreTexte}) de chaque saison, toutes saisons comparables confondues. Saisons écartées : ${esc(ecartees) || "aucune"}.`);
 }
 
 /* ---------- assemblage ---------- */
@@ -418,26 +433,30 @@ sel.innerHTML = METRIQUES.map(m => m.disponible
 const indispo = METRIQUES.filter(m => !m.disponible);
 
 document.getElementById("lede").innerHTML =
-  `Par défaut, chaque massif est coloré par son indice de risque moyen sur <b>${D.libelle_saisons}</b>, mesuré sur la fenêtre
-   <b>${F.nom}</b> (${fenetreTexte}), la seule où les saisons se comparent : avant juin 2021, les journées à manteau insuffisant
-   (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Survolez un massif pour lire ses jours couverts et ses jours à risque 4 ou 5.`
-  + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${esc(m.libelle)} : ${esc(m.motif)}.`).join(" ")}</span>` : "");
+  `Chaque massif est coloré par son indice de risque moyen sur <b>${D.libelle_saisons}</b>, fenêtre <b>${F.nom}</b>. Survolez un massif pour le détail.`
+  + PARTAGE.plus(`La fenêtre ${F.nom} (${fenetreTexte}) est la seule où les saisons se comparent : avant juin 2021, les journées à manteau insuffisant
+   (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Le survol donne les jours couverts et les jours à risque 4 ou 5.`
+  + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${esc(m.libelle)} : ${esc(m.motif)}.`).join(" ")}</span>` : ""));
 
-const archive = dateFr(D.archive_jusqu_au);
-document.getElementById("attrib").innerHTML =
-  `${esc(D.attribution.donnees)}, archive arrêtée au ${archive}. ${esc(D.attribution.contours)}.`;
-document.getElementById("gen").textContent = `Archive arrêtée au ${archive} · page générée le ${dateFr(D.genere)}`;
+PARTAGE.demarrer({ ecran: "carte", ...D.partage });
 
-function dessine() { textes(); carte(); table(); }
-sel.addEventListener("change", () => { metrique = sel.value; history.replaceState(null, "", "#" + metrique); dessine(); });
-addEventListener("hashchange", () => { metrique = depuisUrl(); sel.value = metrique; dessine(); });
+/* L'URL est ecrite avant la carte : l'en-tete de l'export cite le lien courant. */
+function dessine() { PARTAGE.ecrire({ mc: metrique }); textes(); carte(); table(); }
+sel.addEventListener("change", () => { metrique = sel.value; dessine(); });
+addEventListener("hashchange", () => { metrique = depuisUrl(); sel.value = metrique; dessine(); tables(PARTAGE.lire().get("d") === "1"); });
 const bouton = document.getElementById("tbl");
-bouton.addEventListener("click", () => {
-  const on = bouton.getAttribute("aria-pressed") !== "true";
+/* Tableaux ouverts : cle `d=1`, comme sur le tableau de bord, pour qu'une URL collee rouvre le meme ecran. */
+function tables(on) {
   bouton.setAttribute("aria-pressed", String(on));
   bouton.textContent = on ? "Masquer les données" : "Voir les données";
   document.querySelectorAll(".tables").forEach(t => { t.hidden = !on; });
+}
+bouton.addEventListener("click", () => {
+  const on = bouton.getAttribute("aria-pressed") !== "true";
+  tables(on);
+  PARTAGE.ecrire({ d: on ? 1 : null });
 });
 tuiles();
 dessine();
+tables(PARTAGE.lire().get("d") === "1");
 </script>

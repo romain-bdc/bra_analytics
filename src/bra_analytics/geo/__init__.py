@@ -25,6 +25,16 @@ WEB = ICI / "massifs.web.geojson"
 # carte des 36 massifs (mesure sur le fichier du 15/02/2024).
 TOLERANCE = 0.001
 
+# Contour de la France metropolitaine (IGN Admin Express, edition 2018, simplifie par
+# gregoiredavid/france-geojson), pour situer les massifs dans le pays. Fichier d'origine
+# tel que telecharge ; la version web est produite par `bra contours`. Source,
+# empreinte et licence : docs/contours.md.
+FRANCE_SOURCE = ICI / "france_metropole_ign2018.geojson"
+FRANCE_WEB = ICI / "france.web.geojson"
+# Une silhouette de fond n'a pas besoin de la precision des massifs : 0,01 degre ~ 1 km,
+# coordonnees a 3 decimales (~100 m), 600 Ko -> 35 Ko.
+TOLERANCE_FRANCE = 0.01
+
 
 def charger(chemin: str | Path) -> dict:
     return json.loads(Path(chemin).read_text(encoding="utf-8"))
@@ -165,4 +175,19 @@ def version_web(source: dict) -> dict:
     simple = simplifier(source, tolerance=TOLERANCE)
     for f in simple["features"]:
         f["properties"] = {"code": f["properties"]["code"]}
+    return simple
+
+
+def version_web_france(source: dict) -> dict:
+    """Silhouette de la France pour la page : une seule entite, sans propriete.
+
+    Le fichier d'origine est une `Feature` ; on l'enveloppe dans un
+    `FeatureCollection` pour que `simplifier` et la page lisent le meme motif
+    que pour les massifs.
+    """
+    if source.get("type") == "Feature":
+        source = {"type": "FeatureCollection", "features": [source]}
+    simple = simplifier(source, tolerance=TOLERANCE_FRANCE, decimales=3)
+    for f in simple["features"]:
+        f["properties"] = {}
     return simple

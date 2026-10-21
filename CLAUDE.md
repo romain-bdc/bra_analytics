@@ -38,10 +38,10 @@ uv run bra check                                           # erreurs vs signaux,
 uv run bra info                                            # résumé par saison
 uv run bra fenetres                                        # comparabilité saison par saison
 uv run bra audit                                           # disponibilité champ × saison -> docs/disponibilite.md
-uv run bra dashboard                                       # page statique
 uv run bra carte                                           # carte d'accueil des 36 massifs
 uv run bra fiche                                           # fiche massif-saison (risque, neige, iso 0, vent)
 uv run bra comparaison                                     # comparaison de saisons (courbes, tableau, classement)
+uv run bra exploration                                     # roses des pentes et des vents, vent x orientation, situations
 uv run bra contours                                        # raccordement + version web des contours
 uv run bra ui                                              # interface web DuckDB
 uv run pytest
@@ -100,7 +100,7 @@ Les enfreindre ne produit pas une erreur, mais un chiffre faux.
 
 ## Ne pas faire
 
-- Versionner `data/`, `warehouse/`, `dashboard.html`, les Parquet, les XML (sauf `tests/fixtures/`, bulletins
+- Versionner `data/`, `warehouse/`, les pages HTML générées, les Parquet, les XML (sauf `tests/fixtures/`, bulletins
   isolés partagés par tous les tests, et `tests/series/`, suites de jours consécutifs que seuls
   les tests de métriques lisent : les mêler aux fixtures changerait les saisons vues par tous).
 - Introduire un serveur applicatif ou une base serveur. Le front est statique, le moteur est
@@ -115,13 +115,12 @@ Les enfreindre ne produit pas une erreur, mais un chiffre faux.
 
 ## État de l'interface
 
-`bra dashboard` produit déjà une page statique pour la zone Pyrénées : indice moyen par saison,
-répartition des indices, massif × saison, profil de saison, et une section « ce que l'archive ne
-dit pas ».
+Quatre écrans statiques existent : `bra carte`, `bra fiche`, `bra comparaison`, `bra exploration`
+(le tableau de bord Pyrénées, première visualisation, a été retiré).
 
-Le motif est à conserver. `dashboard.py` construit un payload JSON, encode la série de chaque
-massif en une chaîne d'un caractère par jour calendaire, et le gabarit
-`templates/dashboard.html` le reçoit via le marqueur `__DONNEES__` ; tout le filtrage se fait
+Le motif est à conserver. Chaque module d'écran construit un payload JSON, `gabarit.py` l'insère
+dans le gabarit `templates/<écran>.html` par le marqueur `__DONNEES__` (la fiche encode la série
+de chaque massif en une chaîne d'un caractère par jour calendaire) ; tout le filtrage se fait
 côté client, sans serveur. Les nouveaux écrans étendent ce motif. Ils n'introduisent pas de
 framework : à 36 massifs sur dix ans, la série complète pèse environ 130 Ko avant compression,
 ce qui tient largement dans une page.

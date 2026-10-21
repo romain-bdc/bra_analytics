@@ -21,7 +21,7 @@ import pytest
 
 from bra_analytics import comparaison
 from bra_analytics.build import build
-from bra_analytics.dashboard import injecter
+from bra_analytics.gabarit import injecter
 from bra_analytics.fenetres import DEFAUT, SAISON_COMPLETE, SAISONS_NON_COMPARABLES
 from bra_analytics.metriques import risque
 from bra_analytics.metriques.risque import ComparaisonRefusee
@@ -363,3 +363,11 @@ def test_chaque_graphe_et_tableau_porte_sa_couverture(synthetique, tmp_path) -> 
         assert "jours" in dom.texte[ident]
     # Le tableau porte sa couverture dans ses colonnes, une valeur par ligne.
     assert "Jours couverts" in dom.texte["table"] and "Jours avec indice" in dom.texte["table"]
+
+
+@chromium
+def test_mode_par_defaut_est_saisons_choisies(synthetique, tmp_path) -> None:
+    """Sans `x` dans l'URL, l'ecran s'ouvre sur « Saisons choisies » : une saison contre toutes les autres est illisible."""
+    dom = _dom(injecter(comparaison.TEMPLATE, synthetique), "m=65", tmp_path)
+    assert dom.attrs["mode-choix"]["aria-pressed"] == "true"
+    assert dom.attrs["mode-saison"]["aria-pressed"] == "false"

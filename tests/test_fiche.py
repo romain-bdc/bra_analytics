@@ -16,7 +16,7 @@ import pytest
 
 from bra_analytics import fiche
 from bra_analytics.build import build
-from bra_analytics.dashboard import ABSENT, SANS_INDICE
+from bra_analytics.gabarit import ABSENT, SANS_INDICE
 from bra_analytics.fenetres import DEFAUT, FENETRES, SAISONS_NON_COMPARABLES
 from bra_analytics.metriques import risque
 

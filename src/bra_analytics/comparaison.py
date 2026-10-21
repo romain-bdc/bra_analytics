@@ -38,7 +38,8 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
-from .dashboard import injecter
+from . import partage
+from .gabarit import injecter
 from .fenetres import DEFAUT, FENETRES, FIN_SENTINELLE, MOIS_FR, PAR_NOM, SAISON_COMPLETE
 from .fiche import (
     _bandes,
@@ -249,7 +250,8 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "refus": {m.cle: {f["nom"]: refus(m.cle, f["nom"]) for f in fenetres} for m in METRIQUES},
         "series": series,
         "bandes": bandes,
-        "attribution": "Données Météo-France, Licence Ouverte 2.0",
+        "attribution": partage.ATTRIBUTION_DONNEES,
+        "partage": partage.bloc(archive.isoformat() if archive else None, date.today().isoformat()),
     }
 
 

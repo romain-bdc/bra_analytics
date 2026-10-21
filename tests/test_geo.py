@@ -62,7 +62,7 @@ def test_bra_contours_ecrit_la_version_web_et_signale_les_ecarts(tmp_path, capsy
 
     out = tmp_path / "massifs.web.geojson"
     code = main(["contours", "--source", str(fixture("contours_mini.geojson")),
-                 "--out", str(out)])
+                 "--out", str(out), "--france-out", str(tmp_path / "france.web.geojson")])
     assert code == 1
     texte = capsys.readouterr().out
     assert "99" in texte and "71" in texte
@@ -84,3 +84,22 @@ def test_version_web_versionnee_a_jour() -> None:
     d'origine : un fichier genere qui derive en silence decale la carte."""
     attendu = geo.version_web(geo.charger(geo.SOURCE))
     assert geo.charger(geo.WEB) == attendu
+
+
+def test_contour_de_la_france_versionne_a_jour_et_couvre_les_massifs() -> None:
+    """Meme garde que pour les massifs : la silhouette embarquee est ce que `bra contours`
+    produit. Elle doit aussi contenir les massifs, sinon la carte les dessinerait hors du pays
+    (la Corse est dans le fichier d'origine)."""
+    attendu = geo.version_web_france(geo.charger(geo.FRANCE_SOURCE))
+    assert geo.charger(geo.FRANCE_WEB) == attendu
+    (pays,) = attendu["features"]
+    xs, ys = [], []
+    for poly in pays["geometry"]["coordinates"]:
+        for x, y in poly[0]:
+            xs.append(x); ys.append(y)
+    massifs = geo.charger(geo.WEB)
+    for f in massifs["features"]:
+        polys = [f["geometry"]["coordinates"]] if f["geometry"]["type"] == "Polygon" else f["geometry"]["coordinates"]
+        for poly in polys:
+            for x, y in poly[0]:
+                assert min(xs) - 0.1 <= x <= max(xs) + 0.1 and min(ys) - 0.1 <= y <= max(ys) + 0.1, f["properties"]["code"]

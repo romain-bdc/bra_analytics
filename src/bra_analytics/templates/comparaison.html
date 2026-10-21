@@ -105,8 +105,8 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
 <div class="bar">
   <label>Mode</label>
   <span class="seg" role="group" aria-label="Mode de comparaison">
-    <button class="toggle" id="mode-saison">Une saison contre les autres</button>
     <button class="toggle" id="mode-choix">Saisons choisies</button>
+    <button class="toggle" id="mode-saison">Une saison contre les autres</button>
     <button class="toggle" id="mode-massifs">Massifs, une saison</button>
   </span>
   <span id="zone-massif"><label for="sm">Massif</label> <select id="sm"></select></span>
@@ -148,16 +148,19 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
   <p class="cov" id="cov-rang"></p>
 </section>
 
-<ul class="notes" id="notes"></ul>
+<div class="notes" id="notes"></div>
 
 <footer>
+  <span id="attribution"></span>
   <span id="attrib"></span>
-  <span id="gen"></span>
   <span>Page générée par <code>bra comparaison</code></span>
 </footer>
 </div>
 <div id="tip"></div>
 
+<script>
+__PARTAGE__
+</script>
 <script>
 __COMMUN__
 </script>
@@ -178,12 +181,13 @@ const rangLib = r => r === 1 ? "1re" : `${r}e`;
 const plur = (n, s, p) => `${n} ${n > 1 ? (p || s + "s") : s}`;
 
 /* ---------- etat, porte par l'URL ---------- */
-const etat = { x: "saison", m: null, s: null, c: [], n: [], p: true, k: D.metriques[0].cle, f: D.fenetre_defaut, t: null, v: "nord" };
+const etat = { x: "choix", m: null, s: null, c: [], n: [], p: true, k: D.metriques[0].cle, f: D.fenetre_defaut, t: null, v: "nord" };
 const MODES = ["saison", "choix", "massifs"];
 const comparables = m => MASSIF.get(m).saisons.filter(s => SAISON.get(s).comparable);
 function lireUrl() {
-  const p = new URLSearchParams(location.hash.slice(1));
-  etat.x = MODES.includes(p.get("x")) ? p.get("x") : "saison";
+  const p = PARTAGE.lire();
+  // Defaut "choix" : une saison contre toutes les autres rend les courbes illisibles (choix du proprietaire).
+  etat.x = MODES.includes(p.get("x")) ? p.get("x") : "choix";
   const m = +p.get("m");
   etat.m = MASSIF.has(m) ? m : (MASSIF.has(65) ? 65 : D.massifs[0].id);
   const saisons = MASSIF.get(etat.m).saisons;
@@ -206,8 +210,7 @@ function defautMassifs() {
   return [etat.m, ...memes.filter(id => id !== etat.m)].filter(id => D.series[id]?.[etat.s]).slice(0, 3);
 }
 function ecrireUrl() {
-  const p = new URLSearchParams({ x: etat.x, m: etat.m, s: etat.s, c: etat.c.join(","), n: etat.n.join(","), p: etat.p ? 1 : 0, k: etat.k, f: etat.f, t: etat.t, v: etat.v });
-  history.replaceState(null, "", "#" + p);
+  PARTAGE.ecrire({ x: etat.x, m: etat.m, s: etat.s, c: etat.c.join(","), n: etat.n.join(","), p: etat.p ? 1 : 0, k: etat.k, f: etat.f, t: etat.t, v: etat.v });
 }
 
 /* ---------- series : entites comparees ---------- */
@@ -320,14 +323,14 @@ const fmtUnite = (k, v) => v == null ? "—" : fmt(k, v) + (METR.get(k).unite ? 
 /* Texte de troncature : dans le sous-titre du graphe, jamais en note de bas de page. */
 function texteTroncature(p, f, liste) {
   const nom = libFen(f);
-  if (!etat.p) return `<b>Troncature désactivée</b> : chaque série est lue sur toute la fenêtre ${esc(nom)}${f.debut ? ` (${esc(f.libelle)})` : ""} ; les périodes couvertes peuvent différer, les jours couverts sont affichés.`;
-  if (vide(p)) return `<b>Aucune période commune</b> aux séries comparables dans la fenêtre ${esc(nom)} : rien n'est agrégé.`;
+  if (!etat.p) return [`<b>Troncature désactivée</b> : séries lues sur toute la fenêtre ${esc(nom)}.`, `${f.debut ? `Fenêtre ${esc(f.libelle)}. ` : ""}Les périodes couvertes peuvent différer, les jours couverts sont affichés.`];
+  if (vide(p)) return [`<b>Aucune période commune</b> dans la fenêtre ${esc(nom)} : rien n'est agrégé.`, ""];
   const lim = [...(p.limite.debut || []).map(n => `${esc(n)} commence le ${jourLib(D.axe[p.lo])}`), ...(p.limite.fin || []).map(n => `${esc(n)} s'arrête le ${jourLib(D.axe[p.hi])}`)];
   const n = joursPeriode(p);
-  return `<b>Comparaison tronquée à période égale</b> : du <b>${jourLib(D.axe[p.lo])}</b> au <b>${jourLib(D.axe[p.hi])}</b> (${n} jours calendaires), `
-    + `période couverte par toutes les séries comparables dans la fenêtre ${esc(nom)}`
+  return [`<b>Comparaison tronquée à période égale</b> : du <b>${jourLib(D.axe[p.lo])}</b> au <b>${jourLib(D.axe[p.hi])}</b> (${n} jours).`,
+    `Période couverte par toutes les séries comparables dans la fenêtre ${esc(nom)}`
     + (p.tronquee ? ` — raccourcie par : ${lim.join(" ; ")}` : " — aucune série ne la raccourcit")
-    + (p.vides.length ? `. Sans jour couvert, hors du calcul : ${p.vides.map(en => esc(nomEntite(en))).join(", ")}` : "") + ".";
+    + (p.vides.length ? `. Sans jour couvert, hors du calcul : ${p.vides.map(en => esc(nomEntite(en))).join(", ")}` : "") + "."];
 }
 function attrsPeriode(p) {
   return vide(p) ? "" : `${D.axe[p.lo]}..${D.axe[p.hi]}`;
@@ -376,6 +379,9 @@ function grapheCourbes() {
   }
   const dansPeriode = x => x >= p.lo && x <= p.hi && x >= w0 && x <= w1;
 
+  // Export : une ligne par point trace (valeur vraie, sans le decalage vertical d'affichage).
+  const lignesExport = [];
+  const jourIso = (e, i) => new Date(T0(e.origine) + i * DAY).toISOString().slice(0, 10);
   // mode 1 : bande mediane / interquartile (T11), puis les autres saisons en traits fins
   let nBande = 0;
   const b = etat.x === "saison" ? D.bandes[etat.m] : null;
@@ -390,6 +396,7 @@ function grapheCourbes() {
       if (b.q1[x] == null || !dansPeriode(x)) { ferme(); med.push(null); continue; }
       haut.push([px(x), py(b.q3[x] + 0.5)]); bas.push([px(x), py(b.q1[x] - 0.5)]);
       med.push([px(x), py(b.mediane[x])]); nBande++;
+      lignesExport.push(["mediane", "", null, D.axe[x], b.mediane[x], b.q1[x], b.q3[x], "fenêtre " + D.fenetre_defaut]);
     }
     ferme();
     el("path", { d: chemin(med), fill: "none", stroke: "var(--band)", "stroke-width": 2 }, svg);
@@ -400,6 +407,8 @@ function grapheCourbes() {
     for (let i = 0; i < en.e.longueur; i++) {
       const v = valeurRisque(en.e, i);
       pts.push(v == null || !dansPeriode(s[i]) || s[i] < 0 ? null : [px(s[i]), py(v + decal)]);
+      if (v != null && dansPeriode(s[i]) && s[i] >= 0)
+        lignesExport.push([nomEntite(en), en.saison, jourIso(en.e, i), D.axe[s[i]], v, null, null, en.comparable ? "" : "non comparable : " + en.motif]);
     }
     const attrs = { d: chemin(pts), fill: "none", stroke: couleur, "stroke-width": epais, opacity: opa, "stroke-linejoin": "round", "data-trace": en.saison, "data-comparable": en.comparable ? 1 : 0 };
     if (tiret) attrs["stroke-dasharray"] = "4 4";
@@ -424,6 +433,12 @@ function grapheCourbes() {
     liste.forEach((en, k) => trace(en, COULEURS[k], 1.8, 0.95, (k - (liste.length - 1) / 2) * 0.09));
   }
 
+  PARTAGE.enregistrer(svg, {
+    nom: `risque-${etat.x}-${etat.m}-${etat.x === "choix" ? etat.c.join("_") : etat.s}`,
+    titre: `Indice de risque — ${etat.x === "massifs" ? etat.n.map(id => MASSIF.get(id).nom).join(", ") : MASSIF.get(etat.m).nom}, fenêtre ${f.nom}${etat.p ? ", période égale" : ""}`,
+    colonnes: ["serie", "saison", "jour", "jour_calendaire", "valeur", "q1", "q3", "remarque"],
+    lignes: lignesExport,
+  });
   // survol : valeur de chaque serie au jour calendaire pointe
   const cible = el("rect", { x: L, y: TOP, width: W - L - R, height: HAUT, fill: "transparent" }, svg);
   const tip = $("tip");
@@ -449,10 +464,11 @@ function grapheCourbes() {
   const sous = $("sous-courbes");
   sous.dataset.periode = attrsPeriode(p);
   sous.dataset.tronque = etat.p ? "1" : "0";
-  sous.innerHTML = texteTroncature(p, f, liste) + " Fenêtre " + esc(f.nom) + " (" + esc(f.libelle) + ") : seule fenêtre où l'indice se superpose entre saisons. "
+  const [courtT, detailT] = texteTroncature(p, f, liste);
+  sous.innerHTML = courtT + PARTAGE.plus(detailT + " Fenêtre " + esc(f.nom) + " (" + esc(f.libelle) + ") : seule fenêtre où l'indice se superpose entre saisons. "
     + (etat.x === "saison"
       ? `Saison <b>${esc(etat.s)}</b> en couleur ; traits fins : les autres saisons comparables ; pointillés clairs étiquetés : saisons non comparables, hors de la bande et du calcul de période commune ; bande : médiane et intervalle interquartile${nBande ? "" : " (non calculables : moins de " + D.min_saisons_bande + " saisons comparables)"}.`
-      : `Courbes décalées verticalement de 0,09 niveau pour rester lisibles : l'indice est un niveau entier, deux séries égales se recouvriraient.`);
+      : `Courbes décalées verticalement de 0,09 niveau pour rester lisibles : l'indice est un niveau entier, deux séries égales se recouvriraient.`));
   const cov = liste.map(en => {
     const a = agreger(en, "risque", p);
     return `${esc(nomEntite(en))} : <b>${a.avec} jours avec indice</b> sur ${joursPeriode(p)} de la période${a.couverts - a.avec ? ` · <span class="trou">${a.couverts - a.avec} sans indice</span>` : ""}${joursPeriode(p) - a.couverts ? ` · <span class="trou">${joursPeriode(p) - a.couverts} sans bulletin</span>` : ""}`;
@@ -489,9 +505,10 @@ function tableau() {
   const sous = $("sous-table");
   sous.dataset.periode = attrsPeriode(p);
   sous.dataset.tronque = etat.p ? "1" : "0";
-  sous.innerHTML = texteTroncature(p, COEUR, liste)
+  const [courtT, detailT] = texteTroncature(p, COEUR, liste);
+  sous.innerHTML = courtT + PARTAGE.plus(detailT
     + " L'indice moyen se lit toujours avec les jours avec indice de sa ligne ; un niveau de risque est ordinal."
-    + (pn.lo !== p.lo || pn.hi !== p.hi ? ` La neige est tronquée sur sa propre couverture : ${vide(pn) ? "aucun relevé commun" : `du ${jourLib(D.axe[pn.lo])} au ${jourLib(D.axe[pn.hi])}`}.` : "");
+    + (pn.lo !== p.lo || pn.hi !== p.hi ? ` La neige est tronquée sur sa propre couverture : ${vide(pn) ? "aucun relevé commun" : `du ${jourLib(D.axe[pn.lo])} au ${jourLib(D.axe[pn.hi])}`}.` : ""));
 }
 
 /* Modes 2 et 3 : une comparaison demande au moins deux saisons (ou deux massifs). */
@@ -502,6 +519,7 @@ function insuffisant() {
 }
 
 /* ---------- classement ---------- */
+const COLONNES_RANG = ["massif_id", "saison", "metrique", "fenetre", "rang", "ex_aequo", "valeur", "jours_avec_valeur", "comparable", "motif"];
 function massifClasse() { return etat.x === "massifs" ? (etat.n[0] ?? etat.m) : etat.m; }
 function classement() {
   const svg = $("g-rang");
@@ -516,8 +534,9 @@ function classement() {
   if (motifRefus) {
     $("phrase").textContent = ""; $("cov-rang").textContent = "";
     sous.removeAttribute("data-periode"); sous.dataset.tronque = etat.p ? "1" : "0";
-    sous.innerHTML = `Massif <b>${esc(nom)}</b>. ${m.indice ? "Une métrique d'indice ne se classe que sur la fenêtre " + esc(D.fenetre_defaut) + " : hors d'elle, une moitié environ de l'écart entre les époques est un artefact d'encodage." : ""}`;
+    sous.innerHTML = `Massif <b>${esc(nom)}</b>. ${m.indice ? "Une métrique d'indice ne se classe que sur la fenêtre " + esc(D.fenetre_defaut) + "." + PARTAGE.plus("Hors d'elle, une moitié environ de l'écart entre les époques est un artefact d'encodage.", "pourquoi") : ""}`;
     svg.setAttribute("viewBox", "0 0 10 10");
+    PARTAGE.enregistrer(svg, { nom: `classement-${k}-${etat.f}-refuse`, titre: `Classement refusé : ${m.libelle}, fenêtre ${etat.f}`, colonnes: COLONNES_RANG, lignes: [] });
     return;
   }
   const liste = MASSIF.get(mid).saisons.map(s => entite(mid, s));
@@ -534,6 +553,12 @@ function classement() {
   classees.forEach(x => { x.ex = classees.filter(y => y.rang === x.rang).length > 1; });
   const autres = lignes.filter(x => !classees.includes(x)).sort((x, y) => x.en.saison.localeCompare(y.en.saison));
   const rows = [...classees, ...autres];
+  PARTAGE.enregistrer(svg, {
+    nom: `classement-${k}-${etat.f}-${mid}`,
+    titre: `Classement des saisons, ${m.libelle} — ${MASSIF.get(mid).nom}, fenêtre ${etat.f}${etat.p ? ", période égale" : ""}`,
+    colonnes: COLONNES_RANG,
+    lignes: rows.map(x => [mid, x.en.saison, k, etat.f, x.rang ?? null, x.ex ? 1 : 0, x.v, x.a.avec, x.en.comparable ? 1 : 0, x.en.comparable ? "" : x.en.motif]),
+  });
 
   // geometrie
   const RH = 30, LAB = 190, VAL = 210, top = 6;
@@ -589,10 +614,11 @@ function classement() {
   $("phrase").dataset.ex = rangTxt && ligne.ex ? "1" : "0";
   sous.dataset.periode = attrsPeriode(p);
   sous.dataset.tronque = etat.p ? "1" : "0";
-  sous.innerHTML = `Massif <b>${esc(nom)}</b>. ` + texteTroncature(p, f, liste)
+  const [courtT, detailT] = texteTroncature(p, f, liste);
+  sous.innerHTML = `Massif <b>${esc(nom)}</b>. ` + courtT + PARTAGE.plus(detailT
     + ` Barres triées sur les saisons comparables ; les saisons non comparables restent affichées en hachuré, avec leur motif au survol, sans rang.`
     + (ordinal ? " Axe gradué de 1 à 5 : l'indice est ordinal." : "")
-    + (m.indice ? "" : ` Épaisseur au palier de la tranche <b>${esc(etat.t)}</b>, versant ${etat.v} : valeur indicative rattachée à l'altitude de référence, qui change d'époque en époque${altitudes ? ` (altitudes lues dans l'archive : ${esc(altitudes)} m)` : ""}.`);
+    + (m.indice ? "" : ` Épaisseur au palier de la tranche <b>${esc(etat.t)}</b>, versant ${etat.v} : valeur indicative rattachée à l'altitude de référence, qui change d'époque en époque${altitudes ? ` (altitudes lues dans l'archive : ${esc(altitudes)} m)` : ""}.`));
   const total = lignes.reduce((n, x) => n + x.a.avec, 0);
   $("cov-rang").innerHTML = `Couverture — <b>${total} jours avec valeur</b> au total sur ${plur(liste.length, "saison")} de ${esc(nom)}, période de ${jours} jours calendaires.`
     + (autres.length ? ` ${autres.length} sans rang : ${autres.map(x => esc(x.en.saison)).join(", ")}.` : "");
@@ -603,7 +629,7 @@ function alerte() {
   const a = [];
   const insuf = insuffisant();
   if (insuf) a.push(`<b>Comparaison impossible</b> : ${esc(insuf)}`);
-  for (const en of entites()) if (!en.comparable) a.push(`<b>${esc(en.saison)} n'est pas une saison comparable</b> : ${esc(en.motif)}. Elle reste affichée, étiquetée, mais ne fixe pas la période commune et n'est jamais classée.`);
+  for (const en of entites()) if (!en.comparable) a.push(`<b>${esc(en.saison)} n'est pas une saison comparable</b> : ${esc(en.motif)}.${PARTAGE.plus("Elle reste affichée, étiquetée, mais ne fixe pas la période commune et n'est jamais classée.", "suite")}`);
   $("alerte").innerHTML = a.join("<br>");
 }
 function notes() {
@@ -615,7 +641,7 @@ function notes() {
   ];
   const m = MASSIF.get(massifClasse());
   if (m.saisons.length < D.saisons.length) n.push(`${esc(m.nom)} n'a des bulletins que sur ${m.saisons.length} des ${D.saisons.length} saisons de l'archive.`);
-  $("notes").innerHTML = n.map(x => `<li>${x}</li>`).join("");
+  $("notes").innerHTML = `<details class="plus bloc"><summary>Notes de lecture</summary><ul>${n.map(x => `<li>${x}</li>`).join("")}</ul></details>`;
 }
 
 /* ---------- assemblage ---------- */
@@ -650,10 +676,11 @@ function dessine() {
   $("titre").innerHTML = titre;
   $("h-courbes").textContent = etat.x === "massifs" ? "Indice de risque, massifs superposés" : "Indice de risque";
   const m = MASSIF.get(massifClasse());
-  $("attrib").textContent = `${D.attribution}, archive arrêtée au ${dateFr(D.archive_jusqu_au)}`
-    + (m.dernier_bulletin && m.dernier_bulletin !== D.archive_jusqu_au ? ` · dernier bulletin de ${m.nom} : ${dateFr(m.dernier_bulletin)}` : "");
+  $("attrib").textContent = m.dernier_bulletin && m.dernier_bulletin !== D.archive_jusqu_au ? `Dernier bulletin de ${m.nom} : ${dateFr(m.dernier_bulletin)}` : "";
   document.title = `Comparaison — ${m.nom}`;
-  alerte(); grapheCourbes(); tableau(); classement(); notes(); ecrireUrl();
+  /* L'URL est ecrite avant les traces : l'en-tete des exports cite le lien courant. */
+  ecrireUrl();
+  alerte(); grapheCourbes(); tableau(); classement(); notes();
 }
 function change(cle, valeur) {
   etat[cle] = valeur;
@@ -677,7 +704,7 @@ $("sv").addEventListener("change", e => change("v", e.target.value));
 $("ck-egale").addEventListener("change", e => change("p", e.target.checked));
 addEventListener("hashchange", () => { lireUrl(); dessine(); });
 
-$("gen").textContent = `Page générée le ${dateFr(D.genere)}`;
+PARTAGE.demarrer({ ecran: "comparaison", ...D.partage });
 remplirSelecteurs();
 lireUrl();
 dessine();
