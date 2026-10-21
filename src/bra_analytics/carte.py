@@ -234,6 +234,8 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "metrique_defaut": METRIQUES[0]["cle"],
         "massifs": massifs,
         "contours": contours,
+        # Silhouette de fond, pour situer les massifs dans le pays : sans donnee, jamais coloree.
+        "france": geo.charger(geo.FRANCE_WEB),
         "attribution": {
             "donnees": partage.ATTRIBUTION_DONNEES,
             "contours": partage.attribution_contours(VERSION_CONTOURS),

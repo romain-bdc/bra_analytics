@@ -33,7 +33,8 @@ LICENCE_URL = "https://www.etalab.gouv.fr/licence-ouverte-open-licence"
 
 def attribution_contours(version: str) -> str:
     """Attribution des contours, exigee la ou la carte s'affiche (spec section 7)."""
-    return f"Contours des massifs : Météo-France, Licence Ouverte 2.0 (version du {version})"
+    return (f"Contours des massifs : Météo-France, Licence Ouverte 2.0 (version du {version}) ; "
+            "contour de la France : IGN Admin Express 2018, Licence Ouverte")
 
 
 class Ecran(NamedTuple):

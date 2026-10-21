@@ -72,10 +72,11 @@ select{min-width:230px;max-width:100%}
 .panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:22px 22px 18px}
 h2{font-size:19px;font-weight:600;letter-spacing:-.012em;margin:0}
 .sous{margin:4px 0 14px;color:var(--ink-2);font-size:13.5px;max-width:86ch}
-.carte svg{display:block;width:100%;height:auto}
+.carte svg{display:block;width:100%;height:auto;max-width:640px;margin:0 auto}
+.pays{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:.8;stroke-linejoin:round;pointer-events:none}
 .massif{stroke:var(--surface);stroke-width:1.1;stroke-linejoin:round;cursor:crosshair}
 .massif:hover,.massif:focus-visible{stroke:var(--ink);stroke-width:1.8;outline:none}
-.zonelab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;fill:var(--ink-muted)}
+.zonelab{font-family:var(--mono);font-size:15px;letter-spacing:.1em;text-transform:uppercase;fill:var(--ink-muted)}
 
 .legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2)}
 .legend span{display:inline-flex;align-items:center;gap:7px}
@@ -177,7 +178,8 @@ const fenetreTexte = `${F.debut[1]} ${MOIS[F.debut[0] - 1]} → ${F.fin[1]} ${MO
    tient en deux lignes sans bibliotheque cartographique. */
 const anneaux = f => f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
 let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-for (const f of D.contours.features) for (const poly of anneaux(f)) for (const r of poly) for (const [x, y] of r) {
+/* L'etendue est celle de la France entiere : les massifs s'y situent, ils ne remplissent pas la page. */
+for (const f of [...D.france.features, ...D.contours.features]) for (const poly of anneaux(f)) for (const r of poly) for (const [x, y] of r) {
   minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
 }
 const KX = Math.cos((minY + maxY) / 2 * Math.PI / 180);
@@ -289,6 +291,8 @@ function carte() {
   motifs(svg);
   const sc = echelle(metrique);
   const zones = new Map();
+  /* Fond : silhouette de la France, sous les massifs et hors de toute interaction. */
+  for (const f of D.france.features) svg.appendChild(el("path", { d: chemin(f), class: "pays", "aria-hidden": "true" }));
   const lignesExport = [];
   for (const f of D.contours.features) {
     const m = PAR_ID.get(f.properties.code);
