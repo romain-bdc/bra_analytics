@@ -41,7 +41,7 @@ uv run bra audit                                           # disponibilité cham
 uv run bra carte                                           # carte d'accueil des 36 massifs
 uv run bra fiche                                           # fiche massif-saison (risque, neige, iso 0, vent)
 uv run bra comparaison                                     # comparaison de saisons (courbes, tableau, classement)
-uv run bra exploration                                     # roses des pentes et des vents, vent x orientation, situations
+uv run bra exploration                                     # rose des pentes, vent x orientation, situations
 uv run bra contours                                        # raccordement + version web des contours
 uv run bra ui                                              # interface web DuckDB
 uv run pytest
