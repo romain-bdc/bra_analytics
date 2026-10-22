@@ -15,6 +15,7 @@ from . import partage
 
 COMMUN = Path(__file__).parent / "templates" / "commun.js"
 PARTAGE = Path(__file__).parent / "templates" / "partage.js"
+STYLE = Path(__file__).parent / "templates" / "commun.css"
 
 # Un caractere par jour, dans la chaine `serie` de chaque massif.
 ABSENT = "."  # aucun bulletin ce jour-la
@@ -53,6 +54,9 @@ def injecter(gabarit: Path, data: dict, standalone: bool = True) -> str:
         ecrans = json.dumps([e._asdict() for e in partage.ECRANS], ensure_ascii=False)
         js = PARTAGE.read_text(encoding="utf-8").replace("__ECRANS__", ecrans)
         html = html.replace("__PARTAGE__", js, 1)
+    # Meme ordre pour la feuille de style commune : une base visuelle, quatre ecrans.
+    if "__STYLE__" in html:
+        html = html.replace("__STYLE__", STYLE.read_text(encoding="utf-8"), 1)
     if "__COMMUN__" in html:
         html = html.replace("__COMMUN__", COMMUN.read_text(encoding="utf-8"), 1)
     page = html.replace("__DONNEES__", blob)
