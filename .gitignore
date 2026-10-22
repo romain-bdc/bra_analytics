@@ -26,3 +26,5 @@ __pycache__/
 /carte.html
 /fiche.html
 /comparaison.html
+# site statique genere par `bra site`
+/site/

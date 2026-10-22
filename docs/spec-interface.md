@@ -32,10 +32,9 @@ cherche un chiffre ou un graphe partageable.
 | Méthodologie de comparaison inter-saisons | Fait, bornes mesurées | `fenetres.py`, glossaire § 8 |
 | Contrôles de cohérence | Fait, erreurs vs signaux | `bra check` |
 | Documentation des champs | Fait | `docs/glossaire.md` |
-| Page statique Pyrénées | Retirée (remplacée par les quatre écrans) | — |
 | Couverture géographique complète | Fait : 36 massifs, 77 488 bulletins | `bra fetch`, T1 |
 | **Couche métriques** | **blocs risque (T6), enneigement (T7), météo (T8) et rose des pentes (T9) faits** ; score fait (T10) | `metriques/`, § 5 |
-| **Les quatre écrans** | **partiellement : la fiche existe en germe** | § 6 |
+| **Les quatre écrans** | **Fait : carte, fiche, comparaison, exploration** | `bra carte`, `bra fiche`, `bra comparaison`, `bra exploration`, § 6 |
 
 Conséquence directe : la spec ne redécrit pas le socle. Elle décrit ce qui s'ajoute, et seulement
 cela.
@@ -287,10 +286,11 @@ valeur par massif, sans sélecteur de saison. Le survol donne le nombre de jours
 nombre de jours de risque 4 ou 5. Un sélecteur permet de basculer sur une métrique simple
 (jours ≥ 3, maximum atteint, durée d'enneigement).
 
-**Fiche massif-saison.** La page centrale, et celle qui prolongeait la
-première page statique Pyrénées (retirée) : ligne d'indicateurs clés en haut, série temporelle du risque sur fond des autres
-saisons avec bande médiane et interquartile, puis enneigement, ISO 0 et vent sur le même axe
-temporel aligné.
+**Fiche massif-saison.** La page centrale : indicateurs clés groupés en haut (risque, neige,
+isotherme et vent), série temporelle du risque sur la bande médiane et interquartile des autres
+saisons, puis enneigement, ISO 0 et vent sur le même axe temporel aligné. Enneigement et ISO 0
+portent en pointillés la moyenne des autres saisons comparables, qui remplace le faisceau de
+traits gris, illisible une fois la bande présente.
 
 **Comparaison.** Les trois modes : une saison contre les autres du même massif ; deux à quatre
 saisons explicitement choisies, superposées, avec tableau récapitulatif ; N massifs sur une même

@@ -49,11 +49,17 @@ select,.toggle{font-family:var(--sans);font-size:14px;color:var(--ink);backgroun
 .alerte{border-left:3px solid var(--manque);padding:8px 0 8px 12px;background:var(--surface);margin:0 0 14px;font-size:13.5px;color:var(--ink-2)}
 .alerte b{color:var(--ink)}
 .alerte:empty{display:none}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin-bottom:26px}
-.kpi{background:var(--surface);padding:14px 16px 12px;display:flex;flex-direction:column;gap:4px}
-.kpi .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted)}
-.kpi .v{font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
-.kpi .n{font-size:12.5px;color:var(--ink-2)}
+.kpis{display:flex;flex-direction:column;gap:18px;margin-bottom:26px;padding:20px 8px 4px;background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+.kgroupe{display:flex;flex-direction:column;align-items:center;gap:8px}
+.kgroupe>h3{margin:0;font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-muted)}
+.krow{display:flex;flex-wrap:wrap;justify-content:center;width:100%}
+.kpi{flex:0 1 200px;padding:4px 18px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
+.kpi+.kpi{border-left:1px solid var(--rule)}
+.kpi .k{font-size:12.5px;color:var(--ink-2)}
+.kpi .v{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.15;font-variant-numeric:tabular-nums}
+.kpi .n{font-size:12px;color:var(--ink-muted);line-height:1.35}
+.kpi .n b{color:var(--ink-2);font-weight:500}
+@media (max-width:640px){.kpi+.kpi{border-left:0}.kpi{flex-basis:100%}}
 .panel{padding:18px 0 6px;border-top:1px solid var(--rule)}
 h2{font-size:17px;font-weight:600;letter-spacing:-.012em;margin:0}
 .sous{margin:2px 0 8px;color:var(--ink-2);font-size:13px;max-width:96ch}
@@ -67,6 +73,7 @@ svg text{font-family:var(--sans)}
 .legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:6px 0 0;font-size:12px;color:var(--ink-2)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .sw{width:16px;height:3px;border-radius:1px}
+.sw.tirets{height:0;border-top:2px dashed currentColor;background:none!important}
 .sw.box{height:10px;border-radius:2px}
 #tip{position:fixed;z-index:60;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:7px;padding:8px 10px;font-size:12.5px;line-height:1.45;box-shadow:0 6px 22px rgba(0,0,0,.14);max-width:260px}
 #tip b{font-weight:600}
@@ -93,7 +100,7 @@ footer{border-top:1px solid var(--rule);margin-top:34px;padding-top:18px;color:v
   <label for="st">Tranche</label><select id="st"></select>
   <label for="sf">Indicateurs</label><select id="sf"></select>
   <span class="spacer"></span>
-  <label class="chk"><input type="checkbox" id="ck-autres" checked> autres saisons comparables</label>
+  <label class="chk"><input type="checkbox" id="ck-autres" checked> moyenne des autres saisons (neige, isotherme)</label>
 </div>
 
 <div class="alerte" id="alerte"></div>
@@ -200,10 +207,6 @@ function bornesCoeur(saison, e) {
   const o = T0(e.origine);
   const i0 = Math.round((d0 - o) / DAY), i1 = Math.round((d1 - o) / DAY);
   return [i0, i1];
-}
-function dansCoeur(saison, e, i) {
-  const [i0, i1] = bornesCoeur(saison, e);
-  return i >= i0 && i <= i1;
 }
 
 /* ---------- exports : les lignes sont accumulees par la trace elle-meme ----------
@@ -325,6 +328,26 @@ function decalageInverse(e, x) {     // abscisse -> decalage en jours depuis l'o
   return -1;
 }
 const jourTxt = (e, i) => dateFr(new Date(T0(e.origine) + i * DAY).toISOString().slice(0, 10));
+/* Moyenne des autres saisons comparables, case par case de l'axe courant, sur les seuls jours ou
+   la saison a une valeur. Une case n'est retenue qu'a partir de D.min_saisons_bande saisons : en
+   dessous, une moyenne n'est qu'une saison. Renvoie [{x, m, n}] ; l'echelle du graphe la lit
+   avant le trace, pour que la moyenne ne sorte jamais du cadre. */
+function moyenneAutres(valeursDe) {
+  const somme = new Map(), nb = new Map();
+  for (const s of autresSaisons()) {
+    const o = D.series[etat.m][s], v = valeursDe(o);
+    if (!v) continue;
+    v.forEach((y, i) => { if (y == null) return; const x = abscisse(o, i); somme.set(x, (somme.get(x) || 0) + y); nb.set(x, (nb.get(x) || 0) + 1); });
+  }
+  return [...nb].filter(([, n]) => n >= D.min_saisons_bande).sort((a, b) => a[0] - b[0]).map(([x, n]) => ({ x, m: somme.get(x) / n, n }));
+}
+function traceMoyenneAutres(g, moyenne, serie, col, lignesExport) {
+  const par = new Map(moyenne.map(c => [c.x, c]));
+  const pts = [];
+  for (let x = g.x0; x <= g.x1; x++) pts.push(par.has(x) ? [g.px(x), g.py(par.get(x).m)] : null);
+  moyenne.forEach(c => lignesExport.push([serie, "autres saisons", "", etat.a === "cal" ? D.axe[c.x] : c.x, Math.round(c.m * 10) / 10, null, null, `moyenne de ${c.n} saisons`]));
+  el("path", { d: chemin(pts), fill: "none", stroke: col, "stroke-width": 2, "stroke-dasharray": "6 4", "stroke-linejoin": "round" }, g.svg);
+}
 const autresSaisons = () => MASSIF.get(etat.m).saisons.filter(s => s !== etat.s && SAISON.get(s).comparable);
 
 /* ---------- graphe 1 : risque ---------- */
@@ -361,16 +384,6 @@ function grapheRisque() {
     el("path", { d: chemin(med), fill: "none", stroke: "var(--band)", "stroke-width": 2 }, g.svg);
   }
 
-  // autres saisons : traits fins, dans la seule fenetre coeur
-  if (etat.o) {
-    for (const s of autresSaisons()) {
-      const o = D.series[etat.m][s];
-      const n = niveauxRisque(o);
-      const pts = n.map((v, i) => v == null || !dansCoeur(s, o, i) ? null : [g.px(abscisse(o, i)), g.py(v)]);
-      n.forEach((v, i) => { if (v != null && dansCoeur(s, o, i)) lignes.push(pointExport("autre_saison", s, o, i, v)); });
-      el("path", { d: chemin(pts), fill: "none", stroke: "var(--ink-muted)", "stroke-width": 0.8, opacity: 0.35 }, g.svg);
-    }
-  }
   // saison lue
   [...e.risque].forEach((c, i) => { if (c !== ".") lignes.push(pointExport("saison_lue", etat.s, e, i, c === "0" ? null : +c, c === "0" ? "publié sans indice" : "")); });
   exporter("g-risque", "risque", "Indice de risque", lignes);
@@ -385,10 +398,9 @@ function grapheRisque() {
   $("sous-risque").innerHTML = `Saison <b>${esc(etat.s)}</b>${SAISON.get(etat.s).comparable ? "" : " (non comparable)"} en bleu ; bande grise : médiane et quartiles de l'indice, <b>fenêtre ${esc(D.fenetre_defaut)}</b>.`
     + PARTAGE.plus(`Fenêtre ${esc(fenetreTexte)}, ${nBande ? `sur les saisons comparables, une case n'étant tracée qu'à partir de ${D.min_saisons_bande} saisons` : "<b>non calculable</b> pour ce massif (moins de " + D.min_saisons_bande + " saisons comparables)"}`
     + ` — la saison lue y entre quand elle est comparable. Fond bleuté : la fenêtre ${esc(D.fenetre_defaut)} de la saison lue.`
-    + (etat.f === D.saison_complete ? ` Les indicateurs portent sur la saison entière, mais la bande et les autres saisons restent sur la fenêtre ${esc(D.fenetre_defaut)} : hors de celle-ci, les indices ne se comparent pas.` : ""));
+    + (etat.f === D.saison_complete ? ` Les indicateurs portent sur la saison entière, mais la bande reste sur la fenêtre ${esc(D.fenetre_defaut)} : hors de celle-ci, les indices ne se comparent pas.` : ""));
   $("lg-risque").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>saison lue</span>`
-    + `<span><i class="sw" style="background:var(--band)"></i>médiane</span><span><i class="sw box" style="background:var(--band);opacity:.35"></i>quartiles</span>`
-    + (etat.o ? `<span><i class="sw" style="background:var(--ink-muted);opacity:.5;height:1px"></i>autres saisons comparables (fenêtre ${esc(D.fenetre_defaut)} seulement)</span>` : "");
+    + `<span><i class="sw" style="background:var(--band)"></i>médiane</span><span><i class="sw box" style="background:var(--band);opacity:.35"></i>quartiles</span>`;
   curseur(g, "g-risque", x => {
     const i = decalageInverse(e, x);
     if (i < 0 || i >= e.longueur) return "";
@@ -404,27 +416,17 @@ function grapheRisque() {
 function grapheNeige() {
   const e = D.series[etat.m][etat.s];
   const tr = etat.t;
-  const mx = Math.max(10, ...[etat.s, ...autresSaisons()].flatMap(s => {
-    const n = D.series[etat.m][s].neige?.[tr];
-    return n ? [...nombres(n.nord), ...nombres(n.sud)].filter(v => v != null) : [];
-  }));
+  const versants = [["nord", "var(--s1)"], ["sud", "var(--s2)"]];
+  const moy = etat.o ? versants.map(([v]) => moyenneAutres(o => o.neige?.[tr] ? nombres(o.neige[tr][v]) : null)) : [];
+  const mx = Math.max(10, ...[...nombres(e.neige?.[tr]?.nord), ...nombres(e.neige?.[tr]?.sud)].filter(v => v != null), ...moy.flat().map(c => c.m));
   const haut = Math.ceil(mx / 100) * 100;
   const g = cadre("g-neige", 150, [0, haut], [0, haut / 2, haut], "cm");
   const lignes = [];
-  if (etat.o) {
-    for (const s of autresSaisons()) {
-      const o = D.series[etat.m][s], n = o.neige?.[tr];
-      if (!n) continue;
-      for (const [v, col] of [["nord", "var(--s1)"], ["sud", "var(--s2)"]]) {
-        nombres(n[v]).forEach((y, i) => { if (y != null) lignes.push(pointExport("autre_saison_" + v, s, o, i, y)); });
-        el("path", { d: chemin(nombres(n[v]).map((y, i) => y == null ? null : [g.px(abscisse(o, i)), g.py(y)])), fill: "none", stroke: col, "stroke-width": 0.8, opacity: 0.18 }, g.svg);
-      }
-    }
-  }
   const n = e.neige?.[tr];
   const nord = nombres(n?.nord), sud = nombres(n?.sud);
   nord.forEach((y, i) => { if (y != null) lignes.push(pointExport("nord", etat.s, e, i, y)); });
   sud.forEach((y, i) => { if (y != null) lignes.push(pointExport("sud", etat.s, e, i, y)); });
+  versants.forEach(([v, col], k) => { if (etat.o) traceMoyenneAutres(g, moy[k], "autres_saisons_moyenne_" + v, col, lignes); });
   exporter("g-neige", "neige-" + tr, "Épaisseur de neige, tranche " + tr + " (cm)", lignes);
   if (n) for (const [vals, col] of [[nord, "var(--s1)"], [sud, "var(--s2)"]])
     el("path", { d: chemin(vals.map((y, i) => y == null ? null : [g.px(abscisse(e, i)), g.py(y)])), fill: "none", stroke: col, "stroke-width": 1.8, "stroke-linejoin": "round" }, g.svg);
@@ -435,9 +437,9 @@ function grapheNeige() {
   const alt = e.altitudes_neige?.[tr]?.join(" / ");
   legendeCov("cov-neige", c, n ? `un jour compte dès qu'un versant est relevé (nord ${parVersant("nord")} j, sud ${parVersant("sud")} j)` : "aucun palier d'enneigement dans cette tranche pour cette saison");
   $("sous-neige").innerHTML = `Épaisseur du manteau, palier le plus haut de la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (<b>${alt} m</b>)` : ""}, versants nord et sud. Valeur indicative, pas une mesure.`
-    + PARTAGE.plus(`${alt ? `Le palier est à ${alt} m cette saison et change d'époque. ` : ""}Valeur rattachée à l'altitude de référence. Indexée sur la date que décrit le relevé (<code>jour</code>). Traits fins : autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`);
+    + PARTAGE.plus(`${alt ? `Le palier est à ${alt} m cette saison et change d'époque. ` : ""}Valeur rattachée à l'altitude de référence. Indexée sur la date que décrit le relevé (<code>jour</code>). Pointillés : moyenne des autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}. Chaque case ne moyenne que les saisons qui ont une valeur ce jour-là (début et fin de saison : souvent les seules enneigées) et n'est tracée qu'à partir de ${D.min_saisons_bande} saisons.`);
   $("lg-neige").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>versant nord</span><span><i class="sw" style="background:var(--s2)"></i>versant sud</span>`
-    + (etat.o ? `<span><i class="sw" style="height:1px;opacity:.4;background:var(--ink-muted)"></i>autres saisons comparables (traits fins)</span>` : "");
+    + (etat.o ? `<span><i class="sw tirets" style="color:var(--ink-2)"></i>moyenne des autres saisons comparables</span>` : "");
   curseur(g, "g-neige", x => {
     const i = decalageInverse(e, x);
     if (i < 0 || i >= e.longueur) return "";
@@ -449,22 +451,16 @@ function grapheNeige() {
 function grapheIso0() {
   const e = D.series[etat.m][etat.s];
   const iso = e.iso0;
-  const tous = [etat.s, ...autresSaisons()].flatMap(s => { const o = D.series[etat.m][s].iso0; return o ? [...nombres(o.min), ...nombres(o.max)].filter(v => v != null) : []; });
-  const hi = Math.max(1000, Math.ceil(Math.max(0, ...tous) / 1000) * 1000);
+  const tous = [...nombres(iso?.min), ...nombres(iso?.max)].filter(v => v != null);
+  const moy0 = etat.o ? moyenneAutres(o => o.iso0 ? nombres(o.iso0.moyen) : null) : [];
+  const hi = Math.max(1000, Math.ceil(Math.max(0, ...tous, ...moy0.map(c => c.m)) / 1000) * 1000);
   const g = cadre("g-iso0", 150, [0, hi], Array.from({ length: hi / 1000 + 1 }, (_, k) => k * 1000), "m");
   const lignes = [];
-  if (etat.o) {
-    for (const s of autresSaisons()) {
-      const o = D.series[etat.m][s];
-      if (!o.iso0) continue;
-      nombres(o.iso0.moyen).forEach((y, i) => { if (y != null) lignes.push(pointExport("autre_saison_moyenne", s, o, i, y)); });
-      el("path", { d: chemin(nombres(o.iso0.moyen).map((y, i) => y == null ? null : [g.px(abscisse(o, i)), g.py(y)])), fill: "none", stroke: "var(--ink-muted)", "stroke-width": 0.8, opacity: 0.3 }, g.svg);
-    }
-  }
   const mn = nombres(iso?.min), mxv = nombres(iso?.max), moy = nombres(iso?.moyen);
   moy.forEach((y, i) => { if (y != null) lignes.push(pointExport("moyenne", etat.s, e, i, y)); });
   mn.forEach((y, i) => { if (y != null) lignes.push(pointExport("min", etat.s, e, i, y)); });
   mxv.forEach((y, i) => { if (y != null) lignes.push(pointExport("max", etat.s, e, i, y)); });
+  if (etat.o) traceMoyenneAutres(g, moy0, "autres_saisons_moyenne", "var(--ink-2)", lignes);
   exporter("g-iso0", "iso0", "Isotherme 0 °C prévu (m)", lignes);
   // aire min-max, segment par segment : un trou ne se comble pas
   let h = [], b = [];
@@ -485,9 +481,9 @@ function grapheIso0() {
   const c = couverture(g, e, moy, a, z);
   legendeCov("cov-iso0", c, iso ? "" : "aucune prévision d'isotherme pour cette saison");
   $("sous-iso0").innerHTML = `Isotherme 0 °C <b>prévu</b> : moyenne des échéances 06 h et 12 h (trait), amplitude min–max (aire). Prévision, pas observation.`
-    + PARTAGE.plus(`Trait fin : moyenne des autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}.`);
+    + PARTAGE.plus(`Pointillés : moyenne des autres saisons comparables (moyenne journalière de leur isotherme), sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)} ; chaque case ne moyenne que les saisons qui ont une prévision ce jour-là, à partir de ${D.min_saisons_bande} saisons.`);
   $("lg-iso0").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>moyenne du jour</span><span><i class="sw box" style="background:var(--s1);opacity:.3"></i>min–max</span>`
-    + `<span><i class="sw" style="background:var(--s2)"></i>seuil de redoux</span>` + (etat.o ? `<span><i class="sw" style="height:1px;opacity:.5;background:var(--ink-muted)"></i>moyenne des autres saisons comparables</span>` : "");
+    + `<span><i class="sw" style="background:var(--s2)"></i>seuil de redoux</span>` + (etat.o ? `<span><i class="sw tirets" style="color:var(--ink-2)"></i>moyenne des autres saisons comparables</span>` : "");
   curseur(g, "g-iso0", x => {
     const i = decalageInverse(e, x);
     if (i < 0 || i >= e.longueur) return "";
@@ -530,12 +526,13 @@ const fenetreTexte = (() => { const f = COEUR; return `${f.debut[1]} ${MOIS[f.de
 
 /* ---------- indicateurs ---------- */
 function tuile(k, v, n) { return `<div class="kpi"><span class="k">${k}</span><span class="v">${v}</span><span class="n">${n}</span></div>`; }
+const groupe = (titre, tuiles) => tuiles.length ? `<div class="kgroupe"><h3>${titre}</h3><div class="krow">${tuiles.join("")}</div></div>` : "";
 function indicateurs() {
   const ind = D.indicateurs[etat.m]?.[etat.s] || {};
   const w = ind[etat.f] || {};
   const r = w.risque, fen = FEN.get(etat.f);
   const sais = SAISON.get(etat.s);
-  const t = [];
+  const t = [], tn = [], tm = [];
   if (r) {
     const rep = MASSIF.get(etat.m).repere;
     const repere = etat.f === D.fenetre_defaut && rep && rep.risque_moyen != null && sais.comparable
@@ -548,21 +545,22 @@ function indicateurs() {
   }
   const n = w.neige?.[etat.t];
   if (n) {
-    t.push(tuile(`Neige · ${etat.t}`, `${fr(n.epaisseur_max_nord_cm)} cm`, `maximum au nord (${n.date_max_nord ? dateFr(n.date_max_nord) : "—"}) ; sud ${fr(n.epaisseur_max_sud_cm)} cm`));
-    t.push(tuile("Jours enneigés", `${n.jours_enneiges_nord} / ${n.jours_observes_nord}`, `nord ; sud ${n.jours_enneiges_sud} / ${n.jours_observes_sud} jours observés`));
+    tn.push(tuile(`Neige · ${etat.t}`, `${fr(n.epaisseur_max_nord_cm)} cm`, `maximum au nord (${n.date_max_nord ? dateFr(n.date_max_nord) : "—"}) ; sud ${fr(n.epaisseur_max_sud_cm)} cm`));
+    tn.push(tuile("Jours enneigés", `${n.jours_enneiges_nord} / ${n.jours_observes_nord}`, `nord ; sud ${n.jours_enneiges_sud} / ${n.jours_observes_sud} jours observés`));
   }
   const cont = ind.continu;
   if (cont?.nord || cont?.sud) {
     const f = c => c && c.duree_jours != null ? `${c.duree_jours} j` : "—";
-    t.push(tuile("Enneigement continu", f(cont.nord), `plus longue période sous ${(cont.nord || cont.sud).seuil_limite_m} m, nord ; sud ${f(cont.sud)} (saison entière)`));
+    tn.push(tuile("Enneigement continu", f(cont.nord), `plus longue période sous ${(cont.nord || cont.sud).seuil_limite_m} m, nord ; sud ${f(cont.sud)} (saison entière)`));
   }
   const m = w.meteo;
   if (m && m.jours_avec_iso0) {
-    t.push(tuile("Isotherme 0 °C", `${fr(m.iso0_min_m)}–${fr(m.iso0_max_m)} m`, `${m.jours_avec_iso0} jours ; ${m.jours_iso0_au_dessus_seuil} au-dessus de ${m.seuil_iso0_m} m ; ${m.episodes_redoux} redoux`));
+    tm.push(tuile("Isotherme 0 °C", `${fr(m.iso0_min_m)}–${fr(m.iso0_max_m)} m`, `${m.jours_avec_iso0} jours ; ${m.jours_iso0_au_dessus_seuil} au-dessus de ${m.seuil_iso0_m} m ; ${m.episodes_redoux} redoux`));
   }
   const v = w.vent?.[etat.t];
-  if (v) t.push(tuile(`Vent · ${etat.t}`, `${fr(v.vitesse_max_kmh)} km/h`, `maximum prévu ; ${v.jours_vent_fort} jours au-dessus de ${D.seuil_vent_fort_kmh} km/h sur ${v.jours_avec_vent}`));
-  $("kpis").innerHTML = t.join("") || tuile("Indicateurs", "—", "aucune donnée pour cette combinaison");
+  if (v) tm.push(tuile(`Vent · ${etat.t}`, `${fr(v.vitesse_max_kmh)} km/h`, `maximum prévu ; ${v.jours_vent_fort} jours au-dessus de ${D.seuil_vent_fort_kmh} km/h sur ${v.jours_avec_vent}`));
+  $("kpis").innerHTML = groupe("Risque", t) + groupe("Neige", tn) + groupe("Isotherme et vent", tm)
+    || groupe("Indicateurs", [tuile("Indicateurs", "—", "aucune donnée pour cette combinaison")]);
 }
 
 /* ---------- avertissements et notes ---------- */
@@ -577,7 +575,7 @@ function notes() {
   const m = MASSIF.get(etat.m);
   const n = [
     "Les trous sont des faits de l'archive, pas des défauts d'ingestion : ils s'affichent sans être comblés (cellules rouges sous chaque axe).",
-    `Hors de la fenêtre ${esc(D.fenetre_defaut)} (fond bleuté), les jours sans enneigement d'avant juin 2021 sont sans indice, alors qu'ils reçoivent ensuite un indice réel : la bande grise et les autres saisons n'y sont donc pas tracées.`,
+    `Hors de la fenêtre ${esc(D.fenetre_defaut)} (fond bleuté), les jours sans enneigement d'avant juin 2021 sont sans indice, alors qu'ils reçoivent ensuite un indice réel : la bande grise n'y est donc pas tracée.`,
     "Un niveau de risque est ordinal : la bande donne des niveaux observés (quartiles), la moyenne des indicateurs est toujours accompagnée de son nombre de jours.",
     "Neige, isotherme et vent sont ceux du bulletin (valeurs indicatives et prévisions), non des mesures.",
   ];

@@ -224,8 +224,9 @@ version.
 
 ### T11. Fiche massif-saison
 
-L'écran central, (la première page statique Pyrénées, `bra dashboard`, a depuis été retirée). Indicateurs clés, série du risque sur fond des autres saisons avec bande médiane et
-interquartile, puis enneigement, ISO 0 et vent sur le même axe aligné.
+L'écran central. Indicateurs clés, série du risque sur la bande médiane et interquartile des
+autres saisons, puis enneigement, ISO 0 (avec la moyenne des autres saisons en pointillés) et vent
+sur le même axe aligné.
 
 **Fait quand** : un massif et une saison se lisent de bout en bout sans requête manuelle ; le
 basculement entre axe calendaire et `jour_de_saison` fonctionne ; la couverture de données est
