@@ -257,6 +257,17 @@ def cmd_carte(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_site(args: argparse.Namespace) -> int:
+    from .site import generer, servir
+
+    for page in generer(args.db, args.out):
+        print(f"{page} ({page.stat().st_size / 1024:.0f} Ko)")
+    print(f"site statique : {args.out}/ (index.html = la carte), a ouvrir ou a deposer sur un hebergeur.")
+    if args.serve:
+        servir(args.out, args.port)
+    return 0
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     import polars as pl
 
@@ -415,6 +426,13 @@ def build_parser() -> argparse.ArgumentParser:
     k.set_defaults(func=cmd_carte)
 
     from . import geo
+
+    st = sub.add_parser("site", help="generer les quatre ecrans dans un dossier, comme un site statique")
+    st.add_argument("--db", default="warehouse/bra.duckdb")
+    st.add_argument("--out", default="site", help="dossier de sortie")
+    st.add_argument("--serve", action="store_true", help="servir le dossier en local apres la generation")
+    st.add_argument("--port", type=int, default=8000)
+    st.set_defaults(func=cmd_site)
 
     g = sub.add_parser("contours", help="raccorder et simplifier les contours des massifs")
     g.add_argument("--source", default=str(geo.SOURCE), help="GeoJSON d'origine")

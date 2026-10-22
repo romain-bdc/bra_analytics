@@ -173,6 +173,18 @@ Deux commandes auxiliaires : `bra massifs` affiche le référentiel des 36 massi
 raccordent aux 36 identifiants et régénère leur version web — voir
 [docs/contours.md](docs/contours.md).
 
+### 6 bis. `bra site` — tout régénérer en une commande
+
+```bash
+uv run bra site                       # écrit site/ : index.html (la carte), carte, fiche, comparaison, exploration
+uv run bra site --serve               # idem, puis sert site/ sur http://127.0.0.1:8000/
+```
+
+Les pages se lient déjà entre elles par leur nom de fichier : le dossier `site/` (non versionné)
+est un site statique complet, à déposer tel quel sur n'importe quel hébergeur de fichiers. Les
+quatre commandes d'écran restent disponibles pour n'en régénérer qu'un. `bra site` ne reconstruit
+pas l'entrepôt : après un changement de parsing ou de vue, `bra build --replace` d'abord.
+
 ### 7. `bra carte` — carte d'accueil des 36 massifs
 
 ```bash
