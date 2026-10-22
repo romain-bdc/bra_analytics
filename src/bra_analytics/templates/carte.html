@@ -1,113 +1,38 @@
 <title>Carte des massifs BRA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..700&family=Source+Serif+4:opsz,wght@8..60,400..700&display=swap">
 <style>
-/* Jetons communs aux ecrans : meme rampe
-   bleue a cinq pas, validee en ordinal sur les deux surfaces. */
-:root{
-  color-scheme:light;
-  --page:#eef0f3; --surface:#ffffff; --surface-2:#f6f8fa;
-  --ink:#10141a; --ink-2:#4d5765; --ink-muted:#828c9a;
-  --grid:#e4e7ec; --rule:#d7dce2; --ring:rgba(16,20,26,.10);
-  --s1:#2a78d6;
-  --o1:#86b6ef; --o2:#5598e7; --o3:#2a78d6; --o4:#1c5cab; --o5:#0d366b;
-  --hachure:#828c9a; --vide:#e9ecf0;
-  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    color-scheme:dark;
-    --page:#0b0e13; --surface:#161a21; --surface-2:#1c212a;
-    --ink:#f2f4f7; --ink-2:#aab4c2; --ink-muted:#7b8593;
-    --grid:#242a33; --rule:#2f3742; --ring:rgba(255,255,255,.10);
-    --s1:#3987e5;
-    --o1:#184f95; --o2:#256abf; --o3:#3987e5; --o4:#6da7ec; --o5:#9ec5f4;
-    --hachure:#7b8593; --vide:#20262f;
-  }
-}
-:root[data-theme="dark"]{
-  color-scheme:dark;
-  --page:#0b0e13; --surface:#161a21; --surface-2:#1c212a;
-  --ink:#f2f4f7; --ink-2:#aab4c2; --ink-muted:#7b8593;
-  --grid:#242a33; --rule:#2f3742; --ring:rgba(255,255,255,.10);
-  --s1:#3987e5;
-  --o1:#184f95; --o2:#256abf; --o3:#3987e5; --o4:#6da7ec; --o5:#9ec5f4;
-  --hachure:#7b8593; --vide:#20262f;
-}
-
-*{box-sizing:border-box}
-body{
-  margin:0; background:var(--page); color:var(--ink);
-  font-family:var(--sans); font-size:15px; line-height:1.5;
-  -webkit-font-smoothing:antialiased;
-}
-.wrap{max-width:1180px;margin:0 auto;padding:0 24px 72px}
-@media (max-width:600px){.wrap{padding:0 16px 56px}}
-
-header{padding:44px 0 24px}
-.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-muted);margin:0 0 14px}
-h1{font-size:clamp(28px,4.2vw,44px);font-weight:600;letter-spacing:-.022em;line-height:1.08;margin:0;text-wrap:balance}
-.lede{margin:14px 0 0;max-width:68ch;color:var(--ink-2);font-size:16px}
-.lede b{color:var(--ink)}
-
-.bar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:12px 14px;
-  padding:12px 0;margin-bottom:22px;background:var(--page);border-bottom:1px solid var(--rule)}
-.bar label{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted)}
-select,.toggle{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--surface);
-  border:1px solid var(--rule);border-radius:6px;padding:7px 11px;cursor:pointer}
-select{min-width:230px;max-width:100%}
-.toggle[aria-pressed="true"]{background:var(--s1);border-color:var(--s1);color:#fff}
-:is(select,.toggle):focus-visible{outline:2px solid var(--s1);outline-offset:2px}
-.bar .spacer{flex:1 1 auto}
-
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--rule);
-  border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin-bottom:30px}
-.kpi{background:var(--surface);padding:16px 18px 14px;display:flex;flex-direction:column;gap:5px}
-.kpi .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted)}
-.kpi .v{font-size:22px;font-weight:600;letter-spacing:-.015em;line-height:1.15}
-.kpi .n{font-size:12.5px;color:var(--ink-2)}
-
-.panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:22px 22px 18px}
-h2{font-size:19px;font-weight:600;letter-spacing:-.012em;margin:0}
-.sous{margin:4px 0 14px;color:var(--ink-2);font-size:13.5px;max-width:86ch}
-.carte svg{display:block;width:100%;height:auto;max-width:640px;margin:0 auto}
+__STYLE__
+.carte svg{display:block;width:100%;height:auto;max-width:640px;margin:0}
 .pays{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:.8;stroke-linejoin:round;pointer-events:none}
 .massif{stroke:var(--surface);stroke-width:1.1;stroke-linejoin:round;cursor:crosshair}
 .massif:hover,.massif:focus-visible{stroke:var(--ink);stroke-width:1.8;outline:none}
-.zonelab{font-family:var(--mono);font-size:15px;letter-spacing:.1em;text-transform:uppercase;fill:var(--ink-muted)}
-
-.legend{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:14px 0 0;font-size:12.5px;color:var(--ink-2)}
-.legend span{display:inline-flex;align-items:center;gap:7px}
+.zonelab{font-family:var(--serif);font-style:italic;font-size:17px;fill:var(--ink-muted)}
+.legend{gap:8px 18px;margin:16px 0 0}
 .legend .titre{color:var(--ink-muted)}
-.legend svg{width:16px;height:16px;flex:none;border-radius:3px;box-shadow:inset 0 0 0 1px var(--ring)}
-.echelle{margin:6px 0 0;font-size:12.5px;color:var(--ink-muted);max-width:86ch}
-.attrib{margin:14px 0 0;padding-top:10px;border-top:1px solid var(--grid);font-size:12px;color:var(--ink-muted)}
+.legend svg{width:16px;height:16px;flex:none;box-shadow:inset 0 0 0 1px var(--ring)}
+.echelle{margin:8px 0 0;font-size:12.5px;color:var(--ink-muted);max-width:86ch}
+.attrib{margin:16px 0 0;padding-top:10px;border-top:1px solid var(--grid);font-size:12px;color:var(--ink-muted)}
 .attrib a{color:var(--ink-2)}
-
-.tables{margin-top:22px}
+.tables{margin-top:24px}
 .tables[hidden]{display:none}
 .scroller{overflow-x:auto}
-table{border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
-caption{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-muted);padding-bottom:8px}
-th,td{padding:5px 10px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
-th:first-child,td:first-child{text-align:left}
+table{font-size:12.5px}
+th,td{padding:5px 10px;white-space:nowrap}
 td.g{text-align:left;white-space:normal}
-thead th{color:var(--ink-2);font-weight:500;border-bottom:1px solid var(--rule)}
-
-#tip{position:fixed;z-index:60;pointer-events:none;opacity:0;transition:opacity .1s;
-  background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:7px;
-  padding:9px 11px;font-size:12.5px;line-height:1.5;box-shadow:0 6px 22px rgba(0,0,0,.14);max-width:290px}
-#tip b{font-weight:600}
-#tip .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+#tip .num{font-variant-numeric:tabular-nums;font-weight:600}
 #tip .z{color:var(--ink-muted)}
-#tip .alerte{display:block;margin-top:4px;color:var(--ink-2)}
-
-footer{border-top:1px solid var(--rule);margin-top:40px;padding-top:20px;color:var(--ink-muted);
-  font-size:12.5px;display:flex;flex-wrap:wrap;gap:8px 26px}
-footer a{color:var(--ink-2)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+#tip .alerte{display:block;margin-top:4px;padding:0;border:0;color:var(--ink-2)}
+/* Large : la carte a gauche, sa cle a droite, au lieu d'une legende sous un grand vide. */
+@media (min-width:980px){
+  .panel{display:grid;grid-template-columns:minmax(0,640px) minmax(240px,1fr);column-gap:56px;align-content:start}
+  .panel>*{grid-column:1/-1}
+  .panel>.carte{grid-column:1;grid-row:3/span 3}
+  .panel>.exports{grid-column:1;grid-row:6}
+  .panel>.legend{grid-column:2;grid-row:3;flex-direction:column;align-items:flex-start;margin-top:4px}
+  .panel>.echelle{grid-column:2;grid-row:4;margin-top:14px}
+}
 @media (forced-colors:active){.massif{stroke:CanvasText}}
 </style>
 

@@ -54,14 +54,15 @@ const PARTAGE = (() => {
   function style() {
     const s = document.createElement("style");
     s.textContent = `
-.partage-nav{display:flex;flex-wrap:wrap;align-items:center;gap:6px 6px;padding:14px 0 0;font-size:13px}
-.partage-nav a,.partage-nav button{font:inherit;color:var(--ink-2,#4d5765);background:var(--surface,#fff);border:1px solid var(--rule,#d7dce2);border-radius:6px;padding:4px 10px;text-decoration:none;cursor:pointer}
-.partage-nav a[aria-current="page"]{background:var(--s1,#2a78d6);border-color:var(--s1,#2a78d6);color:#fff}
+.partage-nav{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 22px;padding:14px 0 0;font-size:14px}
+.partage-nav a,.partage-nav button{font:inherit;color:var(--ink-2,#46575b);background:none;border:0;border-bottom:2px solid transparent;border-radius:0;padding:2px 0;text-decoration:none;cursor:pointer}
+.partage-nav a[aria-current="page"]{color:var(--ink,#1b282c);font-weight:600;border-bottom-color:var(--ink,#1b282c)}
 .partage-nav .espace{flex:1 1 auto}
-.exports{display:flex;gap:6px;justify-content:flex-end;margin:2px 0 0;font-size:12px}
-.exports a,.exports button{font:inherit;color:var(--ink-2,#4d5765);background:none;border:1px solid var(--rule,#d7dce2);border-radius:5px;padding:1px 8px;text-decoration:none;cursor:pointer}
-.exports a:hover,.exports button:hover,.partage-nav a:hover,.partage-nav button:hover{color:var(--ink,#10141a)}
-:is(.exports a,.exports button,.partage-nav a,.partage-nav button):focus-visible{outline:2px solid var(--s1,#2a78d6);outline-offset:2px}
+.partage-nav button{font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.exports{display:flex;gap:16px;justify-content:flex-end;margin:4px 0 0;font-size:12.5px}
+.exports a,.exports button{font:inherit;color:var(--ink-muted,#6f8084);background:none;border:0;padding:0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.exports a:hover,.exports button:hover,.partage-nav a:hover,.partage-nav button:hover{color:var(--ink,#1b282c)}
+:is(.exports a,.exports button,.partage-nav a,.partage-nav button):focus-visible{outline:2px solid var(--s1,#1d6a8c);outline-offset:3px}
 .attribution a{color:inherit}
 details.plus{display:inline;font-size:inherit}
 details.plus>summary{display:inline;cursor:pointer;color:var(--ink-muted,#6b7480);font-size:.92em;margin-left:4px;list-style:none}
