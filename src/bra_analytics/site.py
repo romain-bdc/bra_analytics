@@ -27,6 +27,8 @@ import duckdb
 from .partage import ECRANS
 
 POLICES = Path(__file__).parent / "templates" / "polices"
+# Capture de la carte (og:image), produite par `scripts/apercu.py` et versionnee comme actif source.
+APERCU = Path(__file__).parent / "templates" / "apercu.png"
 URL_PUBLIQUE = "https://romain-bdc.github.io/bra_analytics/"
 TITRE = "Historique du risque d'avalanche par massif depuis 2016"
 DESCRIPTION = (
@@ -129,6 +131,7 @@ def generer(
         ecrits.append(page)
     # Les @font-face visent `polices/` en chemin relatif : le dossier voyage avec les pages.
     shutil.copytree(POLICES, out / "polices")
+    shutil.copy(APERCU, out / "apercu.png")
     accueil = out / "index.html"
     accueil.write_text(_index(ECRANS[0].fichier), encoding="utf-8")
     versionjson = out / "version.json"

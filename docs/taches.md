@@ -328,6 +328,13 @@ temporaire avec remote nu local : création de la branche orpheline au premier a
 au second appel sans changement, `--dry-run` qui liste ajoutés / modifiés / supprimés sans rien
 pousser, worktree retiré après une erreur.
 
+### T20. Mise en ligne et déclaration data.gouv.fr
+
+**Préparée par** `docs/publication.md` (procédure, republication, brouillon de chaque champ de la
+réutilisation) et `scripts/apercu.py` (capture 1200 × 630 de la carte, copiée dans `site/` par
+`bra site`). Les étapes de mise en ligne restent manuelles : repo public, Pages, vérification
+sans requête tierce, README, déclaration sur data.gouv.fr.
+
 ---
 
 ## Ce qui reste volontairement hors de cette liste
