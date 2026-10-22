@@ -32,7 +32,6 @@ cherche un chiffre ou un graphe partageable.
 | Méthodologie de comparaison inter-saisons | Fait, bornes mesurées | `fenetres.py`, glossaire § 8 |
 | Contrôles de cohérence | Fait, erreurs vs signaux | `bra check` |
 | Documentation des champs | Fait | `docs/glossaire.md` |
-| Page statique Pyrénées | Retirée (remplacée par les quatre écrans) | — |
 | Couverture géographique complète | Fait : 36 massifs, 77 488 bulletins | `bra fetch`, T1 |
 | **Couche métriques** | **blocs risque (T6), enneigement (T7), météo (T8) et rose des pentes (T9) faits** ; score fait (T10) | `metriques/`, § 5 |
 | **Les quatre écrans** | **partiellement : la fiche existe en germe** | § 6 |
