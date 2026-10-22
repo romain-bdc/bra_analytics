@@ -13,10 +13,13 @@ from __future__ import annotations
 
 import functools
 import http.server
+import shutil
 from importlib import import_module
 from pathlib import Path
 
 from .partage import ECRANS
+
+POLICES = Path(__file__).parent / "templates" / "polices"
 
 
 def generer(db_path: str | Path = "warehouse/bra.duckdb", out_dir: str | Path = "site") -> list[Path]:
@@ -27,6 +30,8 @@ def generer(db_path: str | Path = "warehouse/bra.duckdb", out_dir: str | Path = 
     for ecran in ECRANS:
         module = import_module(f".{ecran.id}", __package__)
         ecrits.append(module.render(db_path, out / ecran.fichier, standalone=True))
+    # Les @font-face visent `polices/` en chemin relatif : le dossier voyage avec les pages.
+    shutil.copytree(POLICES, out / "polices", dirs_exist_ok=True)
     accueil = out / "index.html"
     accueil.write_text((out / ECRANS[0].fichier).read_text(encoding="utf-8"), encoding="utf-8")
     return [*ecrits, accueil]
