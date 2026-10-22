@@ -34,7 +34,7 @@ cherche un chiffre ou un graphe partageable.
 | Documentation des champs | Fait | `docs/glossaire.md` |
 | Couverture géographique complète | Fait : 36 massifs, 77 488 bulletins | `bra fetch`, T1 |
 | **Couche métriques** | **blocs risque (T6), enneigement (T7), météo (T8) et rose des pentes (T9) faits** ; score fait (T10) | `metriques/`, § 5 |
-| **Les quatre écrans** | **partiellement : la fiche existe en germe** | § 6 |
+| **Les quatre écrans** | **Fait : carte, fiche, comparaison, exploration** | `bra carte`, `bra fiche`, `bra comparaison`, `bra exploration`, § 6 |
 
 Conséquence directe : la spec ne redécrit pas le socle. Elle décrit ce qui s'ajoute, et seulement
 cela.
