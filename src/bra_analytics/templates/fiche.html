@@ -208,10 +208,6 @@ function bornesCoeur(saison, e) {
   const i0 = Math.round((d0 - o) / DAY), i1 = Math.round((d1 - o) / DAY);
   return [i0, i1];
 }
-function dansCoeur(saison, e, i) {
-  const [i0, i1] = bornesCoeur(saison, e);
-  return i >= i0 && i <= i1;
-}
 
 /* ---------- exports : les lignes sont accumulees par la trace elle-meme ----------
    Une ligne par point trace, en format long : serie (saison lue, autre saison,
@@ -332,27 +328,24 @@ function decalageInverse(e, x) {     // abscisse -> decalage en jours depuis l'o
   return -1;
 }
 const jourTxt = (e, i) => dateFr(new Date(T0(e.origine) + i * DAY).toISOString().slice(0, 10));
-/* Moyenne des autres saisons comparables, case par case de l'axe courant. Une case n'est tracee
-   qu'a partir de D.min_saisons_bande saisons : en dessous, une moyenne n'est qu'une saison. */
-function moyenneAutres(valeursDe, g) {
+/* Moyenne des autres saisons comparables, case par case de l'axe courant, sur les seuls jours ou
+   la saison a une valeur. Une case n'est retenue qu'a partir de D.min_saisons_bande saisons : en
+   dessous, une moyenne n'est qu'une saison. Renvoie [{x, m, n}] ; l'echelle du graphe la lit
+   avant le trace, pour que la moyenne ne sorte jamais du cadre. */
+function moyenneAutres(valeursDe) {
   const somme = new Map(), nb = new Map();
   for (const s of autresSaisons()) {
     const o = D.series[etat.m][s], v = valeursDe(o);
     if (!v) continue;
     v.forEach((y, i) => { if (y == null) return; const x = abscisse(o, i); somme.set(x, (somme.get(x) || 0) + y); nb.set(x, (nb.get(x) || 0) + 1); });
   }
-  const pts = [], lignes = [];
-  for (let x = g.x0; x <= g.x1; x++) {
-    if ((nb.get(x) || 0) < D.min_saisons_bande) { pts.push(null); continue; }
-    const m = somme.get(x) / nb.get(x);
-    pts.push([g.px(x), g.py(m)]);
-    lignes.push([x, Math.round(m), nb.get(x)]);
-  }
-  return { pts, lignes };
+  return [...nb].filter(([, n]) => n >= D.min_saisons_bande).sort((a, b) => a[0] - b[0]).map(([x, n]) => ({ x, m: somme.get(x) / n, n }));
 }
-function traceMoyenneAutres(g, valeursDe, serie, col, lignesExport) {
-  const { pts, lignes } = moyenneAutres(valeursDe, g);
-  lignes.forEach(([x, m, n]) => lignesExport.push([serie, "autres saisons", "", etat.a === "cal" ? D.axe[x] : x, m, null, null, `moyenne de ${n} saisons`]));
+function traceMoyenneAutres(g, moyenne, serie, col, lignesExport) {
+  const par = new Map(moyenne.map(c => [c.x, c]));
+  const pts = [];
+  for (let x = g.x0; x <= g.x1; x++) pts.push(par.has(x) ? [g.px(x), g.py(par.get(x).m)] : null);
+  moyenne.forEach(c => lignesExport.push([serie, "autres saisons", "", etat.a === "cal" ? D.axe[c.x] : c.x, Math.round(c.m * 10) / 10, null, null, `moyenne de ${c.n} saisons`]));
   el("path", { d: chemin(pts), fill: "none", stroke: col, "stroke-width": 2, "stroke-dasharray": "6 4", "stroke-linejoin": "round" }, g.svg);
 }
 const autresSaisons = () => MASSIF.get(etat.m).saisons.filter(s => s !== etat.s && SAISON.get(s).comparable);
@@ -407,8 +400,7 @@ function grapheRisque() {
     + ` — la saison lue y entre quand elle est comparable. Fond bleuté : la fenêtre ${esc(D.fenetre_defaut)} de la saison lue.`
     + (etat.f === D.saison_complete ? ` Les indicateurs portent sur la saison entière, mais la bande reste sur la fenêtre ${esc(D.fenetre_defaut)} : hors de celle-ci, les indices ne se comparent pas.` : ""));
   $("lg-risque").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>saison lue</span>`
-    + `<span><i class="sw" style="background:var(--band)"></i>médiane</span><span><i class="sw box" style="background:var(--band);opacity:.35"></i>quartiles</span>`
-    ;
+    + `<span><i class="sw" style="background:var(--band)"></i>médiane</span><span><i class="sw box" style="background:var(--band);opacity:.35"></i>quartiles</span>`;
   curseur(g, "g-risque", x => {
     const i = decalageInverse(e, x);
     if (i < 0 || i >= e.longueur) return "";
@@ -424,7 +416,9 @@ function grapheRisque() {
 function grapheNeige() {
   const e = D.series[etat.m][etat.s];
   const tr = etat.t;
-  const mx = Math.max(10, ...[...nombres(e.neige?.[tr]?.nord), ...nombres(e.neige?.[tr]?.sud)].filter(v => v != null));
+  const versants = [["nord", "var(--s1)"], ["sud", "var(--s2)"]];
+  const moy = etat.o ? versants.map(([v]) => moyenneAutres(o => o.neige?.[tr] ? nombres(o.neige[tr][v]) : null)) : [];
+  const mx = Math.max(10, ...[...nombres(e.neige?.[tr]?.nord), ...nombres(e.neige?.[tr]?.sud)].filter(v => v != null), ...moy.flat().map(c => c.m));
   const haut = Math.ceil(mx / 100) * 100;
   const g = cadre("g-neige", 150, [0, haut], [0, haut / 2, haut], "cm");
   const lignes = [];
@@ -432,8 +426,7 @@ function grapheNeige() {
   const nord = nombres(n?.nord), sud = nombres(n?.sud);
   nord.forEach((y, i) => { if (y != null) lignes.push(pointExport("nord", etat.s, e, i, y)); });
   sud.forEach((y, i) => { if (y != null) lignes.push(pointExport("sud", etat.s, e, i, y)); });
-  if (etat.o) for (const [v, col] of [["nord", "var(--s1)"], ["sud", "var(--s2)"]])
-    traceMoyenneAutres(g, o => o.neige?.[tr] ? nombres(o.neige[tr][v]) : null, "autres_saisons_moyenne_" + v, col, lignes);
+  versants.forEach(([v, col], k) => { if (etat.o) traceMoyenneAutres(g, moy[k], "autres_saisons_moyenne_" + v, col, lignes); });
   exporter("g-neige", "neige-" + tr, "Épaisseur de neige, tranche " + tr + " (cm)", lignes);
   if (n) for (const [vals, col] of [[nord, "var(--s1)"], [sud, "var(--s2)"]])
     el("path", { d: chemin(vals.map((y, i) => y == null ? null : [g.px(abscisse(e, i)), g.py(y)])), fill: "none", stroke: col, "stroke-width": 1.8, "stroke-linejoin": "round" }, g.svg);
@@ -444,7 +437,7 @@ function grapheNeige() {
   const alt = e.altitudes_neige?.[tr]?.join(" / ");
   legendeCov("cov-neige", c, n ? `un jour compte dès qu'un versant est relevé (nord ${parVersant("nord")} j, sud ${parVersant("sud")} j)` : "aucun palier d'enneigement dans cette tranche pour cette saison");
   $("sous-neige").innerHTML = `Épaisseur du manteau, palier le plus haut de la tranche <b>${esc(trancheLibelle(tr))}</b>${alt ? ` (<b>${alt} m</b>)` : ""}, versants nord et sud. Valeur indicative, pas une mesure.`
-    + PARTAGE.plus(`${alt ? `Le palier est à ${alt} m cette saison et change d'époque. ` : ""}Valeur rattachée à l'altitude de référence. Indexée sur la date que décrit le relevé (<code>jour</code>). Pointillés : moyenne des autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}, tracée à partir de ${D.min_saisons_bande} saisons.`);
+    + PARTAGE.plus(`${alt ? `Le palier est à ${alt} m cette saison et change d'époque. ` : ""}Valeur rattachée à l'altitude de référence. Indexée sur la date que décrit le relevé (<code>jour</code>). Pointillés : moyenne des autres saisons comparables, sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}. Chaque case ne moyenne que les saisons qui ont une valeur ce jour-là (début et fin de saison : souvent les seules enneigées) et n'est tracée qu'à partir de ${D.min_saisons_bande} saisons.`);
   $("lg-neige").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>versant nord</span><span><i class="sw" style="background:var(--s2)"></i>versant sud</span>`
     + (etat.o ? `<span><i class="sw tirets" style="color:var(--ink-2)"></i>moyenne des autres saisons comparables</span>` : "");
   curseur(g, "g-neige", x => {
@@ -459,14 +452,15 @@ function grapheIso0() {
   const e = D.series[etat.m][etat.s];
   const iso = e.iso0;
   const tous = [...nombres(iso?.min), ...nombres(iso?.max)].filter(v => v != null);
-  const hi = Math.max(1000, Math.ceil(Math.max(0, ...tous) / 1000) * 1000);
+  const moy0 = etat.o ? moyenneAutres(o => o.iso0 ? nombres(o.iso0.moyen) : null) : [];
+  const hi = Math.max(1000, Math.ceil(Math.max(0, ...tous, ...moy0.map(c => c.m)) / 1000) * 1000);
   const g = cadre("g-iso0", 150, [0, hi], Array.from({ length: hi / 1000 + 1 }, (_, k) => k * 1000), "m");
   const lignes = [];
   const mn = nombres(iso?.min), mxv = nombres(iso?.max), moy = nombres(iso?.moyen);
   moy.forEach((y, i) => { if (y != null) lignes.push(pointExport("moyenne", etat.s, e, i, y)); });
   mn.forEach((y, i) => { if (y != null) lignes.push(pointExport("min", etat.s, e, i, y)); });
   mxv.forEach((y, i) => { if (y != null) lignes.push(pointExport("max", etat.s, e, i, y)); });
-  if (etat.o) traceMoyenneAutres(g, o => o.iso0 ? nombres(o.iso0.moyen) : null, "autres_saisons_moyenne", "var(--ink-2)", lignes);
+  if (etat.o) traceMoyenneAutres(g, moy0, "autres_saisons_moyenne", "var(--ink-2)", lignes);
   exporter("g-iso0", "iso0", "Isotherme 0 °C prévu (m)", lignes);
   // aire min-max, segment par segment : un trou ne se comble pas
   let h = [], b = [];
@@ -487,7 +481,7 @@ function grapheIso0() {
   const c = couverture(g, e, moy, a, z);
   legendeCov("cov-iso0", c, iso ? "" : "aucune prévision d'isotherme pour cette saison");
   $("sous-iso0").innerHTML = `Isotherme 0 °C <b>prévu</b> : moyenne des échéances 06 h et 12 h (trait), amplitude min–max (aire). Prévision, pas observation.`
-    + PARTAGE.plus(`Pointillés : moyenne des autres saisons comparables (moyenne journalière de leur isotherme), sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)}, tracée à partir de ${D.min_saisons_bande} saisons.`);
+    + PARTAGE.plus(`Pointillés : moyenne des autres saisons comparables (moyenne journalière de leur isotherme), sur toute leur période, sans restriction à la fenêtre ${esc(D.fenetre_defaut)} ; chaque case ne moyenne que les saisons qui ont une prévision ce jour-là, à partir de ${D.min_saisons_bande} saisons.`);
   $("lg-iso0").innerHTML = `<span><i class="sw" style="background:var(--s1)"></i>moyenne du jour</span><span><i class="sw box" style="background:var(--s1);opacity:.3"></i>min–max</span>`
     + `<span><i class="sw" style="background:var(--s2)"></i>seuil de redoux</span>` + (etat.o ? `<span><i class="sw tirets" style="color:var(--ink-2)"></i>moyenne des autres saisons comparables</span>` : "");
   curseur(g, "g-iso0", x => {
