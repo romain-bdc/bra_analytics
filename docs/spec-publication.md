@@ -21,7 +21,7 @@ sur data.gouv.fr.
 | --- | --- | --- |
 | Où se fait le build | **En local**, jamais en CI | `bra build` exige 13 Go de XML (3 h de fetch) et 7 Go de RAM, pour quelques centaines de Ko de HTML en sortie |
 | Comment on déploie | Le site généré est poussé sur une branche orpheline **`gh-pages`** ; Pages sert cette branche (« Deploy from a branch », racine) | Aucune Action à maintenir, aucun secret ; `main` ne versionne toujours aucune page générée (règle de `CLAUDE.md` respectée) |
-| Polices | **Auto-hébergées** dans le site ; plus aucun appel à `fonts.googleapis.com` / `fonts.gstatic.com` | Google Fonts transmet l'IP de chaque visiteur à Google sans consentement, ce qui est contraire au RGPD (LG München, 20 janvier 2022). IBM Plex est sous licence OFL : la redistribuer est autorisé |
+| Polices | **Auto-hébergées** dans le site ; plus aucun appel à `fonts.googleapis.com` / `fonts.gstatic.com` | Google Fonts transmet l'IP de chaque visiteur à Google sans consentement, ce qui est contraire au RGPD (LG München, 20 janvier 2022). Archivo et Source Serif 4 sont sous licence OFL : les redistribuer est autorisé |
 | Point d'entrée | `index.html` redirige vers `carte.html` **en conservant le fragment d'URL** | L'état des écrans vit dans `#...` (T15) : une redirection qui le perd casse les liens partagés |
 
 ## 3. À trancher par Romain avant la mise en public
@@ -59,10 +59,7 @@ et son résultat ; aucune trouvaille ouverte ; le fichier `LICENSE` choisi par R
 
 ### T17. Polices auto-hébergées
 
-- Récupérer les `woff2` depuis le paquet npm **`@ibm/plex`** (version épinglée et notée dans la
-  doc) : IBM Plex Sans 400, 500, 600 et IBM Plex Mono 400, 500, sous-ensemble **latin** seulement.
-  Ce sont les graisses demandées aujourd'hui par l'URL Google Fonts des quatre gabarits ;
-  vérifier qu'aucune autre n'est employée dans le CSS avant de figer la liste.
+- Récupérer les `woff2` variables latin depuis les paquets npm **`@fontsource-variable/archivo`** 5.3.0 (axes `wdth` et `wght`, `font-stretch` est employé) et **`@fontsource-variable/source-serif-4`** 5.3.1 (axes `opsz` et `wght`) (versions épinglées dans `polices.css`) : ce sont les polices de la refonte visuelle, qui a remplacé IBM Plex.
 - Les versionner sous `src/bra_analytics/templates/polices/`, avec le texte de la licence OFL
   (`OFL.txt`) à côté. Ce sont des actifs sources, pas des sorties générées : la règle « ne pas
   versionner le généré » ne s'applique pas.
@@ -77,7 +74,7 @@ et son résultat ; aucune trouvaille ouverte ; le fichier `LICENSE` choisi par R
 
 **Fait quand** : `grep -r "googleapis\|gstatic" src/` ne renvoie rien ; un test vérifie
 qu'aucune page générée ne contient ces domaines ; dans Chromium headless (comme
-`tests/test_partage.py`), `document.fonts.check('500 14px "IBM Plex Sans"')` est vrai sur une
+`tests/test_partage.py`), `document.fonts.check` sur Archivo et Source Serif 4 est vrai sur une
 page servie depuis `site/`.
 
 ### T18. Commande `bra site`

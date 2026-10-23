@@ -234,7 +234,7 @@ visible sur chaque graphe ; la page reste autonome, sans serveur.
 
 **Dépend de** : T6, T7, T8.
 
-**Réalisée par** `bra fiche` (`fiche.py`, `templates/fiche.html`). Critères vérifiés : lecture de bout en bout par sélecteurs, bascule calendaire / `jour_de_saison`, couverture sous chaque graphe, page autonome (seules les polices viennent de Google Fonts, comme les autres pages).
+**Réalisée par** `bra fiche` (`fiche.py`, `templates/fiche.html`). Critères vérifiés : lecture de bout en bout par sélecteurs, bascule calendaire / `jour_de_saison`, couverture sous chaque graphe, page autonome (polices auto-hébergées depuis T17, sous `polices/`).
 
 ### T12. Carte d'accueil
 
@@ -294,6 +294,46 @@ présente sur les quatre écrans.
 **Dépend de** : T11 à T14.
 
 **Réalisée par** `partage.py` et `templates/partage.js` (marqueur `__PARTAGE__`, `gabarit.injecter`), branchés sur les quatre écrans (carte, fiche, comparaison, exploration) ; le tableau de bord Pyrénées, ancien cinquième écran, a été retiré. Critères vérifiés dans Chromium headless (`tests/test_partage.py`) : chaque graphe enregistre les valeurs qu'il vient de tracer pour son export CSV (trois lignes `#` d'attribution en tête) et PNG ; l'état vit dans le fragment d'URL, chaque écran conserve les clés des autres ; attribution et date d'archive sur chaque page, contours en plus sur la carte. Écarté pour l'instant : valeur par défaut de `t` propre à chaque écran, filtres de la fiche et de la carte (spec § 6), factorisation des payloads et des commandes CLI.
+
+---
+
+## Lot 5 — Publication
+
+Spec : `docs/spec-publication.md`.
+
+### T16. Audit avant passage en public
+
+**Réalisée par** l'audit de l'historique complet (114 commits, clone non superficiel) et le fichier
+`LICENSE` (MIT). Rapport dans la description de PR.
+
+### T17. Polices auto-hébergées
+
+**Réalisée par** `templates/polices.css` (marqueur `__POLICES__`) et `templates/polices/` :
+Archivo (`wdth`, `wght`) 5.3.0 et Source Serif 4 (`opsz`, `wght`) 5.3.1, latin, OFL. Critères
+vérifiés dans `tests/test_site.py` : aucune page ne mentionne `googleapis` ni `gstatic`, et
+`document.fonts.check` est vrai dans Chromium headless sur une page servie depuis `site/`.
+
+### T18. Commande `bra site`
+
+**Réalisée par** `site.py`. Critères vérifiés dans `tests/test_site.py` : cinq pages, liens de
+navigation vers des fichiers présents, `index.html#...` aboutit sur la carte avec le fragment,
+deux exécutions donnent le même arbre à `genere` près (l'ordre des groupes de `fiche._series`
+est désormais fixé : `polars.group_by` n'en garantit aucun). `apercu.png` (image Open Graph)
+reste à produire à la mise en ligne (T20).
+
+### T19. Commande `bra publier`
+
+**Réalisée par** `publier.py`. Critères vérifiés dans `tests/test_publier.py`, sur un dépôt
+temporaire avec remote nu local : création de la branche orpheline au premier appel, aucun commit
+au second appel sans changement, `--dry-run` qui liste ajoutés / modifiés / supprimés sans rien
+pousser, worktree retiré après une erreur.
+
+### T20. Mise en ligne et déclaration data.gouv.fr
+
+**Préparée par** `docs/publication.md` (procédure, republication, brouillon de chaque champ de la
+réutilisation) et `scripts/apercu.py` (capture 1200 × 630 de la carte, copiée dans `site/` par
+`bra site`). Les étapes de mise en ligne restent manuelles : repo public, Pages, vérification
+sans requête tierce, README, déclaration sur data.gouv.fr.
 
 ---
 

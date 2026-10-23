@@ -257,12 +257,29 @@ def cmd_carte(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_publier(args: argparse.Namespace) -> int:
+    from .publier import BRANCHE, publier
+
+    bilan = publier(args.site, dry_run=args.dry_run)
+    total = sum(len(v) for v in bilan.values())
+    for nom, fichiers in bilan.items():
+        for f in fichiers:
+            print(f"{nom[:-1]:9s} {f}")
+    if not total:
+        print(f"rien a publier : {BRANCHE} est deja a jour.")
+    elif args.dry_run:
+        print(f"dry-run : {total} fichier(s) changeraient, rien n'est pousse.")
+    else:
+        print(f"{total} fichier(s) pousses sur origin/{BRANCHE}.")
+    return 0
+
+
 def cmd_site(args: argparse.Namespace) -> int:
     from .site import generer, servir
 
-    for page in generer(args.db, args.out):
+    for page in generer(args.db, args.out, args.allow_dirty):
         print(f"{page} ({page.stat().st_size / 1024:.0f} Ko)")
-    print(f"site statique : {args.out}/ (index.html = la carte), a ouvrir ou a deposer sur un hebergeur.")
+    print(f"site statique : {args.out}/ (index.html redirige vers la carte), a servir tel quel.")
     if args.serve:
         servir(args.out, args.port)
     return 0
@@ -432,7 +449,13 @@ def build_parser() -> argparse.ArgumentParser:
     st.add_argument("--out", default="site", help="dossier de sortie")
     st.add_argument("--serve", action="store_true", help="servir le dossier en local apres la generation")
     st.add_argument("--port", type=int, default=8000)
+    st.add_argument("--allow-dirty", action="store_true", help="accepter un arbre de travail sale (version.json pointerait un commit sans vos changements)")
     st.set_defaults(func=cmd_site)
+
+    pb = sub.add_parser("publier", help="pousser site/ sur la branche orpheline gh-pages (jamais de force-push)")
+    pb.add_argument("--site", default="site", help="dossier construit par `bra site`")
+    pb.add_argument("--dry-run", action="store_true", help="montrer ce qui changerait, ne rien pousser")
+    pb.set_defaults(func=cmd_publier)
 
     g = sub.add_parser("contours", help="raccorder et simplifier les contours des massifs")
     g.add_argument("--source", default=str(geo.SOURCE), help="GeoJSON d'origine")
