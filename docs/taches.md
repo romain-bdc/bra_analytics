@@ -321,6 +321,13 @@ deux exécutions donnent le même arbre à `genere` près (l'ordre des groupes d
 est désormais fixé : `polars.group_by` n'en garantit aucun). `apercu.png` (image Open Graph)
 reste à produire à la mise en ligne (T20).
 
+### T19. Commande `bra publier`
+
+**Réalisée par** `publier.py`. Critères vérifiés dans `tests/test_publier.py`, sur un dépôt
+temporaire avec remote nu local : création de la branche orpheline au premier appel, aucun commit
+au second appel sans changement, `--dry-run` qui liste ajoutés / modifiés / supprimés sans rien
+pousser, worktree retiré après une erreur.
+
 ---
 
 ## Ce qui reste volontairement hors de cette liste

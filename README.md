@@ -191,6 +191,18 @@ pointe vers un commit qui existe. Les quatre commandes d'écran restent disponib
 régénérer qu'un. `bra site` ne reconstruit pas l'entrepôt : après un changement de parsing ou de
 vue, `bra build --replace` d'abord.
 
+### 6 ter. `bra publier` — pousser le site sur GitHub Pages
+
+```bash
+uv run bra publier --dry-run          # fichiers ajoutés / modifiés / supprimés, rien n'est poussé
+uv run bra publier                    # commit + push de site/ sur la branche orpheline gh-pages
+```
+
+Publie le contenu de `site/` tel que `bra site` l'a construit (jamais reconstruit implicitement)
+sur la branche `gh-pages` de `origin`, via un worktree temporaire retiré même en cas d'erreur.
+Aucun commit si rien n'a changé (la date de `version.json` seule n'en justifie pas un), jamais de
+force-push. Le build reste local : `bra build --replace && bra check && bra site && bra publier`.
+
 ### 7. `bra carte` — carte d'accueil des 36 massifs
 
 ```bash
