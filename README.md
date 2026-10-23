@@ -1,6 +1,30 @@
-# bra-analytics
+<h1 align="center">
+  <img src="docs/img/logo.svg" alt="bra-analytics" width="420">
+</h1>
 
-**Site public : <https://romain-bdc.github.io/bra_analytics/>** — carte, fiche massif-saison, comparaison de saisons et exploration, sur les 36 massifs depuis 2016.
+<p align="center">
+  <strong>Dix ans de Bulletins d'Estimation du Risque d'Avalanche de Météo-France,<br>
+  ramenés à un schéma unique et rendus lisibles.</strong>
+</p>
+
+<p align="center">
+  <a href="https://romain-bdc.github.io/bra_analytics/">Site public</a> ·
+  <a href="https://www.data.gouv.fr/reuses/analyse-des-bulletins-de-risques-avalanches-depuis-2016">Réutilisation sur data.gouv.fr</a> ·
+  <a href="docs/glossaire.md">Glossaire</a> ·
+  <a href="docs/exploration.md">Exploration de l'archive</a>
+</p>
+
+<p align="center">
+  <a href="https://romain-bdc.github.io/bra_analytics/">
+    <img src="src/bra_analytics/templates/apercu.png" alt="Carte de l'indice de risque moyen par massif, neuf saisons comparables sur onze" width="860">
+  </a>
+</p>
+
+<p align="center">
+  <sub>Mars 2016 → juin 2026 · 36 massifs (Alpes, Pyrénées, Corse) · carte, fiche massif-saison, comparaison de saisons et exploration</sub>
+</p>
+
+---
 
 Pipeline d'ingestion, de parsing et d'agrégation des **Bulletins d'Estimation du Risque
 d'Avalanche** (BRA) de Météo-France, publiés sous [Licence Ouverte 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence).
@@ -166,7 +190,7 @@ uv run bra audit
 Écrit [`docs/disponibilite.md`](docs/disponibilite.md) : part de valeurs non nulles par champ et
 par saison, distribution de `loc_type`, altitudes de référence par massif, couverture de
 l'enneigement, `sat1`/`sat2`, distributions des champs à seuil, bloc météo selon `origine`, et
-sentinelles `-1` restées dans l'entrepôt. Chaque métrique de la spec y reçoit un statut
+sentinelles `-1` restées dans l'entrepôt. Chaque métrique y reçoit un statut
 (calculable, sur un sous-ensemble de saisons, non calculable) **dérivé** de ces mesures. Le
 document est déterministe : le relancer après chaque `bra build` et versionner le diff.
 
@@ -217,14 +241,14 @@ cartographique. Les contours versionnés (`geo/massifs.web.geojson`) sont embarq
 SVG. Chaque massif porte **une valeur**, sans sélecteur de saison :
 
 - par défaut, l'**indice moyen sur la fenêtre `coeur`, saisons comparables seulement** — la
-  métrique d'accueil de la spec § 3.2, lue telle quelle dans `moyenne_pluriannuelle()`. Le libellé
+  métrique d'accueil, lue telle quelle dans `moyenne_pluriannuelle()`. Le libellé
   dit « neuf saisons comparables sur onze », compté depuis l'entrepôt et `fenetres.py` ;
 - le survol donne toujours les jours couverts (et la durée nominale de la fenêtre sur les saisons
   diffusées) et les jours de risque 4 ou 5 : une moyenne d'indices ordinaux n'est jamais affichée
   seule ;
 - un sélecteur bascule sur les **jours à risque 3 ou plus** et le **maximum atteint** (repris de
   `risque_saison`) ; la métrique vit dans l'URL (`carte.html#risque_max`). La durée
-  d'enneigement est annoncée mais pas calculée : elle dépend de T7 ;
+  d'enneigement est annoncée mais pas calculée ;
 - un massif diffusé une partie de la période est **hachuré par-dessus sa couleur** — Haut-Var
   Haut-Verdon (22) n'a que 7 saisons comparables sur 9, Andorre (71) 8 — et le survol nomme les
   saisons manquantes ; un massif sans aucun jour sur la période serait hachuré sur fond neutre,
@@ -258,7 +282,7 @@ La base DuckDB expose chaque table, plus des vues de travail :
 | `palier_tranche` | 1 ligne / valeur mesurée à une altitude | enneigement, neige fraîche et vent par tranche normée (< 1800, 1800–2400, ≥ 2400 m) |
 | `risque_jour` | 1 ligne / massif / jour couvert | risque du jour, variation depuis la veille, écart à la normale |
 | `risque_episode` | 1 ligne / épisode ≥ 3 / portée | épisodes, avec ce qui les rompt ou les tronque |
-| `risque_saison` | 1 ligne / massif / saison / portée | métriques de risque de la spec § 5.1 |
+| `risque_saison` | 1 ligne / massif / saison / portée | métriques de risque |
 | `risque_second_indice` | 1 ligne / massif / jour couvert | `risque1` / `risque2` / `loc_type`, vue experte |
 | `enneigement_jour` | 1 ligne / massif / jour de relevé | limites d'enneigement continu et indicateur `sans_enneigement_continu_*` |
 | `enneigement_palier` | 1 ligne / massif / jour / palier | épaisseur par tranche normée, palier retenu, écart à la normale |
@@ -295,18 +319,8 @@ refusée (`RuptureDeSerie`).
 Partitionnement par saison nivologique (`2025-2026` = septembre 2025 → août 2026), dérivé de
 `DATEBULLETIN` et non du chemin source — les deux divergent en 2016.
 
-### Interroger
-
-```bash
-uv run python -c "import duckdb; print(duckdb.connect('warehouse/bra.duckdb', read_only=True).execute('SELECT saison, round(avg(risque_maxi),2) FROM bulletins GROUP BY 1 ORDER BY 1').df())"
-```
-
-```python
-import polars as pl
-df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
-```
-
-## Points d'attention pour l'analyse
+<details>
+<summary><h2>Points d'attention pour l'analyse</h2></summary>
 
 - **Indexer sur `jour_validite`, pas sur `jour_bulletin`.** Un BRA est rédigé vers 16 h pour le
   lendemain : le risque décrit porte sur l'échéance. Une série indexée sur la date de rédaction
@@ -382,6 +396,8 @@ df = pl.read_parquet("warehouse/bulletins/**/*.parquet")
   cohérente avec les orientations de la rose des pentes ; la source alterne entre convention
   anglaise (≤2023) et française (≥2024).
 
+</details>
+
 ## Tests
 
 ```bash
@@ -418,7 +434,7 @@ uv run bra comparaison                # écrit comparaison.html à la racine (no
 ```
 
 Page HTML autonome (environ 1,5 Mo : risque et neige de 36 massifs × 11 saisons). Trois modes — une
-saison contre les autres du même massif (bande médiane et interquartile de T11), deux à quatre
+saison contre les autres du même massif (bande médiane et interquartile), deux à quatre
 saisons choisies, un à quatre massifs sur une même saison — avec courbes superposées (le sélecteur
 plafonne à quatre), tableau récapitulatif et classement des saisons en barres horizontales. L'état
 vit dans l'URL (`comparaison.html#x=choix&m=65&c=2023-2024,2024-2025&k=jours_3_plus`).
@@ -448,7 +464,7 @@ en barres par secteur — côte à côte, jamais superposées. L'état vit dans 
 (`exploration.html#x=saisons&m=65&c=2023-2024,2024-2025&f=coeur&q=ge3&t=haute&g=barres`).
 
 - **Altitude** : chaque rose des pentes et chaque jeu de situations porte l'étiquette « non
-  localisée en altitude » (T9) ; il n'y a pas de matrice altitude × orientation. Le vent, lui, a
+  localisée en altitude » ; il n'y a pas de matrice altitude × orientation. Le vent, lui, a
   une altitude réelle : le croisement se lit par tranche, une à la fois.
 - **Situations** : seulement depuis la saison qui en porte ; une saison antérieure l'écrit au lieu
   d'afficher un zéro.
@@ -456,10 +472,10 @@ en barres par secteur — côte à côte, jamais superposées. L'état vit dans 
   `exploration.refus`, qui délègue à `risque.fenetre_comparable`. Une saison non comparable reste
   affichable, étiquetée avec son motif et en pointillé.
 - Chaque graphe se résume à des lignes {secteur, jours, jours couverts} : roses et barres les
-  dessinent, et l'export CSV de chaque graphe (T15) les reprend telles quelles. L'écran écrit `q` (condition
+  dessinent, et l'export CSV de chaque graphe les reprend telles quelles. L'écran écrit `q` (condition
 sur le risque) et `g` (rose ou barres) : `k` a un autre sens sur la comparaison, et `d=1` ouvre les tableaux de la carte.
 
-### 11. Exports, URL partageable et attribution (T15)
+### 11. Exports, URL partageable et attribution
 
 Mécanisme commun à tous les écrans, défini une fois (`partage.py`, `templates/partage.js`) :
 

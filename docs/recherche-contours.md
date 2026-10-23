@@ -346,7 +346,7 @@ cite pas sa source géographique.
 - Dans les deux cas, enregistrer à côté du fichier versionné : l'URL figée, le sha256, la date de
   téléchargement et la mention d'attribution.
 - Trois affirmations des documents existants sont démenties ou nuancées par cette recherche :
-  - identifiants « `FR-<massif_id>` » (`taches.md` T3 et `spec-interface.md` § 9) : ils sont en
+  - identifiants « `FR-<massif_id>` » (anciens documents de spec) : ils sont en
     réalité sur deux chiffres ;
   - licence « pas affichée sur le site de diffusion » (mêmes deux passages) : CC0 est déclaré ;
   - variante `_elevation` « qui subdivise par tranche d'altitude » (`taches.md` T3) : ce n'est pas
