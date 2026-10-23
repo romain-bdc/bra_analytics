@@ -16,6 +16,7 @@ from . import partage
 COMMUN = Path(__file__).parent / "templates" / "commun.js"
 PARTAGE = Path(__file__).parent / "templates" / "partage.js"
 STYLE = Path(__file__).parent / "templates" / "commun.css"
+POLICES = Path(__file__).parent / "templates" / "polices.css"
 
 # Un caractere par jour, dans la chaine `serie` de chaque massif.
 ABSENT = "."  # aucun bulletin ce jour-la
@@ -57,6 +58,9 @@ def injecter(gabarit: Path, data: dict, standalone: bool = True) -> str:
     # Meme ordre pour la feuille de style commune : une base visuelle, quatre ecrans.
     if "__STYLE__" in html:
         html = html.replace("__STYLE__", STYLE.read_text(encoding="utf-8"), 1)
+    # Les @font-face sont ecrits une fois : chemins relatifs, polices servies a cote des pages.
+    if "__POLICES__" in html:
+        html = html.replace("__POLICES__", POLICES.read_text(encoding="utf-8"), 1)
     if "__COMMUN__" in html:
         html = html.replace("__COMMUN__", COMMUN.read_text(encoding="utf-8"), 1)
     page = html.replace("__DONNEES__", blob)
