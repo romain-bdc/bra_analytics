@@ -260,9 +260,9 @@ def cmd_carte(args: argparse.Namespace) -> int:
 def cmd_site(args: argparse.Namespace) -> int:
     from .site import generer, servir
 
-    for page in generer(args.db, args.out):
+    for page in generer(args.db, args.out, args.allow_dirty):
         print(f"{page} ({page.stat().st_size / 1024:.0f} Ko)")
-    print(f"site statique : {args.out}/ (index.html = la carte), a ouvrir ou a deposer sur un hebergeur.")
+    print(f"site statique : {args.out}/ (index.html redirige vers la carte), a servir tel quel.")
     if args.serve:
         servir(args.out, args.port)
     return 0
@@ -432,6 +432,7 @@ def build_parser() -> argparse.ArgumentParser:
     st.add_argument("--out", default="site", help="dossier de sortie")
     st.add_argument("--serve", action="store_true", help="servir le dossier en local apres la generation")
     st.add_argument("--port", type=int, default=8000)
+    st.add_argument("--allow-dirty", action="store_true", help="accepter un arbre de travail sale (version.json pointerait un commit sans vos changements)")
     st.set_defaults(func=cmd_site)
 
     g = sub.add_parser("contours", help="raccorder et simplifier les contours des massifs")

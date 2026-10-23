@@ -109,7 +109,7 @@ def _bandes(serie: pl.DataFrame, cle: str) -> pl.DataFrame:
 def _tableau(bandes: pl.DataFrame, cle: str, cases: list) -> dict[int, dict]:
     """Une bande par massif : trois listes alignees sur `cases`, `None` hors population."""
     out: dict[int, dict] = {}
-    for (massif_id,), g in bandes.group_by(["massif_id"]):
+    for (massif_id,), g in _tries(bandes.group_by(["massif_id"])):
         index = {r[cle]: r for r in g.iter_rows(named=True)}
         out[int(massif_id)] = {
             champ: [
@@ -185,6 +185,12 @@ def _indicateurs(con: duckdb.DuckDBPyConnection) -> dict:
 BLOCS = ("neige", "iso0", "vent")
 
 
+def _tries(groupes):
+    """Groupes polars dans l'ordre de leur cle : `group_by` n'en garantit aucun, et deux
+    generations du site doivent produire des pages identiques (T18)."""
+    return sorted(groupes, key=lambda kg: kg[0])
+
+
 def _series(
     con: duckdb.DuckDBPyConnection, blocs: tuple[str, ...] = BLOCS
 ) -> tuple[dict[int, dict[str, dict]], pl.DataFrame]:
@@ -222,7 +228,7 @@ def _series(
             saison, {"origine": d0, "longueur": (d1 - d0).days + 1}
         )
 
-    for (mid, saison), g in jours.group_by(["massif_id", "saison"]):
+    for (mid, saison), g in _tries(jours.group_by(["massif_id", "saison"])):
         e = entree(mid, saison)
         premier = g["jour_validite"].min()
         grille = [ABSENT] * e["longueur"]
@@ -233,7 +239,7 @@ def _series(
         e["decalage_rang"] = (premier - e["origine"]).days
 
     if snow is not None:
-        for (mid, saison, tranche), g in snow.group_by(["massif_id", "saison", "tranche"]):
+        for (mid, saison, tranche), g in _tries(snow.group_by(["massif_id", "saison", "tranche"])):
             e = entree(mid, saison)
             for versant in VERSANTS:
                 e.setdefault("neige", {}).setdefault(tranche, {})[versant] = _chaine(
@@ -243,7 +249,7 @@ def _series(
             e.setdefault("altitudes_neige", {})[tranche] = sorted(set(g["altitude_m"]))
 
     if iso0 is not None:
-        for (mid, saison), g in iso0.group_by(["massif_id", "saison"]):
+        for (mid, saison), g in _tries(iso0.group_by(["massif_id", "saison"])):
             e = entree(mid, saison)
             e["iso0"] = {
                 nom: _chaine(dict(zip(g["jour_validite"], g[col])), e["origine"], e["longueur"])
@@ -251,7 +257,7 @@ def _series(
             }
 
     if vent is not None:
-        for (mid, saison, tranche), g in vent.group_by(["massif_id", "saison", "tranche"]):
+        for (mid, saison, tranche), g in _tries(vent.group_by(["massif_id", "saison", "tranche"])):
             e = entree(mid, saison)
             e.setdefault("vent", {})[tranche] = _chaine(
                 dict(zip(g["jour_validite"], g["vitesse_kmh"])), e["origine"], e["longueur"]

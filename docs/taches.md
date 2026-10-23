@@ -297,6 +297,32 @@ présente sur les quatre écrans.
 
 ---
 
+## Lot 5 — Publication
+
+Spec : `docs/spec-publication.md`.
+
+### T16. Audit avant passage en public
+
+**Réalisée par** l'audit de l'historique complet (114 commits, clone non superficiel) et le fichier
+`LICENSE` (MIT). Rapport dans la description de PR.
+
+### T17. Polices auto-hébergées
+
+**Réalisée par** `templates/polices.css` (marqueur `__POLICES__`) et `templates/polices/` :
+Archivo (`wdth`, `wght`) 5.3.0 et Source Serif 4 (`opsz`, `wght`) 5.3.1, latin, OFL. Critères
+vérifiés dans `tests/test_site.py` : aucune page ne mentionne `googleapis` ni `gstatic`, et
+`document.fonts.check` est vrai dans Chromium headless sur une page servie depuis `site/`.
+
+### T18. Commande `bra site`
+
+**Réalisée par** `site.py`. Critères vérifiés dans `tests/test_site.py` : cinq pages, liens de
+navigation vers des fichiers présents, `index.html#...` aboutit sur la carte avec le fragment,
+deux exécutions donnent le même arbre à `genere` près (l'ordre des groupes de `fiche._series`
+est désormais fixé : `polars.group_by` n'en garantit aucun). `apercu.png` (image Open Graph)
+reste à produire à la mise en ligne (T20).
+
+---
+
 ## Ce qui reste volontairement hors de cette liste
 
 L'alerting mail, l'API publique, le temps réel, les sources externes (observations de stations,
