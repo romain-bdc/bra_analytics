@@ -70,7 +70,7 @@ def test_chaque_ecran_et_les_fichiers_du_site_sont_ecrits(db, tmp_path):
     _generer(db, out)
     for ecran in ECRANS:
         assert (out / ecran.fichier).stat().st_size > 0
-    for nom in ("index.html", "version.json", ".nojekyll", "polices/OFL.txt"):
+    for nom in ("index.html", "version.json", ".nojekyll", "polices/OFL.txt", "apercu.png"):
         assert (out / nom).is_file(), nom
 
 
