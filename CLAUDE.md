@@ -9,8 +9,7 @@ Météo-France (mars 2016 → juin 2026 ; les 36 massifs du référentiel sont i
 d'analyse historique construite dessus.
 
 Le parsing des six formats XML historiques, la déduplication, l'entrepôt Parquet et les vues
-DuckDB sont faits et éprouvés. Ce qui reste à construire est la couche métriques et les écrans :
-voir `docs/spec-interface.md` pour la cible, `docs/taches.md` pour la séquence.
+DuckDB sont faits et éprouvés. La couche métriques et les quatre écrans existent (voir « État de l'interface »).
 
 ## À lire avant d'écrire du code
 
@@ -19,8 +18,6 @@ Dans cet ordre, et sans sauter d'étape :
 1. `README.md` — commandes et liste des pièges d'archive.
 2. `docs/glossaire.md` — sens, unité et piège de chaque champ.
 3. `docs/exploration.md` — écarts entre l'archive réelle et le descriptif technique officiel.
-4. `docs/spec-interface.md` — ce qu'il faut construire.
-5. `docs/taches.md` — dans quel ordre, et à quelles conditions une tâche est finie.
 
 Ne jamais deviner la sémantique d'un champ : plusieurs portent un nom trompeur. `risque1_evolution`
 est un **second indice de risque** et non un code d'évolution ; `naturel` et `accidentel` sont des

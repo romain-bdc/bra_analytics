@@ -495,10 +495,10 @@ def rapport(con: duckdb.DuckDBPyConnection) -> str:
     s: list[str] = []
     s.append("# Disponibilité des champs, saison par saison\n")
     s.append(
-        "Document **généré** par `uv run bra audit` (tâche T2 de [`taches.md`](taches.md)). "
+        "Document **généré** par `uv run bra audit`. "
         "Ne pas l'éditer à la main : le relancer après tout `bra build`.\n\n"
-        "Il répond à une question préalable à toute métrique de la "
-        "[spec](spec-interface.md) : le champ dont elle dépend existe-t-il sur toute la "
+        "Il répond à une question préalable à toute métrique : "
+        "le champ dont elle dépend existe-t-il sur toute la "
         "période ? Le format XML a changé six fois, et plusieurs blocs sont propres à une "
         "époque.\n"
     )
