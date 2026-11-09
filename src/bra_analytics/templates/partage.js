@@ -54,9 +54,9 @@ const PARTAGE = (() => {
   function style() {
     const s = document.createElement("style");
     s.textContent = `
-.partage-nav{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 22px;padding:14px 0 0;font-size:14px}
-.partage-nav a,.partage-nav button{font:inherit;color:var(--ink-2,#46575b);background:none;border:0;border-bottom:2px solid transparent;border-radius:0;padding:2px 0;text-decoration:none;cursor:pointer}
-.partage-nav a[aria-current="page"]{color:var(--ink,#1b282c);font-weight:600;border-bottom-color:var(--ink,#1b282c)}
+.partage-nav{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 26px;padding:12px 0 0;font-size:14px;border-bottom:1px solid var(--rule,#c6cdc8)}
+.partage-nav a,.partage-nav button{font:inherit;color:var(--ink-2,#46575b);background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:2px 0 9px;text-decoration:none;cursor:pointer}
+.partage-nav a[aria-current="page"]{color:var(--ink,#1b282c);font-weight:600;border-bottom-color:var(--accent,#d2602c)}
 .partage-nav .espace{flex:1 1 auto}
 .partage-nav button{font-size:13px;text-decoration:underline;text-underline-offset:3px}
 .exports{display:flex;gap:16px;justify-content:flex-end;margin:4px 0 0;font-size:12.5px}
@@ -68,8 +68,11 @@ details.plus{display:inline;font-size:inherit}
 details.plus>summary{display:inline;cursor:pointer;color:var(--ink-muted,#6b7480);font-size:.92em;margin-left:4px;list-style:none}
 details.plus>summary::-webkit-details-marker{display:none}
 details.plus>summary::before{content:"+ "}
-details.plus[open]>summary::before{content:"\u2212 "}
+details.plus[open]>summary{display:none}
 details.plus[open]>.corps{display:block;margin-top:4px}
+details.plus .moins{font:inherit;font-size:.92em;color:var(--ink-muted,#6b7480);background:none;border:0;padding:0;margin-left:4px;cursor:pointer}
+details.plus .moins::before{content:"\u2212 "}
+details.plus .moins:hover,details.plus>summary:hover{color:var(--ink,#1b282c)}
 details.plus.bloc{display:block}
 details.plus.bloc>summary{display:block;margin:0}`;
     document.head.appendChild(s);
@@ -81,6 +84,13 @@ details.plus.bloc>summary{display:block;margin:0}`;
     ecran = o.ecran;
     attribution = o;
     style();
+    document.addEventListener("click", ev => {
+      const b = ev.target.closest && ev.target.closest("details.plus .moins");
+      if (!b) return;
+      const d = b.closest("details");
+      d.open = false;
+      d.querySelector("summary").focus();
+    });
     const racine = document.querySelector(".wrap") || document.body;
     const nav = document.createElement("nav");
     nav.className = "partage-nav";
@@ -231,7 +241,10 @@ details.plus.bloc>summary{display:block;margin:0}`;
   /* Texte replie : une phrase visible, le reste dans un « + details » (aucun texte supprime,
      les exports et les tests le lisent toujours). `bloc` : le repli occupe sa propre ligne. */
   function plus(detail, titre = "détails", bloc = false) {
-    return detail ? `<details class="plus${bloc ? " bloc" : ""}"><summary>${titre}</summary><span class="corps">${detail}</span></details>` : "";
+    /* Deplie, le resume s'efface et un « voir moins » ferme la fin du texte : on replie
+       la ou on finit de lire, sans remonter chercher le resume. */
+    return detail ? `<details class="plus${bloc ? " bloc" : ""}"><summary>${titre}</summary><span class="corps">${detail}`
+      + ` <button type="button" class="moins">voir moins</button></span></details>` : "";
   }
 
   return { demarrer, lire, ecrire, enregistrer, png, registre, plus };

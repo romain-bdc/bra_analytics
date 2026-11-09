@@ -5,37 +5,43 @@ __STYLE__
 .carte{position:relative}
 .carte svg{display:block;width:100%;height:auto;margin:0;touch-action:pan-y}
 .carte svg.trace{cursor:crosshair;user-select:none}
-.pays{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:.8;stroke-linejoin:round;pointer-events:none;vector-effect:non-scaling-stroke}
-.massif{stroke:var(--surface);stroke-width:1.1;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-.massif:hover,.massif:focus-visible{stroke:var(--ink);stroke-width:1.8;outline:none}
-.zonelab{font-family:var(--serif);font-style:italic;fill:var(--ink-muted);pointer-events:none}
-.nomlab{font-family:var(--sans);font-weight:500;fill:var(--ink);stroke:var(--page);stroke-width:3px;paint-order:stroke;
+.pays{fill:var(--pays);stroke:var(--pays-trait);stroke-width:.8;stroke-linejoin:round;pointer-events:none;vector-effect:non-scaling-stroke}
+.massif{stroke:var(--page);stroke-width:1.2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.massif:hover,.massif:focus-visible{stroke:var(--ink);stroke-width:2;outline:none}
+.zonelab{font-stretch:80%;font-weight:600;letter-spacing:.02em;fill:var(--ink-muted);pointer-events:none}
+.nomlab{font-weight:600;font-stretch:85%;fill:var(--ink);stroke:var(--page);stroke-width:3px;paint-order:stroke;
   stroke-linejoin:round;pointer-events:none;vector-effect:non-scaling-stroke}
 .selection{fill:var(--coeur);stroke:var(--s1);stroke-width:1;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;pointer-events:none}
+.sous-carte{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
 .zoom{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:6px 0 0;font-size:12.5px;color:var(--ink-muted)}
 .zoom button[hidden]{display:none}
-/* Choix de la metrique : une liste de boutons radio, a cote de la carte qu'elle recolore. */
-.metriques{border:0;margin:0 0 22px;padding:0;min-width:0}
-.metriques legend{padding:0;margin:0 0 8px;font-size:13px;color:var(--ink-muted)}
-.metriques label{display:flex;align-items:center;gap:10px;padding:7px 10px;margin:0 0 2px;font-size:14px;color:var(--ink-2);
-  border-left:2px solid transparent;cursor:pointer}
+/* Le zoom par selection est reserve a la souris : sur ecran tactile, glisser fait defiler. */
+@media (hover:none){.zoom{display:none}}
+
+/* Cartouche : choix de la metrique et legende dans un cadre, comme la legende d'une carte
+   topographique. Il recolore la carte voisine, sans defilement. */
+.cote{border:1.5px solid var(--ink);padding:16px 18px 18px;background:var(--page);box-shadow:4px 4px 0 var(--surface-2)}
+.metriques{border:0;margin:0 0 20px;padding:0;min-width:0}
+.metriques legend,.cle .titre{padding:0;margin:0 0 8px;font-size:13px;font-weight:700;font-stretch:80%;letter-spacing:.02em;color:var(--ink)}
+.metriques label{display:flex;align-items:center;gap:10px;padding:6px 8px;margin:0 0 2px;font-size:13.5px;color:var(--ink-2);
+  border-radius:3px;cursor:pointer}
 .metriques label:hover{color:var(--ink);background:var(--surface-2)}
 .metriques input{position:absolute;opacity:0;pointer-events:none}
-.metriques label:has(input:checked){color:var(--ink);font-weight:600;border-left-color:var(--ink);background:var(--surface-2)}
+.metriques label:has(input:checked){color:var(--page);background:var(--ink);font-weight:600}
 .metriques label:has(input:focus-visible){outline:2px solid var(--s1);outline-offset:1px}
 .metriques label:has(input:disabled){color:var(--ink-muted);cursor:not-allowed;background:none}
 .metriques .motif{display:block;font-size:12px;font-weight:400;color:var(--ink-muted)}
 .cle{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:0;font-size:12.5px;color:var(--ink-2)}
-.cle .titre{color:var(--ink-muted)}
-.cle span{display:inline-flex;align-items:center;gap:7px}
-.cle svg{width:16px;height:16px;flex:none;box-shadow:inset 0 0 0 1px var(--ring)}
-.echelle{margin:14px 0 0;font-size:12.5px;color:var(--ink-muted);max-width:60ch}
-.cote .toggle{margin-top:18px;justify-self:start}
-/* Le zoom par selection est reserve a la souris : sur ecran tactile, glisser fait defiler. */
-@media (hover:none){.zoom{display:none}}
-.vue{display:grid;gap:18px 56px;padding-top:4px;border-top:0}
-.reperes{margin-top:34px}
-.reperes h2{margin-bottom:14px}
+.cle .titre{margin:0}
+.cle span{display:inline-flex;align-items:center;gap:8px}
+.cle svg{width:22px;height:14px;flex:none;border-radius:2px}
+.echelle{margin:14px 0 0;font-size:12px;line-height:1.5;color:var(--ink-muted)}
+.cote .toggle{margin-top:14px;padding-left:0;text-decoration:underline;text-underline-offset:3px}
+.cote .toggle:hover{background:none}
+.cote .toggle[aria-pressed="true"]{background:none;color:var(--ink)}
+.vue{display:grid;gap:16px 40px;padding-top:6px;border-top:0}
+.reperes{margin-top:30px;border-top:1.5px solid var(--ink)}
+.reperes h2{margin-bottom:16px}
 .attrib{margin:16px 0 0;padding-top:10px;border-top:1px solid var(--grid);font-size:12px;color:var(--ink-muted)}
 .attrib a{color:var(--ink-2)}
 .tables{margin-top:24px}
@@ -47,30 +53,32 @@ td.g{text-align:left;white-space:normal}
 #tip .num{font-variant-numeric:tabular-nums;font-weight:600}
 #tip .z{color:var(--ink-muted)}
 #tip .alerte{display:block;margin-top:4px;padding:0;border:0;color:var(--ink-2)}
-/* Etroit : le choix de metrique passe au-dessus de la carte, la legende dessous. */
+/* Etroit : le choix de metrique au-dessus de la carte, la legende dessous, sans cadre. */
 @media (max-width:979px){
   .cote{display:contents}
   .metriques{order:-1;margin:0}
   .metriques label{display:inline-flex;margin:0 4px 4px 0}
   .metriques .motif{display:none}
 }
-/* Large : la carte a gauche, le choix de metrique et la cle a droite, visibles ensemble. */
+/* Large : le cartouche a gauche, la carte a droite a hauteur d'ecran. La France vide a
+   l'ouest, le cartouche occupe cette place sans jamais masquer une carte zoomee. */
 @media (min-width:980px){
-  .vue{grid-template-columns:minmax(0,1fr) minmax(250px,300px)}
-  .cote{position:sticky;top:16px;align-self:start}
+  .vue{grid-template-columns:300px minmax(0,1fr)}
+  .vue>.cote{grid-column:1;grid-row:1;align-self:start;position:sticky;top:16px}
+  .vue>.plan{grid-column:2;grid-row:1}
+  .carte svg{height:min(calc(100vh - 210px),900px);min-height:460px}
 }
 @media (forced-colors:active){.massif{stroke:CanvasText}}
 </style>
 
 <div class="wrap">
 <header>
-  <p class="eyebrow">Météo-France · Bulletins d'estimation du risque d'avalanche</p>
   <h1 id="titre">Le risque d'avalanche, massif par massif</h1>
   <p class="lede" id="lede"></p>
 </header>
 
 <section class="panel vue">
-  <div>
+  <div class="plan">
     <div class="carte"><svg id="carte" role="img"></svg></div>
     <p class="zoom"><span id="zoom-aide">Cliquer-glisser sur la carte pour zoomer sur une zone.</span>
       <button class="toggle" id="dezoom" hidden>Revenir à la France entière</button></p>
@@ -106,6 +114,8 @@ const D = __DONNEES__;
 const NS = "http://www.w3.org/2000/svg";
 const NIVEAUX = ["Faible", "Limité", "Marqué", "Fort", "Très fort"];
 const RAMPE = ["--o1", "--o2", "--o3", "--o4", "--o5"];
+/* Un maximum est un niveau de l'echelle europeenne : il prend la couleur de ce niveau. */
+const NIVEAUX_COULEURS = ["--n1", "--n2", "--n3", "--n4", "--n5"];
 /* Les zones de massifs.py sont en ASCII ; seule « Pyrenees » perd un accent a l'affichage. */
 const zoneFr = z => z === "Pyrenees" ? "Pyrénées" : z;
 const PAR_ID = new Map(D.massifs.map(m => [m.id, m]));
@@ -162,7 +172,7 @@ const defMetrique = () => METRIQUES.find(m => m.cle === metrique);
 function echelle(cle) {
   const vals = D.massifs.map(m => m[cle]).filter(v => v != null);
   if (cle === "risque_max") {
-    return { pas: v => v - 1, bornes: NIVEAUX.map((n, k) => `${k + 1} — ${n}`), niveaux: true };
+    return { pas: v => v - 1, bornes: NIVEAUX.map((n, k) => `${k + 1} — ${n}`), niveaux: true, rampe: NIVEAUX_COULEURS };
   }
   const entier = cle !== "risque_moyen";
   const g = entier ? 10 : 0.1;
@@ -171,7 +181,7 @@ function echelle(cle) {
   const larg = (hi - lo) / 5;
   const pas = v => Math.min(4, Math.max(0, Math.floor((v - lo) / larg)));
   const fmt = v => entier ? nb(Math.round(v)) : dec(v, 2);
-  return { pas, lo, hi, bornes: RAMPE.map((_, k) => `${fmt(lo + larg * k)} – ${fmt(lo + larg * (k + 1))}`), niveaux: false };
+  return { pas, lo, hi, bornes: RAMPE.map((_, k) => `${fmt(lo + larg * k)} – ${fmt(lo + larg * (k + 1))}`), niveaux: false, rampe: RAMPE };
 }
 
 /* ---------- valeur affichee ---------- */
@@ -255,7 +265,7 @@ function carte() {
     lignesExport.push([m.id, m.nom, zoneFr(m.zone), metrique, m[metrique], m.jours_couverts, m.jours_periode, m.jours_4_plus, m.saisons_presentes.length, m.diffusion]);
     const d = chemin(f);
     const v = m[metrique];
-    const fill = v == null ? "url(#absent)" : `var(${RAMPE[sc.pas(v)]})`;
+    const fill = v == null ? "url(#absent)" : `var(${sc.rampe[sc.pas(v)]})`;
     const p = el("path", { d, fill, class: "massif", tabindex: 0, "aria-label": `${m.nom} : ${valeurTexte(m, metrique)}` });
     p.addEventListener("pointerenter", ev => { tip.innerHTML = contenu(m); tip.style.opacity = "1"; place(ev); });
     p.addEventListener("pointermove", place);
@@ -322,14 +332,14 @@ function legende(sc) {
   sc.bornes.forEach((txt, k) => {
     if (sc.niveaux && !present.has(k)) return;
     const s = document.createElement("span");
-    s.append(pastille(`var(${RAMPE[k]})`), document.createTextNode(txt));
+    s.append(pastille(`var(${sc.rampe[k]})`), document.createTextNode(txt));
     box.appendChild(s);
   });
   const partiels = D.massifs.filter(m => m.diffusion === "partielle");
   const absents = D.massifs.filter(m => m.diffusion === "absente");
   if (partiels.length) {
     const s = document.createElement("span");
-    s.append(pastille(`var(${RAMPE[2]})`, true), document.createTextNode(`Diffusé une partie de la période (${partiels.map(m => m.nom).join(", ")})`));
+    s.append(pastille(`var(${sc.rampe[2]})`, true), document.createTextNode(`Diffusé une partie de la période (${partiels.map(m => m.nom).join(", ")})`));
     box.appendChild(s);
   }
   const s = document.createElement("span");
@@ -380,7 +390,6 @@ function table() {
 
 /* ---------- textes ----------
    Le chapo decrit la metrique affichee : il change avec elle. */
-const indispo = METRIQUES.filter(m => !m.disponible);
 function textes() {
   const def = defMetrique();
   const ecartees = Object.entries(D.saisons_ecartees).map(([s, motif]) => `${s} (${motif})`).join(" ; ");
@@ -388,8 +397,7 @@ function textes() {
   document.getElementById("lede").innerHTML =
     `Couleur de chaque massif : ${esc(def.description)}. Période : <b>${D.libelle_saisons}</b>, fenêtre <b>${F.nom}</b>.`
     + PARTAGE.plus(`La fenêtre ${F.nom} (${fenetreTexte}) est la seule où les saisons se comparent : avant juin 2021, les journées à manteau insuffisant
-     (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Saisons écartées : ${esc(ecartees) || "aucune"}.`
-    + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${esc(m.libelle)} : ${esc(m.motif)}.`).join(" ")}</span>` : ""));
+     (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Saisons écartées : ${esc(ecartees) || "aucune"}.`);
 }
 
 /* ---------- choix de la metrique ---------- */
