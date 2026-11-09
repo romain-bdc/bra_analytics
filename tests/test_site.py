@@ -1,4 +1,4 @@
-"""`bra site` : les quatre ecrans, `index.html` (redirection), polices, version.json, .nojekyll."""
+"""`bra site` : les trois ecrans, `index.html` (redirection), polices, version.json, .nojekyll."""
 
 from __future__ import annotations
 
@@ -99,6 +99,15 @@ def test_index_redirige_vers_la_carte_en_conservant_le_fragment(db, tmp_path):
     assert 'location.replace("carte.html" + location.hash)' in index
     assert '<meta http-equiv="refresh" content="0; url=carte.html">' in index
     assert "<title>" in index and 'name="description"' in index
+
+
+def test_l_ancien_ecran_de_comparaison_redirige_vers_l_ecran_massif(db, tmp_path):
+    """Fusionne avec la fiche : un lien deja partage arrive sur l'ecran Massif, etat intact."""
+    out = tmp_path / "site"
+    _generer(db, out)
+    page = (out / "comparaison.html").read_text(encoding="utf-8")
+    assert 'location.replace("fiche.html" + location.hash)' in page
+    assert '<meta http-equiv="refresh" content="0; url=fiche.html">' in page
 
 
 @chromium

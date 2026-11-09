@@ -1,4 +1,4 @@
-"""Site statique : les quatre ecrans ecrits cote a cote dans un meme dossier.
+"""Site statique : les trois ecrans ecrits cote a cote dans un meme dossier.
 
 Les pages se lient deja entre elles par leur nom de fichier (`partage.ECRANS`, barre de
 navigation de `partage.js`) : il suffit donc de les ecrire au meme endroit pour obtenir un
@@ -33,12 +33,11 @@ URL_PUBLIQUE = "https://romain-bdc.github.io/bra_analytics/"
 TITRE = "Historique du risque d'avalanche par massif depuis 2016"
 DESCRIPTION = (
     "Bulletins d'estimation du risque d'avalanche de Météo-France, mars 2016 à juin 2026, "
-    "36 massifs : carte, fiche massif-saison, comparaison de saisons et exploration."
+    "36 massifs : carte, fiche par massif et saison avec comparaisons, et exploration."
 )
 DESCRIPTIONS = {
     "carte": "Carte des 36 massifs : risque moyen par saison, sur la fenêtre comparable. " + DESCRIPTION,
-    "fiche": "Fiche d'un massif sur une saison : risque, neige, isotherme 0 °C et vent. " + DESCRIPTION,
-    "comparaison": "Comparaison de saisons d'un massif : courbes, tableau et classement. " + DESCRIPTION,
+    "fiche": "Un massif sur une saison : risque, neige, isotherme 0 °C et vent, comparé à d'autres saisons ou massifs. " + DESCRIPTION,
     "exploration": "Rose des pentes, vent par orientation et situations typiques. " + DESCRIPTION,
 }
 
@@ -55,6 +54,11 @@ def _meta(ecran_id: str, fichier: str) -> str:
         f'<meta property="og:url" content="{URL_PUBLIQUE}{fichier}">\n'
         f'<meta property="og:image" content="{URL_PUBLIQUE}apercu.png">\n'
     )
+
+
+# Pages retirees, redirigees vers l'ecran qui les a absorbees : un lien deja partage reste bon.
+# L'etat de l'URL (massif, saison, saisons comparees...) traverse la redirection.
+REDIRECTIONS = {"comparaison.html": "fiche.html"}
 
 
 def _index(accueil: str) -> str:
@@ -134,6 +138,8 @@ def generer(
     shutil.copy(APERCU, out / "apercu.png")
     accueil = out / "index.html"
     accueil.write_text(_index(ECRANS[0].fichier), encoding="utf-8")
+    for ancienne, cible in REDIRECTIONS.items():
+        (out / ancienne).write_text(_index(cible), encoding="utf-8")
     versionjson = out / "version.json"
     versionjson.write_text(json.dumps(version, indent=2) + "\n", encoding="utf-8")
     # Sans lui, Pages passe le contenu dans Jekyll.

@@ -225,7 +225,7 @@ def cmd_fiche(args: argparse.Namespace) -> int:
     from .fiche import render
 
     out = render(args.db, args.out, standalone=not args.fragment)
-    print(f"fiche massif-saison : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    print(f"ecran massif : {out} ({out.stat().st_size / 1024:.0f} Ko)")
     return 0
 
 
@@ -234,14 +234,6 @@ def cmd_exploration(args: argparse.Namespace) -> int:
 
     out = render(args.db, args.out, standalone=not args.fragment)
     print(f"ecran d'exploration : {out} ({out.stat().st_size / 1024:.0f} Ko)")
-    return 0
-
-
-def cmd_comparaison(args: argparse.Namespace) -> int:
-    from .comparaison import render
-
-    out = render(args.db, args.out, standalone=not args.fragment)
-    print(f"ecran de comparaison : {out} ({out.stat().st_size / 1024:.0f} Ko)")
     return 0
 
 
@@ -414,19 +406,12 @@ def build_parser() -> argparse.ArgumentParser:
     u.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
     u.set_defaults(func=cmd_ui)
 
-    f = sub.add_parser("fiche", help="generer la fiche massif-saison (HTML statique)")
+    f = sub.add_parser("fiche", help="generer l'ecran Massif : fiche massif-saison et comparaisons (HTML statique)")
     f.add_argument("--db", default="warehouse/bra.duckdb")
     f.add_argument("--out", default="fiche.html", help="fichier de sortie")
     f.add_argument("--fragment", action="store_true",
                    help="omettre doctype et <html> (page destinee a etre hebergee)")
     f.set_defaults(func=cmd_fiche)
-
-    c = sub.add_parser("comparaison", help="generer l'ecran de comparaison de saisons (HTML statique)")
-    c.add_argument("--db", default="warehouse/bra.duckdb")
-    c.add_argument("--out", default="comparaison.html", help="fichier de sortie")
-    c.add_argument("--fragment", action="store_true",
-                   help="omettre doctype et <html> (page destinee a etre hebergee)")
-    c.set_defaults(func=cmd_comparaison)
 
     e = sub.add_parser("exploration", help="generer l'ecran d'exploration orientations et vent (HTML statique)")
     e.add_argument("--db", default="warehouse/bra.duckdb")
@@ -444,7 +429,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     from . import geo
 
-    st = sub.add_parser("site", help="generer les quatre ecrans dans un dossier, comme un site statique")
+    st = sub.add_parser("site", help="generer les trois ecrans dans un dossier, comme un site statique")
     st.add_argument("--db", default="warehouse/bra.duckdb")
     st.add_argument("--out", default="site", help="dossier de sortie")
     st.add_argument("--serve", action="store_true", help="servir le dossier en local apres la generation")

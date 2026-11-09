@@ -1,11 +1,11 @@
-"""Ecran de comparaison (spec section 6, T13).
+"""Regles de comparaison entre saisons et entre massifs (spec section 6, T13).
 
-Meme motif que `fiche.py` : un payload JSON construit ici, insere dans
-`templates/comparaison.html` par le marqueur `__DONNEES__`, tout le calcul
-d'affichage cote client. Les series (risque, neige) et la bande mediane sont
-celles de la fiche, produites par les memes fonctions : rien n'est recopie.
+L'ecran de comparaison a fusionne avec la fiche (ecran « Massif », `fiche.py`) :
+les deux montraient le meme massif, les memes saisons, la meme courbe d'indice.
+Ce module ne construit plus de page ; il fournit a la fiche ce qu'elle compare
+et comment (`bloc()`), et garde les regles testables sans navigateur.
 
-Ce module porte une decision et une seule qui lui soit propre : **quelle
+Il porte une decision et une seule qui lui soit propre : **quelle
 metrique peut se classer sur quelle fenetre**. Elle est ecrite ici, depuis les
 drapeaux de `fenetres.py`, et voyage dans le payload (`refus`) ; le gabarit
 n'en recopie aucune.
@@ -33,28 +33,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, timedelta
-from pathlib import Path
 
-import duckdb
-import polars as pl
-
-from . import partage
-from .gabarit import injecter
 from .fenetres import DEFAUT, FENETRES, FIN_SENTINELLE, MOIS_FR, PAR_NOM, SAISON_COMPLETE
-from .fiche import (
-    _bandes,
-    _series,
-    _tableau,
-    archive_et_saisons,
-    axe_calendaire,
-    fiche_massifs,
-    saisons_payload,
-)
 from .metriques import risque
 from .metriques.risque import ComparaisonRefusee
-from .tranches import TRANCHES
-
-TEMPLATE = Path(__file__).parent / "templates" / "comparaison.html"
 
 # Au-dela de quatre courbes superposees, la lecture devient impossible (spec 6) :
 # le plafond voyage dans le payload, le gabarit le lit.
@@ -67,10 +49,6 @@ SEUIL_TRES_HAUT = 4
 
 # En dessous, un rang ne dit rien : classer une saison contre elle seule.
 MIN_SAISONS_CLASSEMENT = 2
-
-# Blocs lus pour la comparaison : le risque et la neige. L'isotherme et le vent
-# n'ont pas de metrique de classement ici.
-BLOCS = ("neige",)
 
 
 @dataclass(frozen=True)
@@ -181,7 +159,8 @@ def periode_commune(
     return (axe[lo], axe[hi]) if lo <= hi else None
 
 
-def _fenetres_payload() -> list[dict]:
+def fenetres_payload() -> list[dict]:
+    """Toutes les fenetres nommees, puis la saison entiere : le classement les offre toutes."""
     return [
         {
             "nom": f.nom,
@@ -200,42 +179,9 @@ def _fenetres_payload() -> list[dict]:
     }]
 
 
-def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
-    db = Path(db_path)
-    if not db.exists():
-        raise SystemExit(f"base absente : {db} (lancer `bra build`)")
-
-    con = duckdb.connect(str(db), read_only=True)
-    try:
-        series, jours = _series(con, BLOCS)
-        moyennes = risque.moyenne_pluriannuelle(con, fenetre=DEFAUT.nom)
-        archive, toutes = archive_et_saisons(con)
-    finally:
-        con.close()
-
-    axe = axe_calendaire()
-    jours = jours.with_columns(pl.col("jour_validite").dt.strftime("%m-%d").alias("jour_annee"))
-    bandes = _tableau(_bandes(jours, "jour_annee"), "jour_annee", axe)
-    massifs = fiche_massifs(series, jours, moyennes)
-
-    for per_massif in series.values():
-        for e in per_massif.values():
-            e["origine"] = e["origine"].isoformat()
-            # La comparaison se lit sur l'axe calendaire : le rang n'y sert pas.
-            e.pop("decalage_rang", None)
-
-    fenetres = _fenetres_payload()
+def bloc(fenetres: list[dict]) -> dict:
+    """Ce que l'ecran Massif lit pour comparer : plafond, seuils, metriques et matrice de refus."""
     return {
-        "genere": date.today().isoformat(),
-        "archive_jusqu_au": archive.isoformat() if archive else None,
-        "axe": axe,
-        "fenetre_defaut": DEFAUT.nom,
-        "saison_complete": SAISON_COMPLETE,
-        "fenetres": fenetres,
-        "saisons": saisons_payload(toutes),
-        "massifs": massifs,
-        "tranches": [{"nom": t.nom, "libelle": t.libelle} for t in TRANCHES],
-        "min_saisons_bande": risque.MIN_SAISONS_NORMALE,
         "max_courbes": MAX_COURBES,
         "seuil_haut": SEUIL_HAUT,
         "seuil_tres_haut": SEUIL_TRES_HAUT,
@@ -248,20 +194,4 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         ],
         # metrique -> fenetre -> motif du refus (None = permis).
         "refus": {m.cle: {f["nom"]: refus(m.cle, f["nom"]) for f in fenetres} for m in METRIQUES},
-        "series": series,
-        "bandes": bandes,
-        "attribution": partage.ATTRIBUTION_DONNEES,
-        "partage": partage.bloc(archive.isoformat() if archive else None, date.today().isoformat()),
     }
-
-
-def render(
-    db_path: str | Path = "warehouse/bra.duckdb",
-    out_path: str | Path = "comparaison.html",
-    standalone: bool = True,
-) -> Path:
-    page = injecter(TEMPLATE, payload(db_path), standalone)
-    out = Path(out_path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(page, encoding="utf-8")
-    return out

@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from bra_analytics import carte, comparaison, exploration, fiche, gabarit, partage
+from bra_analytics import carte, exploration, fiche, gabarit, partage
 from bra_analytics.build import build
 from bra_analytics.gabarit import injecter
 
@@ -48,7 +48,6 @@ def pages(db) -> dict[str, tuple[Path, dict]]:
     return {
         "carte": (carte.TEMPLATE, carte.payload(db)),
         "fiche": (fiche.TEMPLATE, fiche.payload(db)),
-        "comparaison": (comparaison.TEMPLATE, comparaison.payload(db)),
         "exploration": (exploration.TEMPLATE, exploration.payload(db)),
     }
 
@@ -79,7 +78,7 @@ def test_ecrans_ont_des_fichiers_distincts_et_l_archive_dans_le_payload(pages) -
     assert pages["carte"][1]["partage"]["contours"].startswith("Contours des massifs")
     assert "15/02/2024" in pages["carte"][1]["partage"]["contours"]
     # Seule la carte porte les contours.
-    assert all(pages[i][1]["partage"]["contours"] is None for i in ("fiche", "comparaison", "exploration"))
+    assert all(pages[i][1]["partage"]["contours"] is None for i in ("fiche", "exploration"))
 
 
 def test_les_marqueurs_sont_tous_remplaces(pages) -> None:
@@ -113,6 +112,7 @@ class _Dom(HTMLParser):
         self.titre = ""
         self._pile: list[str | None] = []
         self._dans_titre = False
+        self._svg = 0
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
@@ -124,12 +124,15 @@ class _Dom(HTMLParser):
             self.csv.append(a)
         if tag == "a" and "data-ecran" in a:
             self.liens[a["data-ecran"]] = a["href"]
-        self._dans_titre = tag == "title"
+        # Seul le titre du document compte : un <title> de SVG est une infobulle.
+        self._svg += tag == "svg"
+        self._dans_titre = tag == "title" and not self._svg
         if tag not in ("br", "meta", "link", "input", "option", "line", "rect", "path", "circle"):
             self._pile.append(ident)
 
     def handle_endtag(self, tag):
         self._dans_titre = False
+        self._svg -= tag == "svg"
         if self._pile:
             self._pile.pop()
 
@@ -174,8 +177,7 @@ def rendus(pages, tmp_path_factory) -> dict[str, _Dom]:
     s = saisons[-1]
     frag = {
         "carte": "mc=risque_moyen",
-        "fiche": f"m={ASPE}&s={s}&t=moyenne&f=coeur&zz=garde",
-        "comparaison": f"x=saison&m={ASPE}&s={s}&k=risque_moyen&f=coeur",
+        "fiche": f"m={ASPE}&s={s}&t=moyenne&f=coeur&k=risque_moyen&r=coeur&zz=garde",
         "exploration": f"x=saisons&m={ASPE}&c={s}&f=coeur&q=toutes&t=haute&g=barres&zz=garde",
     }
     del a_lire
@@ -194,7 +196,7 @@ def test_attribution_et_date_d_archive_visibles(rendus, pages, ident) -> None:
     archive = pages[ident][1]["partage"]["archive"]
     jour = int(archive[8:])
     assert re.search(rf"archive arrêtée au {jour}\w* \S+ {archive[:4]}", texte), texte
-    # La navigation relie les quatre ecrans, l'ecran courant marque.
+    # La navigation relie les trois ecrans, l'ecran courant marque.
     assert set(rendus[ident].liens) == {e.id for e in partage.ECRANS}
 
 
@@ -209,7 +211,8 @@ def test_attribution_des_contours_sur_la_carte(rendus) -> None:
 
 @chromium
 def test_chaque_graphe_a_son_export_csv_et_png(rendus) -> None:
-    attendus = {"carte": 1, "fiche": 4, "comparaison": 2, "exploration": None}
+    # Fiche : risque, neige, isotherme, vent et classement des saisons.
+    attendus = {"carte": 1, "fiche": 5, "exploration": None}
     for ident, n in attendus.items():
         # Exploration : une trace par entite et par bloc, selon les blocs publies ; au moins une.
         assert (len(rendus[ident].csv) >= 1) if n is None else (len(rendus[ident].csv) == n), ident
@@ -241,11 +244,11 @@ def test_csv_de_la_fiche_compte_les_jours_publies_de_la_saison_lue(rendus, pages
     e = data["series"][ASPE][s]
     a = next(x for x in rendus["fiche"].csv if "risque" in x["download"])
     tete, colonnes, lignes = _csv(a)
-    assert colonnes == ["serie", "saison", "jour", "abscisse", "valeur", "q1", "q3", "remarque"]
+    assert colonnes == ["serie", "saison", "jour", "abscisse", "valeur", "remarque"]
     lue = [x.split(",") for x in lignes if x.startswith("saison_lue,")]
     assert len(lue) == sum(1 for c in e["risque"] if c != ".")
     # `0` = publie sans indice : ligne gardee, valeur vide, motif dit.
-    sans = [x for x in lue if x[7] == "publié sans indice"]
+    sans = [x for x in lue if x[5] == "publié sans indice"]
     assert len(sans) == e["risque"].count("0") and all(x[4] == "" for x in sans)
     assert all(x[1] == s for x in lue)
     # Jours reels, pas des abscisses : le premier jour publie est une date ISO.
@@ -255,10 +258,10 @@ def test_csv_de_la_fiche_compte_les_jours_publies_de_la_saison_lue(rendus, pages
 
 @chromium
 def test_csv_du_classement_garde_les_saisons_non_classees_et_leur_motif(rendus, pages) -> None:
-    a = next(x for x in rendus["comparaison"].csv if "classement" in x["download"])
+    a = next(x for x in rendus["fiche"].csv if "classement" in x["download"])
     _, colonnes, lignes = _csv(a)
     assert colonnes == ["massif_id", "saison", "metrique", "fenetre", "rang", "ex_aequo", "valeur", "jours_avec_valeur", "comparable", "motif"]
-    data = pages["comparaison"][1]
+    data = pages["fiche"][1]
     saisons = {s["nom"] for s in data["saisons"]}
     vues = {x.split(",")[1] for x in lignes}
     assert vues and vues <= saisons
@@ -272,8 +275,8 @@ def test_csv_du_classement_garde_les_saisons_non_classees_et_leur_motif(rendus, 
 @chromium
 def test_le_hash_complet_voyage_d_un_ecran_a_l_autre(rendus) -> None:
     """Le lien vers un autre ecran porte l'etat courant, cles inconnues comprises."""
-    lien = rendus["fiche"].liens["comparaison"]
-    assert lien.startswith("comparaison.html#")
+    lien = rendus["fiche"].liens["exploration"]
+    assert lien.startswith("exploration.html#")
     p = urllib.parse.parse_qs(lien.split("#", 1)[1])
     assert p["m"] == [str(ASPE)] and p["zz"] == ["garde"] and p["f"] == ["coeur"]
     # La carte ecrit sa cle sans effacer celles des autres.
@@ -302,15 +305,15 @@ def test_une_url_collee_reproduit_le_meme_ecran(pages, rendus, ident, tmp_path) 
 
 @chromium
 def test_changer_d_ecran_ne_reinitialise_pas_le_filtre(pages, rendus, tmp_path) -> None:
-    """Fiche -> comparaison avec le hash de la fiche : massif et saison sont repris."""
-    hash_fiche = rendus["fiche"].liens["comparaison"].split("#", 1)[1]
-    gabarit, data = pages["comparaison"]
+    """Fiche -> exploration avec le hash de la fiche : massif et saison sont repris au retour."""
+    hash_fiche = rendus["fiche"].liens["exploration"].split("#", 1)[1]
+    gabarit, data = pages["exploration"]
     dom = _rendre(injecter(gabarit, data), hash_fiche, tmp_path)
     retour = urllib.parse.parse_qs(dom.liens["fiche"].split("#", 1)[1])
     depart = urllib.parse.parse_qs(hash_fiche)
     for cle in ("m", "s", "zz"):
         assert retour[cle] == depart[cle], cle
-    assert str(ASPE) in dom.titre or "Comparaison" in dom.titre
+    assert dom.titre
 
 
 @chromium
@@ -340,10 +343,10 @@ def test_csv_de_l_exploration_reprend_les_comptes_traces_et_garde_l_etat_etrange
 
 @chromium
 def test_l_etat_de_la_carte_et_le_mode_de_comparaison_traversent_les_ecrans(pages, tmp_path) -> None:
-    """Revue T15 : `d=1` rouvre les tableaux de la carte ; `x=choix` survit a un passage par l'exploration."""
+    """Revue T15 : `d=1` rouvre les tableaux de la carte ; une cle d'un autre ecran survit a un passage par l'exploration."""
     (tmp_path / "c").mkdir()
     carte_dom = _rendre(injecter(pages["carte"][0], pages["carte"][1]), "mc=risque_moyen&d=1", tmp_path / "c")
     assert "Masquer" in carte_dom.texte["tbl"]
     (tmp_path / "e").mkdir()
     expl = _rendre(injecter(pages["exploration"][0], pages["exploration"][1]), f"x=choix&m={ASPE}", tmp_path / "e")
-    assert "x=choix" in expl.liens["comparaison"]
+    assert "x=choix" in expl.liens["fiche"]

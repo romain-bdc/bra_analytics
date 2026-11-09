@@ -36,7 +36,7 @@ import duckdb
 import polars as pl
 
 from . import partage
-from .comparaison import MAX_COURBES, SEUIL_HAUT, SEUIL_TRES_HAUT, _fenetres_payload
+from .comparaison import MAX_COURBES, SEUIL_HAUT, SEUIL_TRES_HAUT, fenetres_payload
 from .gabarit import injecter
 from .fenetres import DEFAUT, FIN_SENTINELLE, MOIS_FR, SAISON_COMPLETE
 from .fiche import archive_et_saisons, fiche_massifs, saisons_payload
@@ -117,7 +117,7 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
     if not db.exists():
         raise SystemExit(f"base absente : {db} (lancer `bra build`)")
 
-    fenetres = _fenetres_payload()
+    fenetres = fenetres_payload()
     noms = [f["nom"] for f in fenetres]
     con = duckdb.connect(str(db), read_only=True)
     try:

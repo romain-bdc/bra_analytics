@@ -69,42 +69,6 @@ def test_serie_de_risque_relit_risque_journalier(db, data) -> None:
         assert e["risque"][e["decalage_rang"]] != ABSENT
 
 
-def test_mediane_de_la_bande_egale_la_normale_de_t6(db, data) -> None:
-    """La bande ne redefinit pas la normale : sa mediane est `risque_jour.normale`."""
-    con = duckdb.connect(str(db), read_only=True)
-    try:
-        jours = risque.serie_jour(con, massifs=[ASPE])
-    finally:
-        con.close()
-    normales = {
-        r["jour_validite"].strftime("%m-%d"): r["normale"]
-        for r in jours.iter_rows(named=True)
-        if r["normale"] is not None
-    }
-    assert normales
-    bande = data["bandes"]["calendaire"][ASPE]
-    for k, case in enumerate(data["axe"]):
-        if case in normales:
-            assert bande["mediane"][k] == normales[case]
-
-
-def test_bande_ordonnee_et_vide_sous_le_seuil_de_saisons(data) -> None:
-    bande = data["bandes"]["calendaire"][ASPE]
-    pleines = [k for k, m in enumerate(bande["mediane"]) if m is not None]
-    assert pleines
-    for k in pleines:
-        assert bande["q1"][k] <= bande["mediane"][k] <= bande["q3"][k]
-    # Toute case hors des jours portant au moins `min_saisons_bande` saisons est vide.
-    assert len(pleines) < len(data["axe"])
-    assert data["min_saisons_bande"] == risque.MIN_SAISONS_NORMALE
-
-
-def test_bande_par_rang_et_calendaire_partagent_la_population(data) -> None:
-    rang = data["bandes"]["rang"][ASPE]
-    assert any(m is not None for m in rang["mediane"])
-    assert len(rang["mediane"]) == data["rang_max"]
-
-
 def test_saison_non_comparable_etiquetee_pas_supprimee(data) -> None:
     par_nom = {s["nom"]: s for s in data["saisons"]}
     for saison, motif in SAISONS_NON_COMPARABLES.items():
@@ -128,7 +92,7 @@ def test_indicateurs_egaux_aux_metriques(db, data) -> None:
 
 
 def test_bornes_de_fenetre_viennent_de_fenetres_py(data) -> None:
-    offertes = {f["nom"]: f for f in data["fenetres"]}
+    offertes = {f["nom"]: f for f in data["fenetres"] if f["indicateurs"]}
     assert set(offertes) == set(fiche.FENETRES_FICHE)
     coeur = next(f for f in FENETRES if f.nom == DEFAUT.nom)
     assert offertes[DEFAUT.nom]["debut"] == list(coeur.debut)

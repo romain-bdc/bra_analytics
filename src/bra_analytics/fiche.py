@@ -1,4 +1,10 @@
-"""Fiche massif-saison (spec section 6, T11).
+"""Ecran « Massif » : fiche massif-saison et comparaisons (spec section 6, T11 et T13).
+
+La fiche et l'ecran de comparaison ont fusionne : ils montraient le meme massif,
+les memes saisons, la meme courbe d'indice. La page lit une saison d'un massif et
+peut y superposer d'autres saisons du massif ou d'autres massifs de la saison ;
+les regles de comparaison (refus par fenetre, plafond de courbes, metriques de
+classement) viennent de `comparaison.py`, qui les ecrit une fois.
 
 Meme motif que `gabarit.py` et `carte.py` : un payload JSON construit ici,
 insere dans `templates/fiche.html` par le marqueur `__DONNEES__`, tout le
@@ -8,11 +14,9 @@ sur les polices systeme hors ligne.
 
 Rien n'est recalcule ici : les series viennent des vues de `metriques/`
 (`serie_jour`, `paliers`, `vent_tranche_jour`), les indicateurs de leurs
-`metriques_saison`. Seule la bande mediane / interquartile est calculee dans ce
-module, parce qu'aucune metrique ne porte les quartiles ; elle reprend la
-population de la normale de T6 (fenetre `coeur`, saisons comparables, indice
-non nul, au moins `MIN_SAISONS_NORMALE` saisons) et un test verifie que sa
-mediane egale `risque_jour.normale`.
+`metriques_saison`. La bande mediane / interquartile d'autrefois est retiree :
+des quartiles d'un indice ordinal se lisaient mal a cote de la saison elle-meme,
+que l'on compare desormais a d'autres saisons choisies.
 
 Encodage : une serie par massif et par saison, ancree sur `origine`, le plus
 ancien des jours de tous les blocs. L'axe `jour_de_saison` se lit depuis le
@@ -29,9 +33,9 @@ from pathlib import Path
 import duckdb
 import polars as pl
 
-from . import partage
+from . import comparaison, partage
 from .gabarit import ABSENT, SANS_INDICE, injecter
-from .fenetres import DEFAUT, FENETRES, SAISON_COMPLETE, SAISONS_NON_COMPARABLES, comparable
+from .fenetres import DEFAUT, SAISON_COMPLETE, SAISONS_NON_COMPARABLES, comparable
 from .massifs import MASSIFS
 from .metriques import enneigement, meteo, risque
 from .tranches import TRANCHES
@@ -79,46 +83,6 @@ def _chaine(valeurs: dict[date, int | float | None], origine: date, longueur: in
         v = valeurs.get(origine + timedelta(days=i))
         out.append("" if v is None else str(int(round(v))))
     return ",".join(out)
-
-
-def _bandes(serie: pl.DataFrame, cle: str) -> pl.DataFrame:
-    """Mediane et quartiles de `risque_maxi` par case, sur la population de la normale de T6.
-
-    `cle` est la colonne qui indexe la case (`jour_annee` pour l'axe
-    calendaire, `jour_de_saison` pour l'axe par rang). Une case sous
-    `MIN_SAISONS_NORMALE` saisons reste vide : pas de bande plutot qu'une bande
-    sur deux saisons. Les quartiles sont ceux de l'ordinal -- le niveau observe
-    de rang inferieur pour Q1, de rang superieur pour Q3 -- et non une
-    interpolation entre deux niveaux qui n'existe pas.
-    """
-    pop = serie.filter(
-        pl.col(f"fenetre_{DEFAUT.nom}") & pl.col("saison_comparable") & pl.col("risque_maxi").is_not_null()
-    )
-    return (
-        pop.group_by(["massif_id", cle])
-        .agg(
-            pl.col("saison").n_unique().alias("saisons"),
-            pl.col("risque_maxi").quantile(0.25, "lower").alias("q1"),
-            pl.col("risque_maxi").median().alias("mediane"),
-            pl.col("risque_maxi").quantile(0.75, "higher").alias("q3"),
-        )
-        .filter(pl.col("saisons") >= risque.MIN_SAISONS_NORMALE)
-    )
-
-
-def _tableau(bandes: pl.DataFrame, cle: str, cases: list) -> dict[int, dict]:
-    """Une bande par massif : trois listes alignees sur `cases`, `None` hors population."""
-    out: dict[int, dict] = {}
-    for (massif_id,), g in _tries(bandes.group_by(["massif_id"])):
-        index = {r[cle]: r for r in g.iter_rows(named=True)}
-        out[int(massif_id)] = {
-            champ: [
-                (None if (r := index.get(c)) is None else (r[champ] if champ == "mediane" else int(r[champ])))
-                for c in cases
-            ]
-            for champ in ("q1", "mediane", "q3")
-        }
-    return out
 
 
 def _iso(v):
@@ -194,11 +158,10 @@ def _tries(groupes):
 def _series(
     con: duckdb.DuckDBPyConnection, blocs: tuple[str, ...] = BLOCS
 ) -> tuple[dict[int, dict[str, dict]], pl.DataFrame]:
-    """massif -> saison -> series encodees, plus la serie de risque (pour les bandes).
+    """massif -> saison -> series encodees, plus la serie de risque (dernier bulletin par massif).
 
     Le risque est toujours lu : il ancre `decalage_rang`. `blocs` restreint les
-    autres : l'ecran de comparaison n'a besoin ni de l'isotherme ni du vent, et
-    ne les charge pas. `origine` se calcule sur les seuls blocs lus.
+    autres ; `origine` se calcule sur les seuls blocs lus.
     """
     jours = risque.serie_jour(con)
     snow = (
@@ -280,8 +243,7 @@ def saisons_payload(toutes: list[str]) -> list[dict]:
 def fiche_massifs(series: dict, jours: pl.DataFrame, moyennes: pl.DataFrame) -> list[dict]:
     """Les massifs de la page : nom, saisons diffusees, dernier bulletin, repere d'accueil.
 
-    Partage avec l'ecran de comparaison, qui presente les memes massifs avec le
-    meme repere (la moyenne d'accueil de T6, jamais seule : elle porte ses jours).
+    Le repere est la moyenne d'accueil de T6, jamais seule : elle porte ses jours.
     """
     # Dernier bulletin integre, massif par massif : le massif 71 s'arrete avant l'archive.
     derniers = {
@@ -337,13 +299,7 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         con.close()
 
     axe = axe_calendaire()
-    jours = jours.with_columns(pl.col("jour_validite").dt.strftime("%m-%d").alias("jour_annee"))
-    rang_max = int(jours["jour_de_saison"].max())
-    bandes = {
-        "calendaire": _tableau(_bandes(jours, "jour_annee"), "jour_annee", axe),
-        "rang": _tableau(_bandes(jours, "jour_de_saison"), "jour_de_saison", list(range(1, rang_max + 1))),
-    }
-
+    fenetres = comparaison.fenetres_payload()
     massifs = fiche_massifs(series, jours, moyennes)
 
     for per_massif in series.values():
@@ -354,35 +310,19 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "genere": date.today().isoformat(),
         "archive_jusqu_au": archive.isoformat() if archive else None,
         "axe": axe,
-        "rang_max": rang_max,
         "saisons": saisons_payload(toutes),
         "massifs": massifs,
         "fenetre_defaut": DEFAUT.nom,
         "saison_complete": SAISON_COMPLETE,
-        "fenetres": [
-            {
-                "nom": f.nom,
-                "libelle": f.libelle,
-                "debut": list(f.debut),
-                "fin": list(f.fin),
-                "usage": f.usage,
-                "comparable": f.comparable_entre_saisons,
-                "comparable_enneigement": f.comparable_enneigement,
-            }
-            for f in FENETRES
-            if f.nom in FENETRES_FICHE
-        ]
-        + [{
-            "nom": SAISON_COMPLETE, "libelle": "saison entiere", "debut": None, "fin": None,
-            "usage": "lecture d'une saison prise isolement",
-            "comparable": False, "comparable_enneigement": False,
-        }],
+        # Toutes les fenetres : le classement les offre toutes ; les indicateurs, seulement
+        # `FENETRES_FICHE` (marquees `indicateurs`), les seules precalculees.
+        "fenetres": [{**f, "indicateurs": f["nom"] in FENETRES_FICHE} for f in fenetres],
         "tranches": [{"nom": t.nom, "libelle": t.libelle} for t in TRANCHES],
         "seuil_vent_fort_kmh": meteo.SEUIL_VENT_FORT_KMH,
         "min_saisons_bande": risque.MIN_SAISONS_NORMALE,
         "series": series,
-        "bandes": bandes,
         "indicateurs": indicateurs,
+        **comparaison.bloc(fenetres),
         "attribution": partage.ATTRIBUTION_DONNEES,
         "partage": partage.bloc(archive.isoformat() if archive else None, date.today().isoformat()),
     }
