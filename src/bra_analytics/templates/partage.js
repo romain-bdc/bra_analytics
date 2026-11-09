@@ -168,7 +168,8 @@ details.plus.bloc>summary{display:block;margin:0}`;
      proprietes calculees de chaque noeud, puis on ajoute un titre et l'attribution
      sur fond plein. Retourne une promesse de data URL. */
   const PROPS = ["fill", "stroke", "stroke-width", "stroke-dasharray", "stroke-linejoin", "stroke-linecap", "opacity",
-    "fill-opacity", "stroke-opacity", "font-family", "font-size", "font-weight", "text-anchor", "dominant-baseline", "letter-spacing"];
+    "fill-opacity", "stroke-opacity", "font-family", "font-size", "font-weight", "font-style", "text-anchor", "dominant-baseline", "letter-spacing",
+    "vector-effect", "paint-order"];
   function figer(origine, copie) {
     const cs = getComputedStyle(origine);
     for (const p of PROPS) copie.style.setProperty(p, cs.getPropertyValue(p));
@@ -178,13 +179,16 @@ details.plus.bloc>summary{display:block;margin:0}`;
   function png(svg) {
     const r = svg.getBoundingClientRect();
     const vb = svg.viewBox && svg.viewBox.baseVal;
-    const L = vb && vb.width ? vb.width : Math.round(r.width), H = vb && vb.height ? vb.height : Math.round(r.height);
+    /* Une carte zoomee a un viewBox etroit et decale : l'image garde sa largeur
+       pleine (data-largeur) et le cadrage du viewBox, pas l'origine 0 0. */
+    const vw = vb && vb.width ? vb.width : r.width, vh = vb && vb.height ? vb.height : r.height;
+    const L = Math.round(+svg.dataset.largeur || vw), H = Math.round(L * vh / vw);
     const copie = svg.cloneNode(true);
     figer(svg, copie);
     copie.querySelectorAll("title").forEach(t => t.remove());
     copie.setAttribute("x", 0); copie.setAttribute("y", 30);
     copie.setAttribute("width", L); copie.setAttribute("height", H);
-    copie.setAttribute("viewBox", `0 0 ${L} ${H}`);
+    copie.setAttribute("viewBox", vb && vb.width ? `${vb.x} ${vb.y} ${vw} ${vh}` : `0 0 ${vw} ${vh}`);
     const cs = getComputedStyle(document.body);
     const fond = cs.getPropertyValue("background-color"), encre = cs.getPropertyValue("color");
     const titre = (svg.closest(".panel") || document).querySelector("h2");
