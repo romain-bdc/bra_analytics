@@ -46,8 +46,8 @@ class Ecran(NamedTuple):
 # L'ordre est celui de la barre de navigation.
 ECRANS: tuple[Ecran, ...] = (
     Ecran("carte", "carte.html", "Carte"),
-    Ecran("fiche", "fiche.html", "Fiche massif-saison"),
-    Ecran("comparaison", "comparaison.html", "Comparaison"),
+    # L'ecran Massif garde le fichier de l'ancienne fiche : les liens deja partages restent bons.
+    Ecran("fiche", "fiche.html", "Massif"),
     Ecran("exploration", "exploration.html", "Exploration"),
 )
 

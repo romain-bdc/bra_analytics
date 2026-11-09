@@ -9,7 +9,7 @@ Météo-France (mars 2016 → juin 2026 ; les 36 massifs du référentiel sont i
 d'analyse historique construite dessus.
 
 Le parsing des six formats XML historiques, la déduplication, l'entrepôt Parquet et les vues
-DuckDB sont faits et éprouvés. La couche métriques et les quatre écrans existent (voir « État de l'interface »).
+DuckDB sont faits et éprouvés. La couche métriques et les trois écrans existent (voir « État de l'interface »).
 
 ## À lire avant d'écrire du code
 
@@ -36,10 +36,9 @@ uv run bra info                                            # résumé par saison
 uv run bra fenetres                                        # comparabilité saison par saison
 uv run bra audit                                           # disponibilité champ × saison -> docs/disponibilite.md
 uv run bra carte                                           # carte d'accueil des 36 massifs
-uv run bra fiche                                           # fiche massif-saison (risque, neige, iso 0, vent)
-uv run bra comparaison                                     # comparaison de saisons (courbes, tableau, classement)
+uv run bra fiche                                           # ecran Massif : fiche massif-saison et comparaisons
 uv run bra exploration                                     # rose des pentes, vent x orientation, situations
-uv run bra site                                            # les quatre ecrans dans site/ (index.html = la carte) ; --serve pour les exposer en local
+uv run bra site                                            # les trois ecrans dans site/ (index.html = la carte) ; --serve pour les exposer en local
 uv run bra contours                                        # raccordement + version web des contours
 uv run bra ui                                              # interface web DuckDB
 uv run pytest
@@ -113,8 +112,9 @@ Les enfreindre ne produit pas une erreur, mais un chiffre faux.
 
 ## État de l'interface
 
-Quatre écrans statiques existent : `bra carte`, `bra fiche`, `bra comparaison`, `bra exploration`
-(le tableau de bord Pyrénées, première visualisation, a été retiré).
+Trois écrans statiques existent : `bra carte`, `bra fiche` (écran « Massif »), `bra exploration`.
+Le tableau de bord Pyrénées, première visualisation, a été retiré ; l'écran de comparaison a
+fusionné avec la fiche (`comparaison.py` n'en garde que les règles, `comparaison.html` redirige).
 
 Le motif est à conserver. Chaque module d'écran construit un payload JSON, `gabarit.py` l'insère
 dans le gabarit `templates/<écran>.html` par le marqueur `__DONNEES__` (la fiche encode la série

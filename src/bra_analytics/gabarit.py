@@ -55,7 +55,7 @@ def injecter(gabarit: Path, data: dict, standalone: bool = True) -> str:
         ecrans = json.dumps([e._asdict() for e in partage.ECRANS], ensure_ascii=False)
         js = PARTAGE.read_text(encoding="utf-8").replace("__ECRANS__", ecrans)
         html = html.replace("__PARTAGE__", js, 1)
-    # Meme ordre pour la feuille de style commune : une base visuelle, quatre ecrans.
+    # Meme ordre pour la feuille de style commune : une base visuelle, trois ecrans.
     if "__STYLE__" in html:
         html = html.replace("__STYLE__", STYLE.read_text(encoding="utf-8"), 1)
     # Les @font-face sont ecrits une fois : chemins relatifs, polices servies a cote des pages.
