@@ -2,15 +2,40 @@
 <style>
 __POLICES__
 __STYLE__
-.carte svg{display:block;width:100%;height:auto;max-width:640px;margin:0}
-.pays{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:.8;stroke-linejoin:round;pointer-events:none}
-.massif{stroke:var(--surface);stroke-width:1.1;stroke-linejoin:round;cursor:crosshair}
+.carte{position:relative}
+.carte svg{display:block;width:100%;height:auto;margin:0;touch-action:pan-y}
+.carte svg.trace{cursor:crosshair;user-select:none}
+.pays{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:.8;stroke-linejoin:round;pointer-events:none;vector-effect:non-scaling-stroke}
+.massif{stroke:var(--surface);stroke-width:1.1;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .massif:hover,.massif:focus-visible{stroke:var(--ink);stroke-width:1.8;outline:none}
-.zonelab{font-family:var(--serif);font-style:italic;font-size:17px;fill:var(--ink-muted)}
-.legend{gap:8px 18px;margin:16px 0 0}
-.legend .titre{color:var(--ink-muted)}
-.legend svg{width:16px;height:16px;flex:none;box-shadow:inset 0 0 0 1px var(--ring)}
-.echelle{margin:8px 0 0;font-size:12.5px;color:var(--ink-muted);max-width:86ch}
+.zonelab{font-family:var(--serif);font-style:italic;fill:var(--ink-muted);pointer-events:none}
+.nomlab{font-family:var(--sans);font-weight:500;fill:var(--ink);stroke:var(--page);stroke-width:3px;paint-order:stroke;
+  stroke-linejoin:round;pointer-events:none;vector-effect:non-scaling-stroke}
+.selection{fill:var(--coeur);stroke:var(--s1);stroke-width:1;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;pointer-events:none}
+.zoom{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:6px 0 0;font-size:12.5px;color:var(--ink-muted)}
+.zoom button[hidden]{display:none}
+/* Choix de la metrique : une liste de boutons radio, a cote de la carte qu'elle recolore. */
+.metriques{border:0;margin:0 0 22px;padding:0;min-width:0}
+.metriques legend{padding:0;margin:0 0 8px;font-size:13px;color:var(--ink-muted)}
+.metriques label{display:flex;align-items:center;gap:10px;padding:7px 10px;margin:0 0 2px;font-size:14px;color:var(--ink-2);
+  border-left:2px solid transparent;cursor:pointer}
+.metriques label:hover{color:var(--ink);background:var(--surface-2)}
+.metriques input{position:absolute;opacity:0;pointer-events:none}
+.metriques label:has(input:checked){color:var(--ink);font-weight:600;border-left-color:var(--ink);background:var(--surface-2)}
+.metriques label:has(input:focus-visible){outline:2px solid var(--s1);outline-offset:1px}
+.metriques label:has(input:disabled){color:var(--ink-muted);cursor:not-allowed;background:none}
+.metriques .motif{display:block;font-size:12px;font-weight:400;color:var(--ink-muted)}
+.cle{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:0;font-size:12.5px;color:var(--ink-2)}
+.cle .titre{color:var(--ink-muted)}
+.cle span{display:inline-flex;align-items:center;gap:7px}
+.cle svg{width:16px;height:16px;flex:none;box-shadow:inset 0 0 0 1px var(--ring)}
+.echelle{margin:14px 0 0;font-size:12.5px;color:var(--ink-muted);max-width:60ch}
+.cote .toggle{margin-top:18px;justify-self:start}
+/* Le zoom par selection est reserve a la souris : sur ecran tactile, glisser fait defiler. */
+@media (hover:none){.zoom{display:none}}
+.vue{display:grid;gap:18px 56px;padding-top:4px;border-top:0}
+.reperes{margin-top:34px}
+.reperes h2{margin-bottom:14px}
 .attrib{margin:16px 0 0;padding-top:10px;border-top:1px solid var(--grid);font-size:12px;color:var(--ink-muted)}
 .attrib a{color:var(--ink-2)}
 .tables{margin-top:24px}
@@ -22,14 +47,17 @@ td.g{text-align:left;white-space:normal}
 #tip .num{font-variant-numeric:tabular-nums;font-weight:600}
 #tip .z{color:var(--ink-muted)}
 #tip .alerte{display:block;margin-top:4px;padding:0;border:0;color:var(--ink-2)}
-/* Large : la carte a gauche, sa cle a droite, au lieu d'une legende sous un grand vide. */
+/* Etroit : le choix de metrique passe au-dessus de la carte, la legende dessous. */
+@media (max-width:979px){
+  .cote{display:contents}
+  .metriques{order:-1;margin:0}
+  .metriques label{display:inline-flex;margin:0 4px 4px 0}
+  .metriques .motif{display:none}
+}
+/* Large : la carte a gauche, le choix de metrique et la cle a droite, visibles ensemble. */
 @media (min-width:980px){
-  .panel{display:grid;grid-template-columns:minmax(0,640px) minmax(240px,1fr);column-gap:56px;align-content:start}
-  .panel>*{grid-column:1/-1}
-  .panel>.carte{grid-column:1;grid-row:3/span 3}
-  .panel>.exports{grid-column:1;grid-row:6}
-  .panel>.legend{grid-column:2;grid-row:3;flex-direction:column;align-items:flex-start;margin-top:4px}
-  .panel>.echelle{grid-column:2;grid-row:4;margin-top:14px}
+  .vue{grid-template-columns:minmax(0,1fr) minmax(250px,300px)}
+  .cote{position:sticky;top:16px;align-self:start}
 }
 @media (forced-colors:active){.massif{stroke:CanvasText}}
 </style>
@@ -41,23 +69,26 @@ td.g{text-align:left;white-space:normal}
   <p class="lede" id="lede"></p>
 </header>
 
-<div class="bar">
-  <label for="met">Métrique</label>
-  <select id="met"></select>
-  <span class="spacer"></span>
-  <button class="toggle" id="tbl" aria-pressed="false">Voir les données</button>
-</div>
+<section class="panel vue">
+  <div>
+    <div class="carte"><svg id="carte" role="img"></svg></div>
+    <p class="zoom"><span id="zoom-aide">Cliquer-glisser sur la carte pour zoomer sur une zone.</span>
+      <button class="toggle" id="dezoom" hidden>Revenir à la France entière</button></p>
+  </div>
+  <div class="cote">
+    <fieldset class="metriques" id="met"><legend>Métrique</legend></fieldset>
+    <div class="cle" id="legende"></div>
+    <p class="echelle" id="echelle"></p>
+    <button class="toggle" id="tbl" aria-pressed="false">Voir les données</button>
+  </div>
+</section>
 
-<div class="kpis" id="kpis"></div>
+<div class="tables" hidden><div class="scroller"><table id="table"></table></div></div>
 
-<section class="panel">
-  <h2 id="h2"></h2>
-  <p class="sous" id="sous"></p>
-  <div class="carte"><svg id="carte" role="img" aria-labelledby="h2"></svg></div>
-  <div class="legend" id="legende"></div>
-  <p class="echelle" id="echelle"></p>
+<section class="panel reperes">
+  <h2>Repères</h2>
+  <div class="kpis" id="kpis"></div>
   <p class="attrib" id="attribution-contours"></p>
-  <div class="tables" hidden><div class="scroller"><table id="table"></table></div></div>
 </section>
 
 <footer>
@@ -210,13 +241,14 @@ function motifs(svg) {
 function carte() {
   const svg = document.getElementById("carte");
   svg.textContent = "";
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.dataset.largeur = W;
   motifs(svg);
   const sc = echelle(metrique);
   const zones = new Map();
   /* Fond : silhouette de la France, sous les massifs et hors de toute interaction. */
   for (const f of D.france.features) svg.appendChild(el("path", { d: chemin(f), class: "pays", "aria-hidden": "true" }));
   const lignesExport = [];
+  const noms = [];
   for (const f of D.contours.features) {
     const m = PAR_ID.get(f.properties.code);
     if (!m) continue;
@@ -237,6 +269,7 @@ function carte() {
     if (m.diffusion === "partielle") svg.appendChild(el("path", { d, fill: "url(#partiel)", "pointer-events": "none" }));
     /* Etiquettes de zone : boite englobante des massifs de chaque zone. */
     const b = p.getBBox();
+    noms.push([m.nom, b.x + b.width / 2, b.y + b.height / 2]);
     const z = zones.get(m.zone) || { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
     zones.set(m.zone, { x0: Math.min(z.x0, b.x), x1: Math.max(z.x1, b.x + b.width), y0: Math.min(z.y0, b.y), y1: Math.max(z.y1, b.y + b.height) });
   }
@@ -249,6 +282,13 @@ function carte() {
     t.textContent = zoneFr(nom);
     svg.appendChild(t);
   }
+  /* Noms des massifs : illisibles a l'echelle de la France, ils n'apparaissent qu'une fois zoome. */
+  for (const [nom, x, y] of noms) {
+    const t = el("text", { x, y, "text-anchor": "middle", "dominant-baseline": "middle", class: "nomlab" });
+    t.textContent = nom;
+    svg.appendChild(t);
+  }
+  appliqueVue();
   /* Une ligne par massif colore : la valeur est celle qui a choisi la teinte. */
   PARTAGE.enregistrer(svg, {
     nom: `carte-${metrique}`,
@@ -276,7 +316,7 @@ function legende(sc) {
   const box = document.getElementById("legende");
   box.textContent = "";
   const titre = document.createElement("span");
-  titre.className = "titre"; titre.textContent = defMetrique().libelle;
+  titre.className = "titre"; titre.textContent = "Légende";
   box.appendChild(titre);
   const present = new Set(D.massifs.map(m => m[metrique]).filter(v => v != null).map(sc.pas));
   sc.bornes.forEach((txt, k) => {
@@ -338,35 +378,96 @@ function table() {
       <td>${m.saisons_presentes.length} / ${NB_COMP}</td><td class="g">${statut(m)}</td></tr>`).join("")}</tbody>`;
 }
 
-/* ---------- textes ---------- */
+/* ---------- textes ----------
+   Le chapo decrit la metrique affichee : il change avec elle. */
+const indispo = METRIQUES.filter(m => !m.disponible);
 function textes() {
   const def = defMetrique();
-  document.getElementById("h2").textContent = `${def.libelle}, ${D.libelle_saisons}`;
   const ecartees = Object.entries(D.saisons_ecartees).map(([s, motif]) => `${s} (${motif})`).join(" ; ");
-  document.getElementById("sous").innerHTML =
-    `${def.description[0].toUpperCase() + def.description.slice(1)}, une valeur par massif.`
-    + PARTAGE.plus(`Fenêtre <b>${F.nom}</b> (${fenetreTexte}) de chaque saison, toutes saisons comparables confondues. Saisons écartées : ${esc(ecartees) || "aucune"}.`);
+  document.getElementById("carte").setAttribute("aria-label", `Carte des massifs : ${def.libelle}, ${D.libelle_saisons}`);
+  document.getElementById("lede").innerHTML =
+    `Couleur de chaque massif : ${esc(def.description)}. Période : <b>${D.libelle_saisons}</b>, fenêtre <b>${F.nom}</b>.`
+    + PARTAGE.plus(`La fenêtre ${F.nom} (${fenetreTexte}) est la seule où les saisons se comparent : avant juin 2021, les journées à manteau insuffisant
+     (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Saisons écartées : ${esc(ecartees) || "aucune"}.`
+    + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${esc(m.libelle)} : ${esc(m.motif)}.`).join(" ")}</span>` : ""));
 }
 
-/* ---------- assemblage ---------- */
-const sel = document.getElementById("met");
-sel.innerHTML = METRIQUES.map(m => m.disponible
-  ? `<option value="${m.cle}"${m.cle === metrique ? " selected" : ""}>${m.libelle}</option>`
-  : `<option value="${m.cle}" disabled>${m.libelle} — ${m.motif.split(" :")[0]}</option>`).join("");
-const indispo = METRIQUES.filter(m => !m.disponible);
+/* ---------- choix de la metrique ---------- */
+const choix = document.getElementById("met");
+choix.insertAdjacentHTML("beforeend", METRIQUES.map(m => `<label><input type="radio" name="met" value="${m.cle}"`
+  + `${m.disponible ? "" : " disabled"}${m.cle === metrique ? " checked" : ""}><span>${esc(m.libelle)}`
+  + `${m.disponible ? "" : `<span class="motif">${esc(m.motif.split(" :")[0])}</span>`}</span></label>`).join(""));
+const coche = () => choix.querySelectorAll("input").forEach(i => { i.checked = i.value === metrique; });
 
-document.getElementById("lede").innerHTML =
-  `Chaque massif est coloré par son indice de risque moyen sur <b>${D.libelle_saisons}</b>, fenêtre <b>${F.nom}</b>. Survolez un massif pour le détail.`
-  + PARTAGE.plus(`La fenêtre ${F.nom} (${fenetreTexte}) est la seule où les saisons se comparent : avant juin 2021, les journées à manteau insuffisant
-   (début et fin de saison) ne recevaient pas d'indice et sortaient des moyennes. Le survol donne les jours couverts et les jours à risque 4 ou 5.`
-  + (indispo.length ? ` <span style="color:var(--ink-muted)">${indispo.map(m => `${esc(m.libelle)} : ${esc(m.motif)}.`).join(" ")}</span>` : ""));
+/* ---------- zoom par selection ----------
+   Cliquer-glisser trace un cadre ; au relacher, le viewBox s'y ajuste (au rapport
+   de la carte, zoom plafonne a x12). Le tactile garde le defilement de la page.
+   Les traits ne grossissent pas (vector-effect) ; les textes sont recompenses. */
+const svgCarte = document.getElementById("carte");
+const dezoom = document.getElementById("dezoom");
+const aide = document.getElementById("zoom-aide");
+let vue = null;                                    // [x, y, l, h] ou null = France entiere
+function appliqueVue() {
+  const [x, y, w, h] = vue || [0, 0, W, H];
+  svgCarte.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
+  const k = W / w;
+  /* Les hachures sont en unites de carte : sans correction, elles grossiraient avec le zoom. */
+  for (const [id, rot] of [["absent", 45], ["partiel", 135]]) {
+    const pat = svgCarte.querySelector("#" + id);
+    if (pat) pat.setAttribute("patternTransform", `rotate(${rot}) scale(${1 / k})`);
+  }
+  svgCarte.querySelectorAll(".zonelab").forEach(t => t.setAttribute("font-size", 17 / k));
+  svgCarte.querySelectorAll(".nomlab").forEach(t => { t.setAttribute("font-size", 13 / k); t.style.display = k >= 2.5 ? "" : "none"; });
+  dezoom.hidden = !vue;
+  aide.textContent = vue ? "Cliquer-glisser pour zoomer davantage, double-clic pour revenir." : "Cliquer-glisser sur la carte pour zoomer sur une zone.";
+}
+const pointSvg = ev => {
+  const p = svgCarte.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY;
+  return p.matrixTransform(svgCarte.getScreenCTM().inverse());
+};
+let depart = null, cadre = null;
+svgCarte.classList.add("trace");
+svgCarte.addEventListener("pointerdown", ev => {
+  if (ev.pointerType === "touch" || ev.button !== 0) return;
+  depart = { p: pointSvg(ev), cx: ev.clientX, cy: ev.clientY };
+  svgCarte.setPointerCapture(ev.pointerId);
+});
+svgCarte.addEventListener("pointermove", ev => {
+  if (!depart) return;
+  if (!cadre) {
+    if (Math.hypot(ev.clientX - depart.cx, ev.clientY - depart.cy) < 6) return;
+    cadre = el("rect", { class: "selection" });
+    svgCarte.appendChild(cadre);
+    tip.style.opacity = "0";
+  }
+  const q = pointSvg(ev), a = depart.p;
+  cadre.setAttribute("x", Math.min(a.x, q.x)); cadre.setAttribute("y", Math.min(a.y, q.y));
+  cadre.setAttribute("width", Math.abs(q.x - a.x)); cadre.setAttribute("height", Math.abs(q.y - a.y));
+});
+function finSelection(ev) {
+  if (!depart) return;
+  if (cadre) {
+    let x = +cadre.getAttribute("x"), y = +cadre.getAttribute("y"), w = +cadre.getAttribute("width"), h = +cadre.getAttribute("height");
+    cadre.remove();
+    const cx = x + w / 2, cy = y + h / 2;
+    w = Math.max(w, h * W / H, W / 12); h = w * H / W;  // rapport de la carte, zoom x12 au plus
+    vue = [cx - w / 2, cy - h / 2, w, h];
+    appliqueVue();
+  }
+  depart = null; cadre = null;
+  if (svgCarte.hasPointerCapture(ev.pointerId)) svgCarte.releasePointerCapture(ev.pointerId);
+}
+svgCarte.addEventListener("pointerup", finSelection);
+svgCarte.addEventListener("pointercancel", finSelection);
+svgCarte.addEventListener("dblclick", () => { vue = null; appliqueVue(); });
+dezoom.addEventListener("click", () => { vue = null; appliqueVue(); });
 
 PARTAGE.demarrer({ ecran: "carte", ...D.partage });
 
 /* L'URL est ecrite avant la carte : l'en-tete de l'export cite le lien courant. */
 function dessine() { PARTAGE.ecrire({ mc: metrique }); textes(); carte(); table(); }
-sel.addEventListener("change", () => { metrique = sel.value; dessine(); });
-addEventListener("hashchange", () => { metrique = depuisUrl(); sel.value = metrique; dessine(); tables(PARTAGE.lire().get("d") === "1"); });
+choix.addEventListener("change", ev => { metrique = ev.target.value; dessine(); });
+addEventListener("hashchange", () => { metrique = depuisUrl(); coche(); dessine(); tables(PARTAGE.lire().get("d") === "1"); });
 const bouton = document.getElementById("tbl");
 /* Tableaux ouverts : cle `d=1`, comme sur le tableau de bord, pour qu'une URL collee rouvre le meme ecran. */
 function tables(on) {
