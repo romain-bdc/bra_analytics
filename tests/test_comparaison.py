@@ -112,7 +112,7 @@ def test_periode_commune_ignore_les_saisons_non_comparables(synthetique) -> None
 def test_bornes_de_fenetre_viennent_de_fenetres_py(data) -> None:
     coeur = next(f for f in data["fenetres"] if f["nom"] == DEFAUT.nom)
     assert coeur["debut"] == list(DEFAUT.debut) and coeur["fin"] == list(DEFAUT.fin)
-    assert data["max_courbes"] == 4
+    assert data["max_courbes"] == 3
 
 
 def test_la_bande_mediane_a_quitte_le_payload(data) -> None:
@@ -213,15 +213,15 @@ def synthetique(data) -> dict:
 
 
 TEMPLATE = fiche.TEMPLATE
-# Saison lue 2021-2022 ; comparees : 2019-2020 (non comparable, fin 20 mars),
-# 2022-2023 (fin 31 mars) et 2016-2017.
-TROIS = "m=65&s=2021-2022&c=2019-2020,2022-2023,2016-2017"
+# Saison lue 2021-2022 (fin 30 avril) ; comparees : 2019-2020 (non comparable, fin
+# 20 mars) et 2022-2023 (fin 31 mars).
+DEUX = "m=65&s=2021-2022&c=2019-2020,2022-2023"
 
 
 @chromium
 def test_troncature_a_periode_egale_par_defaut_et_annoncee(synthetique, tmp_path) -> None:
-    dom = _dom(injecter(TEMPLATE, synthetique), TROIS, tmp_path)
-    attendue = comparaison.periode_commune(synthetique, ASPE, ["2021-2022", "2019-2020", "2022-2023", "2016-2017"])
+    dom = _dom(injecter(TEMPLATE, synthetique), DEUX, tmp_path)
+    attendue = comparaison.periode_commune(synthetique, ASPE, ["2021-2022", "2019-2020", "2022-2023"])
     for ident in ("sous-risque", "sous-table"):
         assert dom.attrs[ident]["data-tronque"] == "1"
         # 2022-2023 s'arrete le 31 mars : c'est elle qui raccourcit la periode commune ;
@@ -233,16 +233,16 @@ def test_troncature_a_periode_egale_par_defaut_et_annoncee(synthetique, tmp_path
         assert "2022-2023 s'arrête le 31 mars" in dom.texte[ident]
     ligne = {l["data-id"]: l for l in dom.lignes if l["tag"] == "tr"}
     assert ligne["2022-2023"]["texte"].count("107") >= 1     # 15 dec -> 31 mars = 107 jours
-    assert ligne["2016-2017"]["texte"].count("107") >= 1
+    assert ligne["2021-2022"]["texte"].count("107") >= 1
 
 
 @chromium
 def test_sans_troncature_chaque_serie_garde_sa_fenetre(synthetique, tmp_path) -> None:
-    dom = _dom(injecter(TEMPLATE, synthetique), TROIS + "&p=0", tmp_path)
+    dom = _dom(injecter(TEMPLATE, synthetique), DEUX + "&p=0", tmp_path)
     assert dom.attrs["sous-risque"]["data-tronque"] == "0"
     assert "Troncature désactivée" in dom.texte["sous-risque"]
     ligne = {l["data-id"]: l for l in dom.lignes if l["tag"] == "tr"}
-    assert "122" in ligne["2016-2017"]["texte"]               # 15 dec -> 15 avr, toute la fenetre
+    assert "122" in ligne["2021-2022"]["texte"]               # 15 dec -> 15 avr, toute la fenetre
     assert "107" in ligne["2022-2023"]["texte"]
 
 
@@ -260,7 +260,7 @@ def test_classement_refuse_une_metrique_d_indice_hors_coeur(synthetique, tmp_pat
 
 @chromium
 def test_saison_non_comparable_etiquetee_et_jamais_classee(synthetique, tmp_path) -> None:
-    dom = _dom(injecter(TEMPLATE, synthetique), TROIS + "&k=jours_3_plus&r=coeur", tmp_path)
+    dom = _dom(injecter(TEMPLATE, synthetique), DEUX + "&k=jours_3_plus&r=coeur", tmp_path)
     barres = {l["data-saison"]: l for l in dom.lignes if l["tag"] == "g"}
     # Le classement porte sur toutes les saisons du massif, comparees ou non.
     assert set(barres) == {"2016-2017", "2018-2019", "2019-2020", "2021-2022", "2022-2023"}
@@ -274,11 +274,11 @@ def test_saison_non_comparable_etiquetee_et_jamais_classee(synthetique, tmp_path
 
 @chromium
 def test_selecteur_borne_a_quatre_courbes(synthetique, tmp_path) -> None:
-    """La saison lue plus trois series comparees : au-dela, la lecture devient impossible."""
+    """La saison lue plus deux series comparees : au-dela, les courbes se recouvrent."""
     toutes = "2016-2017,2018-2019,2019-2020,2021-2022,2022-2023"
     dom = _dom(injecter(TEMPLATE, synthetique), f"m=65&s=2021-2022&c={toutes}", tmp_path)
-    assert len([l for l in dom.lignes if l["tag"] == "tr"]) == 4
-    assert dom.texte["puces-saisons"].count("×") == 3
+    assert len([l for l in dom.lignes if l["tag"] == "tr"]) == 3
+    assert dom.texte["puces-saisons"].count("×") == 2
     assert "2021-2022" not in dom.texte["puces-saisons"]       # jamais la saison lue elle-meme
     assert "disabled" in dom.attrs["ajout-saison"]
 
@@ -293,7 +293,7 @@ def test_tableau_egal_aux_metriques_sans_troncature(db, tmp_path) -> None:
         con.close()
     data = fiche.payload(db)
     saisons = [s for s in coeur["saison"].to_list() if s in data["series"][ASPE]]
-    lue, autres = saisons[-1], saisons[:-1][-3:]
+    lue, autres = saisons[-1], saisons[:-1][-(data["max_courbes"] - 1):]
     fragment = f"m={ASPE}&s={lue}&c={','.join(autres)}&p=0"
     html = injecter(TEMPLATE, data)
 
@@ -337,20 +337,20 @@ def test_tableau_egal_aux_metriques_sans_troncature(db, tmp_path) -> None:
 
 @chromium
 def test_series_comparees_tracees_non_comparables_en_pointille(synthetique, tmp_path) -> None:
-    dom = _dom(injecter(TEMPLATE, synthetique), TROIS, tmp_path)
+    dom = _dom(injecter(TEMPLATE, synthetique), DEUX, tmp_path)
     par = {t["data-trace"]: t for t in dom.traces}
-    # La saison lue est en barres par niveau ; seules les series comparees sont des traits.
-    assert set(par) == {"2019-2020", "2022-2023", "2016-2017"}
+    # La saison lue porte `data-lue` ; les series comparees, `data-trace`.
+    assert set(par) == {"2019-2020", "2022-2023"}
     assert par["2019-2020"]["data-comparable"] == "0"
     assert par["2019-2020"]["stroke-dasharray"]
-    assert "stroke-dasharray" not in par["2016-2017"]
+    assert "stroke-dasharray" not in par["2022-2023"]
     assert "non comparable" in dom.texte["lg-risque"]
 
 
 @chromium
 def test_series_comparees_absentes_sur_l_axe_par_rang(synthetique, tmp_path) -> None:
     """Les rangs de deux saisons ne partent pas du meme jour : la superposition est calendaire."""
-    dom = _dom(injecter(TEMPLATE, synthetique), TROIS + "&a=rang", tmp_path)
+    dom = _dom(injecter(TEMPLATE, synthetique), DEUX + "&a=rang", tmp_path)
     assert not dom.traces
     assert "axe calendaire" in dom.texte["sous-risque"]
 
@@ -365,7 +365,7 @@ def test_classement_ex_aequo(synthetique, tmp_path) -> None:
 
 @chromium
 def test_chaque_graphe_et_tableau_porte_sa_couverture(synthetique, tmp_path) -> None:
-    dom = _dom(injecter(TEMPLATE, synthetique), TROIS, tmp_path)
+    dom = _dom(injecter(TEMPLATE, synthetique), DEUX, tmp_path)
     for ident in ("cov-risque", "cov-rang"):
         assert dom.texte[ident].startswith("Couverture")
         assert "jours" in dom.texte[ident]

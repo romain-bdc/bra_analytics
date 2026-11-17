@@ -428,10 +428,12 @@ massif et saison lus, axe (calendrier ou `jour_de_saison`), tranche d'altitude, 
 indicateurs (`f`), saisons (`c`) et massifs (`n`) superposés, période égale (`p`), métrique,
 fenêtre et versant du classement (`k`, `r`, `v`).
 
-- **Indice de risque** : la saison lue en barres journalières, chacune à la hauteur et à la
-  couleur de son niveau sur l'échelle européenne. On y superpose jusqu'à trois séries — d'autres
-  saisons du massif, d'autres massifs sur la même saison — en traits, sur la seule fenêtre
-  `coeur` et l'axe calendaire. La bande médiane / interquartile a été retirée.
+- **Indice de risque** : une courbe en marches par série, de 1 à 5. La saison lue est à l'encre ;
+  on y superpose jusqu'à deux séries — d'autres saisons du massif, d'autres massifs sur la même
+  saison — en bleu et orange, sur la seule fenêtre `coeur` et l'axe calendaire. Trois courbes au
+  plus : au-delà, elles se recouvrent. La bande médiane / interquartile a été retirée.
+- **Chiffres clés** : une rangée de cinq (indice moyen avec ses jours, jours ≥ 3, maximum, neige
+  et vent maximaux de la tranche choisie).
 - **Tableau récapitulatif** : la saison lue et les séries superposées, sur la fenêtre `coeur`.
 - **Neige, isotherme 0 °C, vent** : même axe aligné, moyenne des autres saisons comparables en
   pointillés ; chaque graphe affiche sa couverture (une cellule par jour, rouge quand la valeur

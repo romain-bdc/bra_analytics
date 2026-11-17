@@ -36,7 +36,7 @@ import duckdb
 import polars as pl
 
 from . import partage
-from .comparaison import MAX_COURBES, SEUIL_HAUT, SEUIL_TRES_HAUT, fenetres_payload
+from .comparaison import SEUIL_HAUT, SEUIL_TRES_HAUT, fenetres_payload
 from .gabarit import injecter
 from .fenetres import DEFAUT, FIN_SENTINELLE, MOIS_FR, SAISON_COMPLETE
 from .fiche import archive_et_saisons, fiche_massifs, saisons_payload
@@ -45,6 +45,10 @@ from .metriques.risque import ComparaisonRefusee, _frame
 from .tranches import TRANCHES
 
 TEMPLATE = Path(__file__).parent / "templates" / "exploration.html"
+
+# Entites comparees cote a cote (une rose ou des barres par entite, jamais superposees) :
+# le plafond de courbes superposees de l'ecran Massif ne s'applique pas ici.
+MAX_ENTITES = 4
 
 ALTITUDE_LIBELLE = "non localisée en altitude"
 
@@ -158,7 +162,7 @@ def payload(db_path: str | Path = "warehouse/bra.duckdb") -> dict:
         "massifs": massifs,
         "tranches": [{"nom": t.nom, "libelle": t.libelle} for t in TRANCHES],
         "conditions": list(CONDITIONS),
-        "max_courbes": MAX_COURBES,
+        "max_courbes": MAX_ENTITES,
         "fin_sentinelle": f"{MOIS_FR[FIN_SENTINELLE.month - 1]} {FIN_SENTINELLE.year}",
         "origine_vent": "prévision",
         "libelles_sat": {str(c): l for c, l in pentes.LIBELLES_SAT.items()},
