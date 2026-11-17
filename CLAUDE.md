@@ -9,7 +9,7 @@ Météo-France (mars 2016 → juin 2026 ; les 36 massifs du référentiel sont i
 d'analyse historique construite dessus.
 
 Le parsing des six formats XML historiques, la déduplication, l'entrepôt Parquet et les vues
-DuckDB sont faits et éprouvés. La couche métriques et les trois écrans existent (voir « État de l'interface »).
+DuckDB sont faits et éprouvés. La couche métriques et les deux écrans existent (voir « État de l'interface »).
 
 ## À lire avant d'écrire du code
 
@@ -36,9 +36,8 @@ uv run bra info                                            # résumé par saison
 uv run bra fenetres                                        # comparabilité saison par saison
 uv run bra audit                                           # disponibilité champ × saison -> docs/disponibilite.md
 uv run bra carte                                           # carte d'accueil des 36 massifs
-uv run bra fiche                                           # ecran Massif : fiche massif-saison et comparaisons
-uv run bra exploration                                     # rose des pentes, vent x orientation, situations
-uv run bra site                                            # les trois ecrans dans site/ (index.html = la carte) ; --serve pour les exposer en local
+uv run bra fiche                                           # fiche massif : saison d'un massif et comparaisons
+uv run bra site                                            # les deux ecrans dans site/ (index.html = la carte) ; --serve pour les exposer en local
 uv run bra contours                                        # raccordement + version web des contours
 uv run bra ui                                              # interface web DuckDB
 uv run pytest
@@ -112,9 +111,11 @@ Les enfreindre ne produit pas une erreur, mais un chiffre faux.
 
 ## État de l'interface
 
-Trois écrans statiques existent : `bra carte`, `bra fiche` (écran « Massif »), `bra exploration`.
+Deux écrans statiques existent : `bra carte` et `bra fiche` (onglet « Fiche massif »).
 Le tableau de bord Pyrénées, première visualisation, a été retiré ; l'écran de comparaison a
-fusionné avec la fiche (`comparaison.py` n'en garde que les règles, `comparaison.html` redirige).
+fusionné avec la fiche (`comparaison.py` n'en garde que les règles) ; l'écran d'exploration a été
+retiré (sa couche `metriques/pentes.py` reste). `comparaison.html` et `exploration.html`
+redirigent vers `fiche.html`.
 
 Le motif est à conserver. Chaque module d'écran construit un payload JSON, `gabarit.py` l'insère
 dans le gabarit `templates/<écran>.html` par le marqueur `__DONNEES__` (la fiche encode la série

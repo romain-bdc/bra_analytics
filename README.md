@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <sub>Mars 2016 → juin 2026 · 36 massifs (Alpes, Pyrénées, Corse) · carte, écran Massif (fiche et comparaisons) et exploration</sub>
+  <sub>Mars 2016 → juin 2026 · 36 massifs (Alpes, Pyrénées, Corse) · carte et fiche massif (saison d'un massif et comparaisons)</sub>
 </p>
 
 ---
@@ -202,7 +202,7 @@ raccordent aux 36 identifiants et régénère leur version web — voir
 ### 6 bis. `bra site` — tout régénérer en une commande
 
 ```bash
-uv run bra site                       # reconstruit site/ : index.html (redirection), les trois écrans, polices/, version.json, .nojekyll
+uv run bra site                       # reconstruit site/ : index.html (redirection), les deux écrans, polices/, version.json, .nojekyll
 uv run bra site --out autre/          # ailleurs
 uv run bra site --allow-dirty         # malgré un arbre de travail sale
 uv run bra site --serve               # idem, puis sert site/ sur http://127.0.0.1:8000/
@@ -213,7 +213,7 @@ est un site statique complet, à déposer tel quel sur n'importe quel hébergeur
 supprimé puis reconstruit à chaque appel. `index.html` redirige vers la carte en conservant le
 fragment d'URL, où vit l'état des écrans. `version.json` note le commit, la date de génération et
 le dernier jour couvert : la commande refuse un arbre de travail sale, pour qu'une version publiée
-pointe vers un commit qui existe. Les trois commandes d'écran restent disponibles pour n'en
+pointe vers un commit qui existe. Les deux commandes d'écran restent disponibles pour n'en
 régénérer qu'un. `bra site` ne reconstruit pas l'entrepôt : après un changement de parsing ou de
 vue, `bra build --replace` d'abord.
 
@@ -413,7 +413,7 @@ base64 en ont été retirées : elles représentaient 93 % du poids sans valeur 
 Le XML brut n'est **jamais versionné** (`.gitignore`). Il est mis en cache sous `data/raw/`,
 reproduisant l'arborescence de la source, et reste reconstructible par `bra fetch`.
 
-### 8. `bra fiche` — écran Massif (fiche et comparaisons)
+### 8. `bra fiche` — fiche massif (saison d'un massif et comparaisons)
 
 ```bash
 uv run bra fiche                      # écrit fiche.html à la racine (non versionné)
@@ -422,6 +422,9 @@ uv run bra fiche                      # écrit fiche.html à la racine (non vers
 Page HTML autonome (environ 4,4 Mo : 36 massifs × 11 saisons × quatre blocs). L'ancien écran de
 comparaison y a fusionné : il montrait le même massif, les mêmes saisons, la même courbe d'indice.
 `comparaison.html` redirige désormais vers `fiche.html`, état de l'URL compris.
+L'écran d'exploration (rose des pentes, vent × orientation, situations) a été retiré en novembre
+2026 : `exploration.html` redirige aussi vers `fiche.html`. Sa couche de métriques
+(`metriques/pentes.py`) reste dans l'entrepôt et dans le glossaire.
 
 L'état vit dans l'URL (`fiche.html#m=65&s=2024-2025&c=2023-2024,2021-2022&n=66&k=jours_3_plus`) :
 massif et saison lus, axe (calendrier ou `jour_de_saison`), tranche d'altitude, fenêtre des
@@ -452,31 +455,7 @@ fenêtre et versant du classement (`k`, `r`, `v`).
 - Les tests de la page (`tests/test_comparaison.py`) la rendent dans Chromium headless
   (`BRA_CHROMIUM` pour indiquer le binaire) ; ils sont sautés si aucun n'est trouvé.
 
-### 9. `bra exploration` — orientations et vent
-
-```bash
-uv run bra exploration                # écrit exploration.html à la racine (non versionné)
-```
-
-Page HTML autonome (environ 0,4 Mo : comptes en jours de 36 massifs × 11 saisons × 3 fenêtres).
-Trois blocs : rose des pentes, croisement vent × orientation et situations
-typiques (la rose des vents a été retirée), pour un à quatre massifs sur une saison ou une à quatre saisons d'un massif, en roses ou
-en barres par secteur — côte à côte, jamais superposées. L'état vit dans l'URL
-(`exploration.html#x=saisons&m=65&c=2023-2024,2024-2025&f=coeur&q=ge3&t=haute&g=barres`).
-
-- **Altitude** : chaque rose des pentes et chaque jeu de situations porte l'étiquette « non
-  localisée en altitude » ; il n'y a pas de matrice altitude × orientation. Le vent, lui, a
-  une altitude réelle : le croisement se lit par tranche, une à la fois.
-- **Situations** : seulement depuis la saison qui en porte ; une saison antérieure l'écrit au lieu
-  d'afficher un zéro.
-- **Comparer des saisons** n'est permis que sur la fenêtre `coeur` ; le refus vient de
-  `exploration.refus`, qui délègue à `risque.fenetre_comparable`. Une saison non comparable reste
-  affichable, étiquetée avec son motif et en pointillé.
-- Chaque graphe se résume à des lignes {secteur, jours, jours couverts} : roses et barres les
-  dessinent, et l'export CSV de chaque graphe les reprend telles quelles. L'écran écrit `q` (condition
-sur le risque) et `g` (rose ou barres) : `k` a un autre sens sur l'écran Massif, et `d=1` ouvre les tableaux de la carte.
-
-### 10. Exports, URL partageable et attribution
+### 9. Exports, URL partageable et attribution
 
 Mécanisme commun à tous les écrans, défini une fois (`partage.py`, `templates/partage.js`) :
 
