@@ -38,9 +38,11 @@ from .fenetres import DEFAUT, FENETRES, FIN_SENTINELLE, MOIS_FR, PAR_NOM, SAISON
 from .metriques import risque
 from .metriques.risque import ComparaisonRefusee
 
-# Au-dela de quatre courbes superposees, la lecture devient impossible (spec 6) :
-# le plafond voyage dans le payload, le gabarit le lit.
-MAX_COURBES = 4
+# Courbes superposees sur le graphe d'indice de l'ecran Massif, saison lue comprise. La spec
+# en permettait quatre ; a l'usage, quatre courbes en marches entre 1 et 5 se recouvrent
+# trop pour se lire (choix du proprietaire, novembre 2026). Le plafond voyage dans le
+# payload, le gabarit le lit.
+MAX_COURBES = 3
 
 # Seuils des deux metriques de comptage. Le premier est celui de `risque` (une
 # seule definition) ; le second est le "4" litteral des vues de `risque.py`.
