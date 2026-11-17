@@ -1,4 +1,4 @@
-"""Comparaisons de l'ecran Massif (T13, spec section 6).
+"""Comparaisons de la fiche massif (T13, spec section 6).
 
 L'ecran de comparaison a fusionne avec la fiche : ses regles vivent dans
 `comparaison.py`, sa page est `templates/fiche.html`. Deux niveaux. Les regles et

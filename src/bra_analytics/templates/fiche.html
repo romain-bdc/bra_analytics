@@ -1,4 +1,4 @@
-<title>Massif</title>
+<title>Fiche massif</title>
 <style>
 __POLICES__
 __STYLE__
@@ -918,7 +918,7 @@ function dessine() {
   /* L'URL est ecrite avant les traces : l'en-tete des exports cite le lien courant. */
   ecrireUrl();
   $("attrib").textContent = m.dernier_bulletin && m.dernier_bulletin !== D.archive_jusqu_au ? `Dernier bulletin de ${m.nom} : ${dateFr(m.dernier_bulletin)}` : "";
-  document.title = `${m.nom} ${etat.s} — massif`;
+  document.title = `${m.nom} ${etat.s} — fiche massif`;
   alerte(); indicateurs();
   grapheRisque(); tableau(); grapheNeige(); grapheIso0(); grapheVent(); classement();
   notes();

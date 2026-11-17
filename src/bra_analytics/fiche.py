@@ -1,4 +1,4 @@
-"""Ecran « Massif » : fiche massif-saison et comparaisons (spec section 6, T11 et T13).
+"""Fiche massif : saison d'un massif et comparaisons (spec section 6, T11 et T13).
 
 La fiche et l'ecran de comparaison ont fusionne : ils montraient le meme massif,
 les memes saisons, la meme courbe d'indice. La page lit une saison d'un massif et

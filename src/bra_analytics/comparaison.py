@@ -1,6 +1,6 @@
 """Regles de comparaison entre saisons et entre massifs (spec section 6, T13).
 
-L'ecran de comparaison a fusionne avec la fiche (ecran « Massif », `fiche.py`) :
+L'ecran de comparaison a fusionne avec la fiche (« Fiche massif », `fiche.py`) :
 les deux montraient le meme massif, les memes saisons, la meme courbe d'indice.
 Ce module ne construit plus de page ; il fournit a la fiche ce qu'elle compare
 et comment (`bloc()`), et garde les regles testables sans navigateur.
@@ -38,7 +38,7 @@ from .fenetres import DEFAUT, FENETRES, FIN_SENTINELLE, MOIS_FR, PAR_NOM, SAISON
 from .metriques import risque
 from .metriques.risque import ComparaisonRefusee
 
-# Courbes superposees sur le graphe d'indice de l'ecran Massif, saison lue comprise. La spec
+# Courbes superposees sur le graphe d'indice de la fiche massif, saison lue comprise. La spec
 # en permettait quatre ; a l'usage, quatre courbes en marches entre 1 et 5 se recouvrent
 # trop pour se lire (choix du proprietaire, novembre 2026). Le plafond voyage dans le
 # payload, le gabarit le lit.
@@ -182,7 +182,7 @@ def fenetres_payload() -> list[dict]:
 
 
 def bloc(fenetres: list[dict]) -> dict:
-    """Ce que l'ecran Massif lit pour comparer : plafond, seuils, metriques et matrice de refus."""
+    """Ce que la fiche massif lit pour comparer : plafond, seuils, metriques et matrice de refus."""
     return {
         "max_courbes": MAX_COURBES,
         "seuil_haut": SEUIL_HAUT,

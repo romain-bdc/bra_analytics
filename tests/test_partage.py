@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from bra_analytics import carte, exploration, fiche, gabarit, partage
+from bra_analytics import carte, fiche, gabarit, partage
 from bra_analytics.build import build
 from bra_analytics.gabarit import injecter
 
@@ -48,7 +48,6 @@ def pages(db) -> dict[str, tuple[Path, dict]]:
     return {
         "carte": (carte.TEMPLATE, carte.payload(db)),
         "fiche": (fiche.TEMPLATE, fiche.payload(db)),
-        "exploration": (exploration.TEMPLATE, exploration.payload(db)),
     }
 
 
@@ -78,7 +77,7 @@ def test_ecrans_ont_des_fichiers_distincts_et_l_archive_dans_le_payload(pages) -
     assert pages["carte"][1]["partage"]["contours"].startswith("Contours des massifs")
     assert "15/02/2024" in pages["carte"][1]["partage"]["contours"]
     # Seule la carte porte les contours.
-    assert all(pages[i][1]["partage"]["contours"] is None for i in ("fiche", "exploration"))
+    assert all(pages[i][1]["partage"]["contours"] is None for i in ("fiche",))
 
 
 def test_les_marqueurs_sont_tous_remplaces(pages) -> None:
@@ -178,7 +177,6 @@ def rendus(pages, tmp_path_factory) -> dict[str, _Dom]:
     frag = {
         "carte": "mc=risque_moyen",
         "fiche": f"m={ASPE}&s={s}&t=moyenne&f=coeur&k=risque_moyen&r=coeur&zz=garde",
-        "exploration": f"x=saisons&m={ASPE}&c={s}&f=coeur&q=toutes&t=haute&g=barres&zz=garde",
     }
     del a_lire
     out = {}
@@ -196,7 +194,7 @@ def test_attribution_et_date_d_archive_visibles(rendus, pages, ident) -> None:
     archive = pages[ident][1]["partage"]["archive"]
     jour = int(archive[8:])
     assert re.search(rf"archive arrêtée au {jour}\w* \S+ {archive[:4]}", texte), texte
-    # La navigation relie les trois ecrans, l'ecran courant marque.
+    # La navigation relie les deux ecrans, l'ecran courant marque.
     assert set(rendus[ident].liens) == {e.id for e in partage.ECRANS}
 
 
@@ -212,10 +210,9 @@ def test_attribution_des_contours_sur_la_carte(rendus) -> None:
 @chromium
 def test_chaque_graphe_a_son_export_csv_et_png(rendus) -> None:
     # Fiche : risque, neige, isotherme, vent et classement des saisons.
-    attendus = {"carte": 1, "fiche": 5, "exploration": None}
+    attendus = {"carte": 1, "fiche": 5}
     for ident, n in attendus.items():
-        # Exploration : une trace par entite et par bloc, selon les blocs publies ; au moins une.
-        assert (len(rendus[ident].csv) >= 1) if n is None else (len(rendus[ident].csv) == n), ident
+        assert len(rendus[ident].csv) == n, ident
         for a in rendus[ident].csv:
             assert a["download"].startswith(f"bra-{ident}-") and a["download"].endswith(".csv")
             assert int(a["data-lignes"]) >= 0
@@ -275,8 +272,8 @@ def test_csv_du_classement_garde_les_saisons_non_classees_et_leur_motif(rendus, 
 @chromium
 def test_le_hash_complet_voyage_d_un_ecran_a_l_autre(rendus) -> None:
     """Le lien vers un autre ecran porte l'etat courant, cles inconnues comprises."""
-    lien = rendus["fiche"].liens["exploration"]
-    assert lien.startswith("exploration.html#")
+    lien = rendus["fiche"].liens["carte"]
+    assert lien.startswith("carte.html#")
     p = urllib.parse.parse_qs(lien.split("#", 1)[1])
     assert p["m"] == [str(ASPE)] and p["zz"] == ["garde"] and p["f"] == ["coeur"]
     # La carte ecrit sa cle sans effacer celles des autres.
@@ -305,9 +302,9 @@ def test_une_url_collee_reproduit_le_meme_ecran(pages, rendus, ident, tmp_path) 
 
 @chromium
 def test_changer_d_ecran_ne_reinitialise_pas_le_filtre(pages, rendus, tmp_path) -> None:
-    """Fiche -> exploration avec le hash de la fiche : massif et saison sont repris au retour."""
-    hash_fiche = rendus["fiche"].liens["exploration"].split("#", 1)[1]
-    gabarit, data = pages["exploration"]
+    """Fiche -> carte avec le hash de la fiche : massif et saison sont repris au retour."""
+    hash_fiche = rendus["fiche"].liens["carte"].split("#", 1)[1]
+    gabarit, data = pages["carte"]
     dom = _rendre(injecter(gabarit, data), hash_fiche, tmp_path)
     retour = urllib.parse.parse_qs(dom.liens["fiche"].split("#", 1)[1])
     depart = urllib.parse.parse_qs(hash_fiche)
@@ -331,22 +328,11 @@ def test_export_png_produit_une_image(pages, tmp_path) -> None:
 
 
 @chromium
-def test_csv_de_l_exploration_reprend_les_comptes_traces_et_garde_l_etat_etranger(rendus, pages) -> None:
-    dom = rendus["exploration"]
-    a = next(x for x in dom.csv if x["download"].startswith("bra-exploration-pentes-"))
-    _, colonnes, lignes = _csv(a)
-    assert colonnes[:6] == ["entite", "massif_id", "saison", "secteur", "jours", "jours_couverts"]
-    assert len(lignes) == len(pages["exploration"][1]["orientations"]) == 8
-    # Les liens de navigation reportent le fragment complet, cle etrangere comprise.
-    assert all("zz=garde" in h for h in dom.liens.values())
-
-
-@chromium
 def test_l_etat_de_la_carte_et_le_mode_de_comparaison_traversent_les_ecrans(pages, tmp_path) -> None:
-    """Revue T15 : `d=1` rouvre les tableaux de la carte ; une cle d'un autre ecran survit a un passage par l'exploration."""
+    """Revue T15 : `d=1` rouvre les tableaux de la carte ; une cle etrangere survit a un passage par la carte."""
     (tmp_path / "c").mkdir()
     carte_dom = _rendre(injecter(pages["carte"][0], pages["carte"][1]), "mc=risque_moyen&d=1", tmp_path / "c")
     assert "Masquer" in carte_dom.texte["tbl"]
     (tmp_path / "e").mkdir()
-    expl = _rendre(injecter(pages["exploration"][0], pages["exploration"][1]), f"x=choix&m={ASPE}", tmp_path / "e")
-    assert "x=choix" in expl.liens["fiche"]
+    carte2 = _rendre(injecter(pages["carte"][0], pages["carte"][1]), f"x=choix&m={ASPE}", tmp_path / "e")
+    assert "x=choix" in carte2.liens["fiche"]

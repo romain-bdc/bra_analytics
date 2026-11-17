@@ -225,15 +225,7 @@ def cmd_fiche(args: argparse.Namespace) -> int:
     from .fiche import render
 
     out = render(args.db, args.out, standalone=not args.fragment)
-    print(f"ecran massif : {out} ({out.stat().st_size / 1024:.0f} Ko)")
-    return 0
-
-
-def cmd_exploration(args: argparse.Namespace) -> int:
-    from .exploration import render
-
-    out = render(args.db, args.out, standalone=not args.fragment)
-    print(f"ecran d'exploration : {out} ({out.stat().st_size / 1024:.0f} Ko)")
+    print(f"fiche massif : {out} ({out.stat().st_size / 1024:.0f} Ko)")
     return 0
 
 
@@ -406,19 +398,12 @@ def build_parser() -> argparse.ArgumentParser:
     u.add_argument("--no-browser", action="store_true", help="ne pas ouvrir le navigateur")
     u.set_defaults(func=cmd_ui)
 
-    f = sub.add_parser("fiche", help="generer l'ecran Massif : fiche massif-saison et comparaisons (HTML statique)")
+    f = sub.add_parser("fiche", help="generer la fiche massif : saison d'un massif et comparaisons (HTML statique)")
     f.add_argument("--db", default="warehouse/bra.duckdb")
     f.add_argument("--out", default="fiche.html", help="fichier de sortie")
     f.add_argument("--fragment", action="store_true",
                    help="omettre doctype et <html> (page destinee a etre hebergee)")
     f.set_defaults(func=cmd_fiche)
-
-    e = sub.add_parser("exploration", help="generer l'ecran d'exploration orientations et vent (HTML statique)")
-    e.add_argument("--db", default="warehouse/bra.duckdb")
-    e.add_argument("--out", default="exploration.html", help="fichier de sortie")
-    e.add_argument("--fragment", action="store_true",
-                   help="omettre doctype et <html> (page destinee a etre hebergee)")
-    e.set_defaults(func=cmd_exploration)
 
     k = sub.add_parser("carte", help="generer la carte d'accueil des 36 massifs (HTML statique)")
     k.add_argument("--db", default="warehouse/bra.duckdb")
@@ -429,7 +414,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     from . import geo
 
-    st = sub.add_parser("site", help="generer les trois ecrans dans un dossier, comme un site statique")
+    st = sub.add_parser("site", help="generer les deux ecrans dans un dossier, comme un site statique")
     st.add_argument("--db", default="warehouse/bra.duckdb")
     st.add_argument("--out", default="site", help="dossier de sortie")
     st.add_argument("--serve", action="store_true", help="servir le dossier en local apres la generation")
