@@ -15,6 +15,9 @@
   --band:#8d9d9c; --coeur:rgba(43,93,138,.08); --hors:rgba(105,121,126,.16); --manque:#b83a2e;
   --o1:#f6e8a6; --o2:#f1c56c; --o3:#e8974a; --o4:#d2602c; --o5:#9f3a1c;
   --n1:#b9d870; --n2:#f1dd3c; --n3:#f09a2e; --n4:#de3b28; --n5:#4a1410;
+  /* Series comparees (bleu, orange, vert d'eau) : validees deux a deux, en clair et en sombre,
+     daltonisme compris (dataviz validate_palette, --pairs all). La serie lue est a l'encre. */
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a;
   --hachure:#69797e; --vide:#e5e9e4; --pays:#e7ebe5; --pays-trait:#9aa8a6;
   --serif:"Archivo","Helvetica Neue",Arial,system-ui,sans-serif;
   --sans:"Archivo","Helvetica Neue",Arial,system-ui,sans-serif;
@@ -29,6 +32,7 @@
     --s1:#6aa6d6; --s2:#ec8048; --s3:#5fb08a; --s4:#b98ad0;
     --band:#62716f; --coeur:rgba(106,166,214,.10); --hors:rgba(139,154,157,.14); --manque:#e8776b;
     --n5:#8a2a20;
+    --c1:#3987e5; --c2:#d95926; --c3:#199e70;
     --hachure:#8b9a9d; --vide:#212c33; --pays:#202a30; --pays-trait:#4d5c62;
   }
 }
@@ -41,6 +45,7 @@
   --s1:#6aa6d6; --s2:#ec8048; --s3:#5fb08a; --s4:#b98ad0;
   --band:#62716f; --coeur:rgba(106,166,214,.10); --hors:rgba(139,154,157,.14); --manque:#e8776b;
   --n5:#8a2a20;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70;
   --hachure:#8b9a9d; --vide:#212c33; --pays:#202a30; --pays-trait:#4d5c62;
 }
 

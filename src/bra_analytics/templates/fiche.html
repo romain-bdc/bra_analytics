@@ -2,12 +2,11 @@
 <style>
 __POLICES__
 __STYLE__
-.kpis{display:block}
-.kgroupe{margin:0 0 26px;border-top:2px solid var(--ink)}
-.kgroupe>h3{margin:0;padding:8px 0 2px;font-size:13px;font-weight:600;color:var(--ink)}
-.krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 30px}
-.kgroupe .kpi{padding:4px 0 6px 12px;margin-top:10px}
-.kgroupe .kpi .v{font-size:32px}
+/* Chiffres cles : cinq, sur une rangee. Le reste (episodes, couverture, isotherme...) est
+   dans les graphes et leurs lignes de couverture, pas en tete de page. */
+.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px 24px;margin:4px 0 30px}
+.kpis .kpi{padding:2px 0 4px 12px;border-left-width:4px}
+.kpis .kpi .v{font-size:26px}
 .axl{font-size:11px;fill:var(--ink-2)}
 /* Comparaison : puces des series superposees, liseret a la couleur de leur trait. */
 .comparer{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:4px 0 14px;padding:10px 12px;background:var(--surface-2);border-radius:3px}
@@ -23,7 +22,7 @@ __STYLE__
 .val{font-size:11.5px;fill:var(--ink-2);font-variant-numeric:tabular-nums}
 .ctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:8px 0 6px}
 tr.nc td{color:var(--ink-muted)}
-tr.sel td:first-child{box-shadow:inset 4px 0 0 var(--accent)}
+tr td:first-child{box-shadow:inset 4px 0 0 var(--serie, transparent)}
 td small{display:block;color:var(--ink-muted);font-size:11.5px;text-align:left;white-space:normal;max-width:46ch}
 .badge{display:inline-block;font-size:11.5px;border:1px solid var(--manque);color:var(--manque);padding:0 5px;margin-left:6px;vertical-align:1px;border-radius:2px}
 .tablewrap{overflow-x:auto}
@@ -133,10 +132,11 @@ const MASSIF = new Map(D.massifs.map(m => [m.id, m]));
 const SLOT = new Map(D.axe.map((c, i) => [c, i]));
 const METR = new Map(D.metriques.map(m => [m.cle, m]));
 const MAX = D.max_courbes;
-/* Couleurs des series superposees : encre, bleu, violet. Jamais une couleur de l'echelle
-   de risque, que portent les barres de la saison lue. */
-const COULEURS = ["var(--ink)", "var(--s1)", "var(--s4)"];
-const NIV_COULEURS = ["var(--n1)", "var(--n2)", "var(--n3)", "var(--n4)", "var(--n5)"];
+/* La saison lue est a l'encre ; les series comparees prennent bleu, orange, vert d'eau
+   (--c1..--c3, validees deux a deux, daltonisme compris). Une couleur suit sa serie :
+   memes teintes sur la courbe, les puces, le tableau et le classement. */
+const LUE = "var(--ink)";
+const COULEURS = ["var(--c1)", "var(--c2)", "var(--c3)"];
 const libFen = f => f.nom === D.saison_complete ? "saison entière" : f.nom;
 const jourLib = c => `${+c.slice(3)} ${MOIS[+c.slice(0, 2) - 1]}`;
 const rangLib = r => r === 1 ? "1re" : `${r}e`;
@@ -492,64 +492,64 @@ function traceMoyenneAutres(g, moyenne, serie, col, lignesExport) {
 const autresSaisons = () => MASSIF.get(etat.m).saisons.filter(s => s !== etat.s && SAISON.get(s).comparable);
 
 /* ---------- graphe 1 : risque ----------
-   La saison lue en barres journalieres, chacune a la hauteur et a la couleur de son niveau
-   sur l'echelle europeenne : la saison se lit d'un coup d'oeil, comme une suite de BRA.
-   Les series comparees se superposent en traits, sur la seule fenetre coeur (hors d'elle,
-   pres de la moitie de l'ecart entre epoques est la sentinelle d'avant juin 2021) et sur
-   l'axe calendaire. */
+   Une courbe par serie, en marches (un niveau tient toute la journee), de 1 a 5. La saison
+   lue est tracee sur toute sa diffusion ; les series comparees sur la seule fenetre coeur
+   (hors d'elle, pres de la moitie de l'ecart entre epoques est la sentinelle d'avant juin
+   2021) et sur l'axe calendaire. */
 function grapheRisque() {
   const e = D.series[etat.m][etat.s];
-  const g = cadre("g-risque", 200, [0, 5.4], [1, 2, 3, 4, 5], "indice");
+  const g = cadre("g-risque", 220, [0.5, 5.5], [1, 2, 3, 4, 5], "indice");
   const larg = (W - L - R) / (g.x1 - g.x0 + 1);
   const lignes = [];
-
-  // saison lue : une barre par jour avec indice
-  const niveaux = new Set();
-  [...e.risque].forEach((c, i) => {
-    if (c === ".") return;
-    lignes.push(["saison_lue", etat.s, jourIso(e, i), abscisseLib(e, i), c === "0" ? null : +c, c === "0" ? "publié sans indice" : ""]);
-    const x = g.px(abscisse(e, i));
-    if (c === "0") {          // publie sans indice : un cercle au pied de l'axe, ni zero ni trou
-      el("circle", { cx: x, cy: g.py(0) - 4, r: 2.2, fill: "none", stroke: "var(--ink-muted)" }, g.svg);
-      return;
-    }
-    const v = +c;
-    niveaux.add(v);
-    el("rect", { x: x - larg / 2, y: g.py(v), width: larg + 0.35, height: g.py(0) - g.py(v), fill: NIV_COULEURS[v - 1], "data-niveau": v }, g.svg);
-  });
-
-  // series comparees
   const autres = comparees();
   const liste = entites();
   const calendaire = etat.a === "cal";
   const p = periode(liste, "risque", COEUR);
   const [w0, w1] = p.w;
   const dans = x => x >= w0 && x <= w1 && (!etat.p || (x >= p.lo && x <= p.hi));
-  if (autres.length && calendaire) {
+  const visibles = calendaire ? autres : [];
+  // les niveaux sont entiers : deux series egales se recouvriraient, d'ou un leger decalage
+  const n = visibles.length + 1;
+  const decal = k => (k - (n - 1) / 2) * 0.08;
+
+  if (visibles.length && etat.p) {
     // hors periode commune, dans la fenetre coeur : fond grise, annonce par le sous-titre
-    if (etat.p) {
-      const zones = vide(p) ? [[w0, w1]] : [[w0, p.lo - 1], [p.hi + 1, w1]];
-      for (const [a, b] of zones) if (b >= a) el("rect", { x: g.px(a) - larg / 2, y: TOP, width: (b - a + 1) * larg, height: g.hauteur, fill: "var(--hors)" }, g.svg);
-    }
-    autres.forEach((en, k) => {
-      const sl = slots(en.e), pts = [];
-      // les niveaux sont entiers : deux series egales se recouvriraient, d'ou un leger decalage
-      const decal = (k - (autres.length - 1) / 2) * 0.1;
-      for (let i = 0; i < en.e.longueur; i++) {
-        const v = valeurRisque(en.e, i), x = sl[i];
-        if (v == null || x < 0 || !dans(x)) { pts.push(null); continue; }
-        // marche d'escalier : un niveau tient toute la journee
-        pts.push([g.px(x) - larg / 2, g.py(v + decal)], [g.px(x) + larg / 2, g.py(v + decal)]);
-        lignes.push([nomEntite(en), en.saison, jourIso(en.e, i), D.axe[x], v, en.comparable ? "série comparée" : "série comparée, non comparable : " + en.motif]);
-      }
-      const d = chemin(pts);
-      el("path", { d, fill: "none", stroke: "var(--page)", "stroke-width": 4.5, "stroke-linejoin": "round", opacity: 0.85 }, g.svg);
-      const attrs = { d, fill: "none", stroke: COULEURS[k], "stroke-width": 1.8, "stroke-linejoin": "round",
-        "data-trace": nomEntite(en), "data-comparable": en.comparable ? 1 : 0 };
-      if (!en.comparable) attrs["stroke-dasharray"] = "4 3";
-      el("path", attrs, g.svg);
-    });
+    const zones = vide(p) ? [[w0, w1]] : [[w0, p.lo - 1], [p.hi + 1, w1]];
+    for (const [a, b] of zones) if (b >= a) el("rect", { x: g.px(a) - larg / 2, y: TOP, width: (b - a + 1) * larg, height: g.hauteur, fill: "var(--hors)" }, g.svg);
   }
+  const courbe = (pts, couleur, epais, attrs = {}) => {
+    const d = chemin(pts);
+    // liseret de la couleur du fond : une courbe qui en croise une autre reste lisible
+    el("path", { d, fill: "none", stroke: "var(--page)", "stroke-width": epais + 2.5, "stroke-linejoin": "round" }, g.svg);
+    el("path", { d, fill: "none", stroke: couleur, "stroke-width": epais, "stroke-linejoin": "round", ...attrs }, g.svg);
+  };
+  // series comparees d'abord : la saison lue passe par-dessus
+  visibles.forEach((en, k) => {
+    const sl = slots(en.e), pts = [], dy = decal(k + 1);
+    for (let i = 0; i < en.e.longueur; i++) {
+      const v = valeurRisque(en.e, i), x = sl[i];
+      if (v == null || x < 0 || !dans(x)) { pts.push(null); continue; }
+      pts.push([g.px(x) - larg / 2, g.py(v + dy)], [g.px(x) + larg / 2, g.py(v + dy)]);
+      lignes.push([nomEntite(en), en.saison, jourIso(en.e, i), D.axe[x], v, en.comparable ? "série comparée" : "série comparée, non comparable : " + en.motif]);
+    }
+    const attrs = { "data-trace": nomEntite(en), "data-comparable": en.comparable ? 1 : 0 };
+    if (!en.comparable) attrs["stroke-dasharray"] = "5 3";
+    courbe(pts, COULEURS[k], 1.8, attrs);
+  });
+  // saison lue
+  const pts = [], dy = decal(0);
+  [...e.risque].forEach((c, i) => {
+    if (c === ".") { pts.push(null); return; }
+    lignes.push(["saison_lue", etat.s, jourIso(e, i), abscisseLib(e, i), c === "0" ? null : +c, c === "0" ? "publié sans indice" : ""]);
+    if (c === "0") {          // publie sans indice : un cercle au pied de l'axe, ni zero ni trou
+      pts.push(null);
+      el("circle", { cx: g.px(abscisse(e, i)), cy: g.py(0.5) - 4, r: 2.2, fill: "none", stroke: "var(--ink-muted)" }, g.svg);
+      return;
+    }
+    const x = g.px(abscisse(e, i)), y = g.py(+c + dy);
+    pts.push([x - larg / 2, y], [x + larg / 2, y]);
+  });
+  courbe(pts, LUE, 2.2, { "data-lue": etat.s });
   exporter("g-risque", "risque", "Indice de risque", lignes);
 
   const [a, z] = etendueRisque(e);
@@ -560,27 +560,27 @@ function grapheRisque() {
   const sous = $("sous-risque");
   sous.dataset.periode = autres.length ? attrsPeriode(p) : "";
   sous.dataset.tronque = etat.p ? "1" : "0";
-  let texte = `Saison <b>${esc(etat.s)}</b>${SAISON.get(etat.s).comparable ? "" : " (non comparable)"} : chaque jour à la hauteur et à la couleur de son niveau de risque.`;
-  let detail = `Échelle européenne du risque d'avalanche, de 1 (faible) à 5 (très fort). Fond bleuté : la fenêtre ${esc(D.fenetre_defaut)} (${esc(fenetreTexte)}) de la saison lue.`;
-  if (autres.length && calendaire) {
+  let texte = `Indice de risque de 1 (faible) à 5 (très fort), jour par jour.`;
+  let detail = `Échelle européenne du risque d'avalanche. Fond bleuté : la fenêtre ${esc(D.fenetre_defaut)} (${esc(fenetreTexte)}) de la saison lue.`;
+  if (visibles.length) {
     const [court, long] = texteTroncature(p, COEUR);
     texte += " " + court;
-    detail += ` ${long} Les séries comparées ne se tracent que sur la fenêtre ${esc(D.fenetre_defaut)}, seule où l'indice se compare entre saisons ; elles sont décalées de 0,1 niveau l'une de l'autre pour rester lisibles.`;
+    detail += ` ${long} Les séries comparées ne se tracent que sur la fenêtre ${esc(D.fenetre_defaut)}, seule où l'indice se compare entre saisons ; les courbes sont décalées de 0,08 niveau l'une de l'autre pour ne pas se recouvrir.`;
   } else if (autres.length) {
     texte += " Les séries comparées ne se superposent que sur l'axe calendaire.";
   }
   sous.innerHTML = texte + PARTAGE.plus(detail);
-  $("lg-risque").innerHTML = [1, 2, 3, 4, 5].filter(v => niveaux.has(v))
-    .map(v => `<span><i class="niv" style="background:${NIV_COULEURS[v - 1]}"></i>${v} ${NIVEAUX[v - 1].toLowerCase()}</span>`).join("")
-    + (calendaire ? autres.map((en, k) => `<span><i class="sw" style="background:${COULEURS[k]}${en.comparable ? "" : ";height:0;border-top:2px dashed " + COULEURS[k]}"></i>${esc(nomEntite(en))}${en.comparable ? "" : " (non comparable)"}</span>`).join("") : "")
-    + (autres.length && calendaire && etat.p && p.tronquee ? `<span><i class="sw box" style="background:var(--hors)"></i>hors période commune</span>` : "");
+  const trait = (couleur, pointille) => `<i class="sw" style="${pointille ? `height:0;border-top:2px dashed ${couleur};background:none` : `background:${couleur};height:3px`}"></i>`;
+  $("lg-risque").innerHTML = `<span>${trait(LUE)}${esc(nomEntite(entite(etat.m, etat.s)))}</span>`
+    + visibles.map((en, k) => `<span>${trait(COULEURS[k], !en.comparable)}${esc(nomEntite(en))}${en.comparable ? "" : " (non comparable)"}</span>`).join("")
+    + (visibles.length && etat.p && p.tronquee ? `<span><i class="sw box" style="background:var(--hors)"></i>hors période commune</span>` : "");
 
   const txtJour = v => v === undefined ? "aucun bulletin" : v === null ? "publié sans indice" : `indice <b>${v}</b> — ${NIVEAUX[v - 1]}`;
   curseur(g, "g-risque", x => {
     const i = decalageInverse(e, x);
     if (i < 0 || i >= e.longueur) return "";
-    let h = `<b>${jourTxt(e, i)}</b> · jour ${i - e.decalage_rang + 1} de la saison<br>${txtJour(valeurRisque(e, i))}`;
-    if (calendaire) autres.forEach((en, k) => {
+    let h = `<b>${jourTxt(e, i)}</b> · jour ${i - e.decalage_rang + 1} de la saison<br><span style="color:${LUE}">■</span> ${esc(nomEntite(entite(etat.m, etat.s)))} : ${txtJour(valeurRisque(e, i))}`;
+    visibles.forEach((en, k) => {
       const j = slots(en.e).indexOf(x);
       h += `<br><span style="color:${COULEURS[k]}">■</span> ${esc(nomEntite(en))} : ${j < 0 ? "aucun bulletin" : txtJour(valeurRisque(en.e, j))}`;
     });
@@ -602,7 +602,8 @@ function tableau() {
     const etq = en.comparable ? "" : `<span class="badge">non comparable</span>`;
     const motif = en.comparable ? "" : `<small>${esc(en.motif)}. Valeurs sur la période commune des saisons comparables, jamais classées.</small>`;
     const c = (cle, v) => `<td data-c="${cle}">${v}</td>`;
-    return `<tr class="${en.comparable ? "" : "nc"} ${k === 0 ? "sel" : ""}" data-id="${esc(nomEntite(en))}" data-comparable="${en.comparable ? 1 : 0}">`
+    // liseret a la couleur de la courbe de la serie
+    return `<tr class="${en.comparable ? "" : "nc"}" style="--serie:${k === 0 ? LUE : COULEURS[k - 1]}" data-id="${esc(nomEntite(en))}" data-comparable="${en.comparable ? 1 : 0}">`
       + `<td>${esc(nomEntite(en))}${etq}${motif}</td>`
       + c("couverts", a.couverts) + c("avec", a.avec)
       + c("moyenne", a.moyenne == null ? "—" : fmt("risque_moyen", a.moyenne))
@@ -679,8 +680,8 @@ function classement() {
     el("line", { x1: x, x2: x, y1: top, y2: top + rows.length * RH, stroke: "var(--grid)" }, svg);
     el("text", { x, y: top + rows.length * RH + 16, "text-anchor": "middle", class: "tick" }, svg).textContent = Number.isInteger(t) ? t : t.toFixed(0);
   }
-  // la saison lue en couleur d'accent, les saisons superposees en la couleur de leur trait, les autres en gris
-  const couleurDe = sa => sa === etat.s ? "var(--accent)" : etat.c.includes(sa) ? COULEURS[etat.c.indexOf(sa)] : null;
+  // la saison lue a l'encre, les saisons superposees a la couleur de leur courbe, les autres en gris
+  const couleurDe = sa => sa === etat.s ? LUE : etat.c.includes(sa) ? COULEURS[etat.c.indexOf(sa)] : null;
   rows.forEach((x, i) => {
     const y = top + i * RH, nc = !x.en.comparable;
     const g = el("g", { "data-saison": x.en.saison, "data-rang": x.rang ?? "", "data-valeur": x.v ?? "", "data-ex": x.ex ? 1 : 0, "data-comparable": nc ? 0 : 1 }, svg);
@@ -717,7 +718,7 @@ function classement() {
   sous.dataset.tronque = etat.p ? "1" : "0";
   const [court, long] = texteTroncature(p, f);
   sous.innerHTML = `Toutes les saisons de <b>${esc(nom)}</b>. ` + court + PARTAGE.plus(long
-    + ` Barres triées sur les saisons comparables ; la saison lue est en orange, les saisons comparées à la couleur de leur trait. Les saisons non comparables restent affichées en hachuré, avec leur motif au survol, sans rang.`
+    + ` Barres triées sur les saisons comparables ; la saison lue est à l'encre, les saisons comparées à la couleur de leur courbe. Les saisons non comparables restent affichées en hachuré, avec leur motif au survol, sans rang.`
     + (ordinal ? " Axe gradué de 1 à 5 : l'indice est ordinal." : "")
     + (m.indice ? "" : ` Épaisseur au palier de la tranche <b>${esc(etat.t)}</b>, versant ${etat.v} : valeur indicative rattachée à l'altitude de référence, qui change d'époque en époque${altitudes ? ` (altitudes lues dans l'archive : ${esc(altitudes)} m)` : ""}.`));
   const total = lignes.reduce((n, x) => n + x.a.avec, 0);
@@ -839,41 +840,22 @@ const fenetreTexte = (() => { const f = COEUR; return `${f.debut[1]} ${MOIS[f.de
 
 /* ---------- indicateurs ---------- */
 function tuile(k, v, n) { return `<div class="kpi"><span class="k">${k}</span><span class="v">${v}</span><span class="n">${n}</span></div>`; }
-const groupe = (titre, tuiles) => tuiles.length ? `<div class="kgroupe"><h3>${titre}</h3><div class="krow">${tuiles.join("")}</div></div>` : "";
+/* Cinq chiffres : l'indice (moyenne avec ses jours, seuils, maximum), la neige et le vent de
+   la tranche choisie. Une moyenne d'indice ne se lit jamais sans ses jours avec indice. */
 function indicateurs() {
   const ind = D.indicateurs[etat.m]?.[etat.s] || {};
   const w = ind[etat.f] || {};
-  const r = w.risque, fen = FEN.get(etat.f);
-  const sais = SAISON.get(etat.s);
-  const t = [], tn = [], tm = [];
+  const r = w.risque, t = [];
   if (r) {
-    const rep = MASSIF.get(etat.m).repere;
-    const repere = etat.f === D.fenetre_defaut && rep && rep.risque_moyen != null && sais.comparable
-      ? ` · moyenne du massif sur ${rep.saisons} saisons comparables : <b>${fr(rep.risque_moyen)}</b> (${rep.jours_avec_indice} j)` : "";
-    t.push(tuile("Indice moyen", fr(r.risque_moyen), `sur ${r.jours_avec_indice} jours avec indice${r.jours_sans_indice ? `, ${r.jours_sans_indice} sans indice` : ""}${repere}`));
-    t.push(tuile("Jours ≥ 3", r.jours_3_plus, `dont ${r.jours_4_plus} à 4 ou 5 (${r.jours_5} à 5), sur ${r.jours_avec_indice} jours`));
-    t.push(tuile("Indice maximal", r.risque_max ?? "—", r.risque_max == null ? "aucun indice" : `atteint ${r.jours_au_max} jour${r.jours_au_max > 1 ? "s" : ""}, le ${dateFr(r.date_max)}`));
-    t.push(tuile("Épisodes ≥ 3", r.episodes, `le plus long : ${fr(r.plus_long_episode)} jours`));
-    t.push(tuile("Couverture", `${fr(r.couverture_pct)} %`, `${r.jours_couverts} jours sur ${r.jours_periode} de la fenêtre`));
+    t.push(tuile("Indice moyen", fr(r.risque_moyen), `sur ${r.jours_avec_indice} jours avec indice`));
+    t.push(tuile("Jours à risque ≥ 3", r.jours_3_plus, `dont ${r.jours_4_plus} à 4 ou 5`));
+    t.push(tuile("Indice maximal", r.risque_max ?? "—", r.risque_max == null ? "aucun indice" : `${r.jours_au_max} jour${r.jours_au_max > 1 ? "s" : ""}, dès le ${dateFr(r.date_max)}`));
   }
   const n = w.neige?.[etat.t];
-  if (n) {
-    tn.push(tuile(`Neige · ${etat.t}`, `${fr(n.epaisseur_max_nord_cm)} cm`, `maximum au nord (${n.date_max_nord ? dateFr(n.date_max_nord) : "—"}) ; sud ${fr(n.epaisseur_max_sud_cm)} cm`));
-    tn.push(tuile("Jours enneigés", `${n.jours_enneiges_nord} / ${n.jours_observes_nord}`, `nord ; sud ${n.jours_enneiges_sud} / ${n.jours_observes_sud} jours observés`));
-  }
-  const cont = ind.continu;
-  if (cont?.nord || cont?.sud) {
-    const f = c => c && c.duree_jours != null ? `${c.duree_jours} j` : "—";
-    tn.push(tuile("Enneigement continu", f(cont.nord), `plus longue période sous ${(cont.nord || cont.sud).seuil_limite_m} m, nord ; sud ${f(cont.sud)} (saison entière)`));
-  }
-  const m = w.meteo;
-  if (m && m.jours_avec_iso0) {
-    tm.push(tuile("Isotherme 0 °C", `${fr(m.iso0_min_m)}–${fr(m.iso0_max_m)} m`, `${m.jours_avec_iso0} jours ; ${m.jours_iso0_au_dessus_seuil} au-dessus de ${m.seuil_iso0_m} m ; ${m.episodes_redoux} redoux`));
-  }
+  if (n) t.push(tuile(`Neige max · ${etat.t}`, `${fr(n.epaisseur_max_nord_cm)} cm`, `versant nord${n.date_max_nord ? ", le " + dateFr(n.date_max_nord) : ""}`));
   const v = w.vent?.[etat.t];
-  if (v) tm.push(tuile(`Vent · ${etat.t}`, `${fr(v.vitesse_max_kmh)} km/h`, `maximum prévu ; ${v.jours_vent_fort} jours au-dessus de ${D.seuil_vent_fort_kmh} km/h sur ${v.jours_avec_vent}`));
-  $("kpis").innerHTML = groupe("Risque", t) + groupe("Neige", tn) + groupe("Isotherme et vent", tm)
-    || groupe("Indicateurs", [tuile("Indicateurs", "—", "aucune donnée pour cette combinaison")]);
+  if (v) t.push(tuile(`Vent max · ${etat.t}`, `${fr(v.vitesse_max_kmh)} km/h`, `${v.jours_vent_fort} jours au-dessus de ${D.seuil_vent_fort_kmh} km/h`));
+  $("kpis").innerHTML = t.join("") || tuile("Indicateurs", "—", "aucune donnée pour cette combinaison");
 }
 
 /* ---------- avertissements et notes ---------- */
