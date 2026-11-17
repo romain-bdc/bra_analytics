@@ -37,9 +37,16 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         site = Path(tmp) / "site"
         generer("warehouse/bra.duckdb", site, allow_dirty=True)
-        # La carte est sous l'en-tete : on le masque, c'est elle que l'apercu doit montrer.
+        # Image de lien : le titre, la phrase qui dit ce que la couleur mesure, la carte en grand et
+        # sa legende. Commandes, exports, textes
+        # d'explication et reperes sont retires : ils ne se lisent pas a cette taille.
         page = site / "carte.html"
-        cadrage = "<style>header,.bar,.kpis,.sous,.partage-nav{display:none}.panel{border:0}.carte svg{max-height:540px}</style></html>"
+        cadrage = ("<style>.partage-nav,.lede details,.metriques,.echelle,.cote .toggle,.exports,.zoom,.reperes,"
+                   ".tables,footer{display:none!important}"
+                   ".wrap{padding:0 40px}header{padding:22px 0 4px}h1{font-size:36px}.lede{font-size:16px;margin-top:6px;max-width:none}"
+                   ".vue{grid-template-columns:270px minmax(0,1fr)!important;column-gap:24px}"
+                   ".vue>.cote{position:static;margin-top:120px;box-shadow:none}"
+                   ".carte svg{height:510px!important;min-height:0!important}</style></html>")
         page.write_text(page.read_text(encoding="utf-8").replace("</html>", cadrage), encoding="utf-8")
         subprocess.run(
             [chromium(), "--no-sandbox", "--disable-gpu", "--hide-scrollbars", "--window-size=1200,630",
